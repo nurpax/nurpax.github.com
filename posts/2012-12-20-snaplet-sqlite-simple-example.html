@@ -86,7 +86,7 @@ mainPage <span class="fu">=</span> withLoggedInUser go
       heistLocal (splices comments) <span class="fu">$</span> render <span class="st">&quot;/index&quot;</span>
     splices cs <span class="fu">=</span>
       I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</code></pre>
-<p>To play more with this code, I recommend that you clone the code from Git, try to build the example and play with the app:</p>
+<p>To learn more about using sqlite-simple with Snap, I recommend you clone the code from Git, build the example, play with the app and read the <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example source code</a>.</p>
 <pre class="sourceCode bash"><code class="sourceCode bash">git clone git://github.com/nurpax/snaplet-sqlite-simple.git
 <span class="kw">cd</span> example
 cabal-dev <span class="kw">install</span>
