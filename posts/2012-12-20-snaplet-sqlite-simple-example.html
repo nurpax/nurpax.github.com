@@ -37,16 +37,16 @@
 <p>by <em>Janne Hellsten</em> on <strong>December 20, 2012</strong></p>
 
 <p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple 0.3</a>, a compatibility update the recently released <a href="http://hackage.haskell.org/package/snap">Snap 0.10</a>. This library is glue for hooking up a Snap application to an SQLite3 database using the <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a> library. Using SQLite with Snap is a handy, light-weight approach for quickly prototyping database-backed web apps – you don’t need to configure a separate SQL server just to run your web app.</p>
-<p>While the new snaplet-sqlite-simple release doesn’t add any significant new functionality over previous versions, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example project</a> would be worth a mention.</p>
-<p>This example project implements a simple web app that has a login screen (with new user registration) and a main page that logged in users can use to add comments. Users and comments are both persisted into an SQLite3 database.</p>
+<p>While the new snaplet-sqlite-simple 0.3 release doesn’t add any significant new functionality, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example project</a> would be worth a mention.</p>
+<p>This example project implements a simple web app that has a login screen (with new user registration) and a main page where logged in users can drop comments. Users and comments are both persisted into an SQLite3 database.</p>
 <p>Here’s a couple of screenshots to show how it looks like. Let’s start with the login screen:</p>
 <div class="screenshot white-bg">
-<img src="../images/snaplet-sqlite-simple-example-login.png" title="Login" />
+<img src="../images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
 </div>
 
 <p>If you create a new user and login to the app, you’re taken to the main page. Here the logged in user can add comments. The comments get persisted into a database and are associated with the current user (e.g., other users can’t see them.) Here’s how the main page looks like:</p>
 <div class="screenshot white-bg">
-<img src="../images/snaplet-sqlite-simple-example-comments.png" title="Login" />
+<img src="../images/snaplet-sqlite-simple-example-comments.png" title="Main page" />
 </div>
 
 <p>The example demonstrates a few basic concepts in a complete example:</p>
@@ -86,6 +86,12 @@ mainPage <span class="fu">=</span> withLoggedInUser go
       heistLocal (splices comments) <span class="fu">$</span> render <span class="st">&quot;/index&quot;</span>
     splices cs <span class="fu">=</span>
       I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</code></pre>
+<p>To play more with this code, I recommend that you clone the code from Git, try to build the example and play with the app:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">git clone git://github.com/nurpax/snaplet-sqlite-simple.git
+<span class="kw">cd</span> example
+cabal-dev <span class="kw">install</span>
+./cabal-dev/bin/example
+<span class="co"># browse to http://localhost:8000</span></code></pre>
 
     </div>
 
