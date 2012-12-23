@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
-        <title>nurpax - Snap with SQLite3</title>
+        <title>nurpax - Snap with SQLite</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css"></link>
         <link rel="stylesheet" type="text/css" href="../css/syntax.css"></link>
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml"></link>
@@ -26,20 +26,20 @@
 
     <div id="page-wrap">
         <div id="header">
-            <h1>Blog - Snap with SQLite3</h1>
+            <h1>Blog - Snap with SQLite</h1>
             <div id="navigation">
                 <a href="../">Home</a>
                 <a href="../posts.html">All posts</a>
             </div>
         </div>
 <article>
-<h1>Snap with SQLite3</h1>
+<h1>Snap with SQLite</h1>
 
 <p>by <em>Janne Hellsten</em> on <strong>December 20, 2012</strong></p>
 
-<p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple 0.3</a>, a compatibility update for the recently released <a href="http://hackage.haskell.org/package/snap">Snap 0.10</a>. This library is glue for hooking up a Snap application to an SQLite3 database using the <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a> library. Using SQLite with Snap is a handy, light-weight approach for quickly prototyping database-backed web apps – you don’t need to configure a separate SQL server just to run your web app.</p>
+<p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple 0.3</a>, a compatibility update for the recently released <a href="http://hackage.haskell.org/package/snap">Snap 0.10</a>. This library is glue for hooking up a Snap application to an <a href="http://www.sqlite.org/">SQLite</a> database using the <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a> library. Using SQLite with Snap is a handy, light-weight approach for quickly prototyping database-backed web apps – you don’t need to configure a separate SQL server just to run your web app.</p>
 <p>While the new snaplet-sqlite-simple 0.3 release doesn’t add any significant new functionality, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example project</a> would be worth a mention.</p>
-<p>This example project implements a simple web app that has a login screen (with new user registration) and a main page where logged in users can drop comments. Users and comments are both persisted into an SQLite3 database.</p>
+<p>This example project implements a simple web app that has a login screen (with new user registration) and a main page where logged in users can drop comments. Users and comments are both persisted into an SQLite database.</p>
 <p>Here’s a couple of screenshots to show how it looks like. Let’s start with the login screen:</p>
 <div class="screenshot white-bg">
 <img src="../images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
