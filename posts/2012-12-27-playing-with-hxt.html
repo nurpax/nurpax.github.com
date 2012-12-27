@@ -1,16 +1,43 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-    <channel>
-        <title>nurpax.github.com blog</title>
-        <link>http://nurpax.github.com</link>
-        <description><![CDATA[Notes on programming in Haskell]]></description>
-        <atom:link href="http://nurpax.github.com/rss.xml" rel="self"
-                   type="application/rss+xml" />
-        <lastBuildDate>Thu, 27 Dec 2012 00:00:00 UT</lastBuildDate>
-        <item>
-    <title>Reading TCX in Haskell</title>
-    <link>http://nurpax.github.com/posts/2012-12-27-playing-with-hxt.html</link>
-    <description><![CDATA[<p>I use a Garmin GPS/heart-rate monitor watch to track my running. I also upload this GPS data to a service called <a href="http://www.runkeeper.com">RunKeeper</a> to keep a history of my runs. While I’ve generally been happy with RunKeeper, my experience uploading Garmin GPS data to RunKeeper has been less than stellar. My biggest complaint is that usually the original GPS data changes significantly when uploaded to RunKeeper. For example, a 10.0 km run (according to Garmin) can become 10.2 km in RunKeeper.</p>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+        <title>nurpax - Reading TCX in Haskell</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css"></link>
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css"></link>
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml"></link>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>Blog - Reading TCX in Haskell</h1>
+            <div id="navigation">
+                <a href="../">Home</a>
+                <a href="../posts.html">All posts</a>
+            </div>
+        </div>
+<article>
+<h1>Reading TCX in Haskell</h1>
+
+<p>by <em>Janne Hellsten</em> on <strong>December 27, 2012</strong></p>
+
+<p>I use a Garmin GPS/heart-rate monitor watch to track my running. I also upload this GPS data to a service called <a href="http://www.runkeeper.com">RunKeeper</a> to keep a history of my runs. While I’ve generally been happy with RunKeeper, my experience uploading Garmin GPS data to RunKeeper has been less than stellar. My biggest complaint is that usually the original GPS data changes significantly when uploaded to RunKeeper. For example, a 10.0 km run (according to Garmin) can become 10.2 km in RunKeeper.</p>
 <p>I decided to do a bit of data mining on Garmin GPS files to figure out how RunKeeper interprets it differently. Garmin’s tools can export GPS data as both GPX and <a href="http://en.wikipedia.org/wiki/Training_Center_XML">TCX</a>. The latter format is developed by Garmin and quite likely the closest match to the their native format. Both GPX and TCX are XML.</p>
 <p>I didn’t get very far with actual GPS track analysis but I did write a TCX file reader in Haskell using the <a href="http://hackage.haskell.org/package/hxt">Haskell XML Toolbox (hxt)</a> library. As there seems to be a bit of a lack of Haskell XML parsing examples on the Internet, I decided to post my TCX reader here as an example of parsing Real World XML data in Haskell.</p>
 <p>Here’s a short sample of what a TCX file looks like (some elements have been omitted and xmlns URLs truncated for brevity):</p>
@@ -114,72 +141,11 @@ main <span class="fu">=</span> <span class="kw">do</span>
       <span class="fu">mapM_</span> printTrackpoint trackpts
 
     printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
-      <span class="fu">putStrLn</span> (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> bpm)</code></pre>]]></description>
-    <pubDate>Thu, 27 Dec 2012 00:00:00 UT</pubDate>
-    <guid>http://nurpax.github.com/posts/2012-12-27-playing-with-hxt.html</guid>
-</item>
-<item>
-    <title>Snap with SQLite</title>
-    <link>http://nurpax.github.com/posts/2012-12-20-snaplet-sqlite-simple-example.html</link>
-    <description><![CDATA[<p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple 0.3</a>, a compatibility update for the recently released <a href="http://hackage.haskell.org/package/snap">Snap 0.10</a>. This library is glue for hooking up a Snap application to an <a href="http://www.sqlite.org/">SQLite</a> database using the <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a> library. Using SQLite with Snap is a handy, light-weight approach for quickly prototyping database-backed web apps – you don’t need to configure a separate SQL server just to run your web app.</p>
-<p>While the new snaplet-sqlite-simple 0.3 release doesn’t add any significant new functionality, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example project</a> would be worth a mention.</p>
-<p>This example project implements a simple web app that has a login screen (with new user registration) and a main page where logged in users can drop comments. Users and comments are both persisted into an SQLite database.</p>
-<p>Here’s a couple of screenshots to show how it looks like. Let’s start with the login screen:</p>
-<div class="screenshot white-bg">
-<img src="/images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
-</div>
+      <span class="fu">putStrLn</span> (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> bpm)</code></pre>
+</article>
 
-<p>If you create a new user and login to the app, you’re taken to the main page. Here the logged in user can add comments. The comments get persisted into a database and are associated with the current user (e.g., other users can’t see them.) Here’s how the main page looks like:</p>
-<div class="screenshot white-bg">
-<img src="/images/snaplet-sqlite-simple-example-comments.png" title="Main page" />
-</div>
+    </div>
 
-<p>The example demonstrates a few basic concepts in a complete example:</p>
-<ul>
-<li>Connecting to an SQLite database</li>
-<li>Creating database tables (if not created) on web app’s init</li>
-<li>Associating your own user data with Snap’s <a href="http://hackage.haskell.org/packages/archive/snap/0.10.0.1/doc/html/Snap-Snaplet-Auth.html">Snap.Snaplet.Auth</a> user objects</li>
-<li>Making simple database queries and rendering the results on the main screen</li>
-</ul>
-<p>Setting up the connection is easy, see the <code>app</code> function in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Site.hs">Site.hs</a>.</p>
-<p>Creating the database schema on app startup is perhaps less obvious. This also happens on app init:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | The application initializer.</span>
-<span class="ot">app ::</span> <span class="dt">SnapletInit</span> <span class="dt">App</span> <span class="dt">App</span>
-<span class="co">-- ...</span>
-    <span class="co">-- Grab the DB connection pool from the sqlite snaplet and call</span>
-    <span class="co">-- into the Model to create all the DB tables if necessary.</span>
-    <span class="kw">let</span> connPool <span class="fu">=</span> sqlitePool <span class="fu">$</span> d <span class="fu">^#</span> snapletValue
-    liftIO <span class="fu">$</span> withResource connPool <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.createTables conn</code></pre>
-<p>The actual table creation is done in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Db.hs">Db.hs</a>. This module also contains query functions for saving and listing comments for a given user.</p>
-<p>Everything on the main page requires a logged in user. Requiring a logged in user is ensured using <code>withLoggedInUser</code> which either calls a handler with the currently logged in user or redirects to the login screen. It’s defined as:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Run actions with a logged in user or go back to the login screen</span>
-<span class="ot">withLoggedInUser ::</span> (<span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()) <span class="ot">-&gt;</span> <span class="dt">H</span> ()
-withLoggedInUser action <span class="fu">=</span>
-  currentUser <span class="fu">&gt;&gt;=</span> go
-  <span class="kw">where</span>
-    go <span class="kw">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="kw">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
-    go (<span class="kw">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
-      <span class="kw">where</span>
-        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (<span class="fu">read</span> <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre>
-<p>You can use it anywhere you need to access the currently logged in user. For example, here’s how the main page handler deals with the current user:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()
-mainPage <span class="fu">=</span> withLoggedInUser go
-  <span class="kw">where</span>
-<span class="ot">    go ::</span> <span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()
-    go user <span class="fu">=</span> <span class="kw">do</span>
-      comments <span class="ot">&lt;-</span> withTop db <span class="fu">$</span> Db.listComments user
-      heistLocal (splices comments) <span class="fu">$</span> render <span class="st">&quot;/index&quot;</span>
-    splices cs <span class="fu">=</span>
-      I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</code></pre>
-<p>To learn more about using sqlite-simple with Snap, I recommend you clone the code from Git, build the example, play with the app and read the <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example source code</a>:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">git clone git://github.com/nurpax/snaplet-sqlite-simple.git
-<span class="kw">cd</span> example
-cabal-dev <span class="kw">install</span>
-./cabal-dev/bin/example
-<span class="co"># browse to http://localhost:8000</span></code></pre>]]></description>
-    <pubDate>Thu, 20 Dec 2012 00:00:00 UT</pubDate>
-    <guid>http://nurpax.github.com/posts/2012-12-20-snaplet-sqlite-simple-example.html</guid>
-</item>
 
-    </channel> 
-</rss>
+    </body>
+</html>
