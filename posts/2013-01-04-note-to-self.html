@@ -39,7 +39,7 @@
 <p>by <em>Janne Hellsten</em> on <strong>January 4, 2013</strong></p>
 
 <p>Note to self: Don’t use SQLite3 from multiple Haskell threads – at least not with <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a>.</p>
-<p>I recently implemented a To-Do app (the “Hello World” of web apps) using <a href="http://angularjs.org/">AngularJS</a> on the frontend and <a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t heard about AngularJS I highly recommend you to check it out – it’s got a very clean approach to developing modern single-page web apps.</p>
+<p>I recently implemented a To-Do app (the “Hello World” of web apps) using <a href="http://angularjs.org/">AngularJS</a> on the frontend and <a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t heard about AngularJS, I highly recommend you to check it out – it’s got a very clean approach to developing modern single-page web apps.</p>
 <p>In my app, the Snap-based server was used mainly for authentication and persistence. The rest of the app runs client-side in JavaScript and talks to the server over a simple REST API. Getting all this up and running was surprisingly easy.</p>
 <p>Anyhow.. Turns out it’s easy to write an AngularJS app that sends a lot of concurrent requests to the server, even in the single user case. As an example, you can iterate through a list of todo-items in JavaScript, persisting each item with a call to <code>item.$save()</code>:</p>
 <pre class="sourceCode javascript"><code class="sourceCode javascript">    $<span class="kw">scope</span>.<span class="fu">archive</span> = <span class="kw">function</span>() {
