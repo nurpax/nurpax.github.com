@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+        <title>nurpax - Note to self</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css"></link>
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css"></link>
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml"></link>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>Blog - Note to self</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+<h1>Note to self</h1>
+
+<p>by <em>Janne Hellsten</em> on <strong>January 4, 2013</strong></p>
+
+<p>Note to self: Don’t use SQLite3 from multiple Haskell threads – at least not with <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a>.</p>
+<p>I recently implemented a To-Do app (the “Hello World” of web apps) using <a href="http://angularjs.org/">AngularJS</a> on the frontend and <a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t heard about AngularJS I highly recommend you to check it out – it’s got a very clean approach to developing modern single-page web apps.</p>
+<p>In my app, the Snap-based server was used mainly for authentication and persistence. The rest of the app runs client-side in JavaScript and talks to the server over a simple REST API. Getting all this up and running was surprisingly easy.</p>
+<p>Anyhow.. Turns out it’s easy to write an AngularJS app that sends a lot of concurrent requests to the server, even in the single user case. As an example, you can iterate through a list of todo-items in JavaScript, persisting each item with a call to <code>item.$save()</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript">    $<span class="kw">scope</span>.<span class="fu">archive</span> = <span class="kw">function</span>() {
+        <span class="kw">var</span> oldTodos = $<span class="kw">scope</span>.<span class="fu">todos</span>;
+        $<span class="kw">scope</span>.<span class="fu">todos</span> = [];
+        <span class="kw">angular</span>.<span class="fu">forEach</span>(oldTodos, <span class="kw">function</span>(todo) {
+            <span class="kw">if</span> (!<span class="kw">todo</span>.<span class="fu">done</span>)
+                $<span class="kw">scope.todos</span>.<span class="fu">push</span>(todo);
+
+            <span class="kw">todo</span>.$<span class="fu">save</span>();
+        });
+    };</code></pre>
+<p>Each <code>$save()</code> triggers an AJAX call and the server will see these as multiple concurrent requests.</p>
+<p>Unfortunately though, I started seeing lot of SQLITE_BUSY errors on the server side with this usage. Turns out accessing a single SQLite3 database from multiple threads, each with its own connection is not as simple as I thought. If you’re in the middle of reading rows from a SELECT and you issue an INSERT from another connection, the INSERT will fail with an SQLITE_BUSY error. Here’s Haskell code that reproduces this problem:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span>
+
+<span class="kw">module</span> <span class="dt">Direct</span> (
+  directSqliteTest
+  ) <span class="kw">where</span>
+
+<span class="kw">import</span> <span class="dt">Control.Monad</span>
+<span class="kw">import</span> <span class="dt">Database.SQLite3.Direct</span>
+
+<span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()
+directSqliteTest <span class="fu">=</span> <span class="kw">do</span>
+  <span class="kw">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="kw">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+
+  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
+  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
+
+  <span class="kw">Right</span> (<span class="kw">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
+  a <span class="ot">&lt;-</span> step sr
+  a <span class="ot">&lt;-</span> step sr
+  <span class="fu">print</span> a
+  x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
+  <span class="co">-- ^^ SQLITE_BUSY is triggered</span>
+  finalize sr
+  <span class="fu">print</span> x
+
+  void <span class="fu">$</span> close conn1
+  void <span class="fu">$</span> close conn2</code></pre>
+<p>The above code will print:</p>
+<pre><code>$ ./dist/build/sqlite-test/sqlite-test
+Right Row
+Right Row
+Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
+<p>As <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple</a> does connection pooling, the above pattern is very likely to happen. The SQLite snaplet maintains a connection pool which is used to service connections to request handlers. Concurrent requests will each be handed their own connection instead of using a single shared connection. A request can be in the middle of reading rows from the database while another request tries to write to the database using another connection, and <em>boom</em>, the above SQLITE_BUSY scenario triggers.</p>
+<p>As a quick band-aid fix, I changed snaplet-sqlite-simple to not use a connection pool but instead allocate a single database handle on init and servicing the same handle sequentially to anyone that asks (<a href="https://github.com/nurpax/snaplet-sqlite-simple/commit/3957f722cce6abf7e1059f481668379e05b62286">commit 3957f722</a>). For extra safety, I also stuck the connection inside an <code>MVar</code> so that all SQLite operations get serialized within the Snap application.</p>
+<p>Hopefully I’ll be able to switch to a more concurrent model in the future, but at least the current v0.4.0 release works without SQLITE_BUSY errors.</p>
+</article>
+
+        </div>
+    </div>
+
+
+    </body>
+</html>
