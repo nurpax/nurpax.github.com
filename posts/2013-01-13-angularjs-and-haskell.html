@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+        <title>nurpax - AngularJS with Haskell</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css"></link>
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css"></link>
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml"></link>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>Blog - AngularJS with Haskell</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+<h1>AngularJS with Haskell</h1>
+
+<p>by <em>Janne Hellsten</em> on <strong>January 13, 2013</strong></p>
+
+<h3 id="introduction">Introduction</h3>
+<p>I recently wrote a simple To-Do app in <a href="http://angularjs.org/">AngularJS</a> using the Haskell web development framework called <a href="http://snapframework.com/">Snap</a>. I started with the To-Do example I found on the <a href="http://angularjs.org/">AngularJS’s homepage</a> and added the necessary JavaScript plumbing to enable talking to a Haskell web server over a REST API. I figured someone might find my little app a useful starting point for developing web applications with AngularJS and Snap, and so I decided to upload the <a href="https://github.com/nurpax/snap-examples/tree/master/angularjs-todo">code on github</a> and write this code walkthrough.</p>
+<p>To get started, you can try to build &amp; run the app:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash">git clone git://github.com/nurpax/snap-examples
+<span class="kw">cd</span> snap-examples/angularjs-todo
+cabal-dev <span class="kw">install</span>
+./cabal-dev/bin/angularjs-todo
+<span class="co"># browse to http://localhost:8000</span></code></pre>
+<p>You should see something like this:</p>
+<div class="screenshot white-bg">
+<img src="../images/angular-todo1.png" title="AngularJS ToDo app with Haskell" />
+</div>
+
+<p>I will not go into much detail about AngularJS usage here – you should read more about it on their <a href="http://angularjs.org/">homepage</a>. This post will focus on what’s needed in order to build an AngularJS app with a Haskell backend.</p>
+<p>In an AngularJS app, a major part of the application is JavaScript and runs in the the browser. These applications are usually backed by a central server. In our case, the backend is written in Haskell. This server takes care of user management, authentication and persistence. The frontend talks to the backend via a REST API. The REST API communicates things like adding or listing to-do items.</p>
+<h3 id="frontend-javascript-parts">Frontend JavaScript parts</h3>
+<p>The main client-side source files are:</p>
+<ul>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>: Application frontpage</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a>: Controller for to-do items</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/services.js">static/services.js</a>: Model definition</li>
+</ul>
+<p>The “AngularJS application” is defined <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>. It contains definitions on how to display the main page, how to list to-do items and how to hook up UI events to controller actions.</p>
+<p>The application calls into a <code>TodoCtrl</code> controller defined in <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a>. The controller mostly deals with UI events. The controller talks to the backend via a <code>Todo</code> service.</p>
+<p>The <code>Todo</code> service is defined <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/services.js">static/services.js</a>. It defines the client-server interface for accessing user’s to-do items, providing methods such as <code>Todo.query()</code> and <code>Todo.save()</code>.</p>
+<h3 id="the-haskell-backend">The Haskell backend</h3>
+<p>The most interesting server parts can be found in the following source files:</p>
+<ul>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">src/Site.hs</a>: Main server module (login, authentication, REST)</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">src/Db.hs</a>: Model definition (types, JSON serialization, database persistence)</li>
+</ul>
+<p>The model definition of our to-do app is quite simple. The main type is the <code>Todo</code> item:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Todo</span> <span class="fu">=</span>
+  <span class="dt">Todo</span>
+  {<span class="ot"> todoId   ::</span> <span class="dt">Maybe</span> <span class="dt">Int64</span>  <span class="co">-- database row id</span>
+  ,<span class="ot"> todoText ::</span> <span class="dt">T.Text</span>       <span class="co">-- todo text</span>
+  ,<span class="ot"> todoDone ::</span> <span class="dt">Bool</span>         <span class="co">-- completed?</span>
+  } <span class="kw">deriving</span> (<span class="kw">Show</span>)</code></pre>
+<p>The <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module defines how these objects can be serialized to/from JSON using the <a href="http://hackage.haskell.org/package/aeson">aeson package</a>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">Todo</span> <span class="kw">where</span>
+  parseJSON (<span class="dt">Object</span> v) <span class="fu">=</span>
+    <span class="dt">Todo</span> <span class="fu">&lt;$&gt;</span> optional (v <span class="fu">.:</span> <span class="st">&quot;id&quot;</span>)
+         <span class="fu">&lt;*&gt;</span> v <span class="fu">.:</span> <span class="st">&quot;text&quot;</span>
+         <span class="fu">&lt;*&gt;</span> v <span class="fu">.:</span> <span class="st">&quot;done&quot;</span>
+  parseJSON _ <span class="fu">=</span> mzero
+
+<span class="kw">instance</span> <span class="dt">ToJSON</span> <span class="dt">Todo</span> <span class="kw">where</span>
+  toJSON (<span class="dt">Todo</span> i text done) <span class="fu">=</span>
+    object [ <span class="st">&quot;id&quot;</span> <span class="fu">.=</span> fromJust i
+           , <span class="st">&quot;text&quot;</span> <span class="fu">.=</span> text
+           , <span class="st">&quot;done&quot;</span> <span class="fu">.=</span> done
+           ]</code></pre>
+<p>The rest of the module is about persisting <code>Todo</code>s in an SQLite database.</p>
+<p>The final piece of the puzzle is the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">Site</a> module which plugs all of the above server bits together. It manages routing, authentication and serves to-do items over a REST API. The server-side routing is defined as follows:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Render main page</span>
+<span class="ot">mainPage ::</span> <span class="dt">H</span> ()
+mainPage <span class="fu">=</span> withLoggedInUser (<span class="fu">const</span> <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)
+
+<span class="co">-- | The application's routes.</span>
+<span class="ot">routes ::</span> [(<span class="dt">ByteString</span>, <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">App</span> ())]
+routes <span class="fu">=</span> [ (<span class="st">&quot;/login&quot;</span>,        with auth handleLoginSubmit)
+         , (<span class="st">&quot;/logout&quot;</span>,       with auth handleLogout)
+         , (<span class="st">&quot;/new_user&quot;</span>,     with auth handleNewUser)
+         , (<span class="st">&quot;/api/todo&quot;</span>,     with auth handleTodos)
+         , (<span class="st">&quot;/&quot;</span>,             with auth mainPage)
+         , (<span class="st">&quot;/static&quot;</span>,       serveDirectory <span class="st">&quot;static&quot;</span>)
+         ]</code></pre>
+<p>There’s a couple of things to note about the above routing table:</p>
+<ul>
+<li>The REST interface is at <code>/api/todo</code> and gets handled by <code>handleTodos</code></li>
+<li>Serving the main page is just a matter of serving static files. This is because all the important templating happens on client-side in <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>.</li>
+</ul>
+<p>The actual implementation of the <code>/api/todo</code> handler is straightforward (esp. with the hidden gem that is <a href="http://hackage.haskell.org/package/snap-extras">snap-extras</a>):</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">handleTodos ::</span> <span class="dt">H</span> ()
+handleTodos <span class="fu">=</span>
+  method <span class="dt">GET</span>  (withLoggedInUser getTodos) <span class="fu">&lt;|&gt;</span>
+  method <span class="dt">POST</span> (withLoggedInUser saveTodo)
+  <span class="kw">where</span>
+    getTodos user <span class="fu">=</span> <span class="kw">do</span>
+      todos <span class="ot">&lt;-</span> withDb <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.listTodos conn user
+      writeJSON todos
+
+    saveTodo user <span class="fu">=</span> <span class="kw">do</span>
+      newTodo <span class="ot">&lt;-</span> getJSON
+      <span class="fu">either</span> (<span class="fu">const</span> <span class="fu">$</span> <span class="fu">return</span> ()) persist newTodo
+        <span class="kw">where</span>
+          persist todo <span class="fu">=</span> <span class="kw">do</span>
+            savedTodo <span class="ot">&lt;-</span> withDb <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.saveTodo conn user todo
+            writeJSON savedTodo</code></pre>
+<p>Function <code>handleTodos</code> handles either <code>GET</code> or <code>POST</code> requests, for retrieving and modifying todo items. All its request parameters come in as JSON – these are turned into Haskell objects using <code>getJSON</code> from <a href="http://hackage.haskell.org/packages/archive/snap-extras/0.3/doc/html/Snap-Extras-JSON.html">Snap.Extras.JSON</a>. Similarly, we use <code>writeJSON</code> for outputting the request response. Automatic JSON encode and decode is made possible by the <code>FromJSON</code> and <code>ToJSON</code> instances defined in the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module.</p>
+<h3 id="debugging-json-responses">Debugging JSON responses</h3>
+<p>A good way to debug your REST APIs is to use Chrome’s Developer Tools. Open the Developer console and click on the Network tab. When you load a page, you can see what requests are being made and you can inspect what JSON gets sent by clicking on the individual <code>/api/todo</code> requests. Here’s an example of what traffic gets generated when complete a to-do:</p>
+<div class="screenshot white-bg">
+<img src="../images/angular-todo2-check.png" title="Chrome dev tool view" />
+</div>
+
+<p>This is the result of a <code>todo.$save()</code> AJAX call.</p>
+<h3 id="what-next">What next?</h3>
+<p>Well.. The easy part is over. If you want to learn more about using AngularJS with Snap, I suggest that you:</p>
+<ul>
+<li>Read the <a href="http://angularjs.org/">AngularJS docs</a></li>
+<li>Read the <a href="http://snapframework.com/">Snap Framework docs</a></li>
+<li>Read the <a href="https://github.com/nurpax/snap-examples/tree/master/angularjs-todo">example source</a></li>
+<li>Compile, run and play with the example</li>
+</ul>
+<p>HTH.</p>
+</article>
+
+        </div>
+    </div>
+
+
+    </body>
+</html>
