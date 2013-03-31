@@ -2,11 +2,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>nurpax - Note to self</title>
-        <link rel="stylesheet" type="text/css" href="../css/default.css"></link>
-        <link rel="stylesheet" type="text/css" href="../css/syntax.css"></link>
-        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml"></link>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
 
 <script type="text/javascript">
 
@@ -36,20 +36,20 @@
 <article>
 <h1>Note to self</h1>
 
-<p>by <em>Janne Hellsten</em> on <strong>January 4, 2013</strong></p>
+<p>by <em>Janne Hellsten</em> on <strong>January  4, 2013</strong></p>
 
 <p>Note to self: Don’t use SQLite3 from multiple Haskell threads – at least not with <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a>.</p>
 <p>I recently implemented a To-Do app (the “Hello World” of web apps) using <a href="http://angularjs.org/">AngularJS</a> on the frontend and <a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t heard about AngularJS, I highly recommend you to check it out – it’s got a very clean approach to developing modern single-page web apps.</p>
 <p>In my app, the Snap-based server was used mainly for authentication and persistence. The rest of the app runs client-side in JavaScript and talks to the server over a simple REST API. Getting all this up and running was surprisingly easy.</p>
 <p>Anyhow.. Turns out it’s easy to write an AngularJS app that sends a lot of concurrent requests to the server, even in the single user case. As an example, you can iterate through a list of todo-items in JavaScript, persisting each item with a call to <code>item.$save()</code>:</p>
-<pre class="sourceCode javascript"><code class="sourceCode javascript">    $<span class="kw">scope</span>.<span class="fu">archive</span> = <span class="kw">function</span>() {
-        <span class="kw">var</span> oldTodos = $<span class="kw">scope</span>.<span class="fu">todos</span>;
-        $<span class="kw">scope</span>.<span class="fu">todos</span> = [];
-        <span class="kw">angular</span>.<span class="fu">forEach</span>(oldTodos, <span class="kw">function</span>(todo) {
-            <span class="kw">if</span> (!<span class="kw">todo</span>.<span class="fu">done</span>)
-                $<span class="kw">scope.todos</span>.<span class="fu">push</span>(todo);
+<pre class="sourceCode javascript"><code class="sourceCode javascript">    <span class="ot">$scope</span>.<span class="fu">archive</span> = <span class="kw">function</span>() {
+        <span class="kw">var</span> oldTodos = <span class="ot">$scope</span>.<span class="fu">todos</span>;
+        <span class="ot">$scope</span>.<span class="fu">todos</span> = [];
+        <span class="ot">angular</span>.<span class="fu">forEach</span>(oldTodos, <span class="kw">function</span>(todo) {
+            <span class="kw">if</span> (!<span class="ot">todo</span>.<span class="fu">done</span>)
+                <span class="ot">$scope</span>.<span class="ot">todos</span>.<span class="fu">push</span>(todo);
 
-            <span class="kw">todo</span>.$<span class="fu">save</span>();
+            <span class="ot">todo</span>.<span class="fu">$save</span>();
         });
     };</code></pre>
 <p>Each <code>$save()</code> triggers an AJAX call and the server will see these as multiple concurrent requests.</p>
@@ -60,8 +60,8 @@
   directSqliteTest
   ) <span class="kw">where</span>
 
-<span class="kw">import</span> <span class="dt">Control.Monad</span>
-<span class="kw">import</span> <span class="dt">Database.SQLite3.Direct</span>
+<span class="kw">import</span> Control.Monad
+<span class="kw">import</span> Database.SQLite3.Direct
 
 <span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()
 directSqliteTest <span class="fu">=</span> <span class="kw">do</span>

@@ -2,11 +2,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>nurpax - Reading TCX in Haskell</title>
-        <link rel="stylesheet" type="text/css" href="../css/default.css"></link>
-        <link rel="stylesheet" type="text/css" href="../css/syntax.css"></link>
-        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml"></link>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
 
 <script type="text/javascript">
 
@@ -73,9 +73,9 @@
 <p>Note: As is probably obvious, this code is not meant to be comprehensive library for accessing TCX data – it’s really just an example of how to get started with HXT and TCX.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
 
-<span class="kw">import</span> <span class="dt">Text.XML.HXT.Core</span>
-<span class="kw">import</span> <span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)
-<span class="kw">import</span> <span class="dt">System.Locale</span> (defaultTimeLocale)
+<span class="kw">import</span> Text.XML.HXT.Core
+<span class="kw">import</span> Data.Time (UTCTime, readTime)
+<span class="kw">import</span> System.Locale (defaultTimeLocale)
 
 <span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]
   <span class="kw">deriving</span> (<span class="kw">Show</span>)

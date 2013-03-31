@@ -2,11 +2,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></meta>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>nurpax - AngularJS with Haskell</title>
-        <link rel="stylesheet" type="text/css" href="../css/default.css"></link>
-        <link rel="stylesheet" type="text/css" href="../css/syntax.css"></link>
-        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml"></link>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
 
 <script type="text/javascript">
 
@@ -41,10 +41,10 @@
 <h3 id="introduction">Introduction</h3>
 <p>I recently wrote a simple To-Do app in <a href="http://angularjs.org/">AngularJS</a> using the Haskell web development framework called <a href="http://snapframework.com/">Snap</a>. I started with the To-Do example I found on the <a href="http://angularjs.org/">AngularJS’s homepage</a> and added the necessary JavaScript plumbing to enable talking to a Haskell web server over a REST API. I figured someone might find my little app a useful starting point for developing web applications with AngularJS and Snap, and so I decided to upload the <a href="https://github.com/nurpax/snap-examples/tree/master/angularjs-todo">code on github</a> and write this code walkthrough.</p>
 <p>To get started, you can try to build &amp; run the app:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash">git clone git://github.com/nurpax/snap-examples
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">git</span> clone git://github.com/nurpax/snap-examples
 <span class="kw">cd</span> snap-examples/angularjs-todo
-cabal-dev <span class="kw">install</span>
-./cabal-dev/bin/angularjs-todo
+<span class="kw">cabal-dev</span> install
+<span class="kw">./cabal-dev/bin/angularjs-todo</span>
 <span class="co"># browse to http://localhost:8000</span></code></pre>
 <p>You should see something like this:</p>
 <div class="screenshot white-bg">
@@ -56,9 +56,9 @@ cabal-dev <span class="kw">install</span>
 <h3 id="frontend-javascript-parts">Frontend JavaScript parts</h3>
 <p>The main client-side source files are:</p>
 <ul>
-<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>: Application frontpage</li>
-<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a>: Controller for to-do items</li>
-<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/services.js">static/services.js</a>: Model definition</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a> - Application frontpage</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a> - Controller for to-do items</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/services.js">static/services.js</a> - Model definition</li>
 </ul>
 <p>The “AngularJS application” is defined <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>. It contains definitions on how to display the main page, how to list to-do items and how to hook up UI events to controller actions.</p>
 <p>The application calls into a <code>TodoCtrl</code> controller defined in <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a>. The controller mostly deals with UI events. The controller talks to the backend via a <code>Todo</code> service.</p>
@@ -66,8 +66,8 @@ cabal-dev <span class="kw">install</span>
 <h3 id="the-haskell-backend">The Haskell backend</h3>
 <p>The most interesting server parts can be found in the following source files:</p>
 <ul>
-<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">src/Site.hs</a>: Main server module (login, authentication, REST)</li>
-<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">src/Db.hs</a>: Model definition (types, JSON serialization, database persistence)</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">src/Site.hs</a> - Main server module (login, authentication, REST)</li>
+<li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">src/Db.hs</a> - Model definition (types, JSON serialization, database persistence)</li>
 </ul>
 <p>The model definition of our to-do app is quite simple. The main type is the <code>Todo</code> item:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Todo</span> <span class="fu">=</span>
