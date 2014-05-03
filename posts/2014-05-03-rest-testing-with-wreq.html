@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>nurpax - Testing REST APIs in Haskell with wreq and test-framework</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
+
+        <script src="../js/jquery.min.js" type="text/javascript"></script>
+        <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>Blog - Testing REST APIs in Haskell with wreq and test-framework</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+
+<h1>Testing REST APIs in Haskell with wreq and test-framework</h1>
+
+<p>by <em>Janne Hellsten</em> on <strong>May  3, 2014</strong></p>
+
+<p>I’ve been revamping my REST API tests for my pet project <a href="https://github.com/nurpax/hswtrack">Hswtrack</a> which is a simple web application for exercise tracking. The application server is built with <a href="http://snapframework.com/">Snap</a> and the UI is JavaScript with JQuery and <a href="http://handlebarsjs.com/">Handlebars.js</a>. The Snap application</p>
+<p>XXX REST APIs XXX some motivation on hunit trickyness, e.g. passing state from one test to another is useful.</p>
+<p>My longer term plan is to also create an Android application that’d run on this same REST API. In order to make the server API more stable, I decided to develop better unit tests for it.</p>
+<p>Since the server talks to the client in JSON, JavaScript + NodeJS would’ve been a simple light-weight approach to developing these tests. I first tried <a href="http://frisbyjs.com/">Frisby</a> which looked good for simple examples. Unfortunately, some types of tests, especially ones where you pass dependent data from one HTTP request to another, turned out to be cumbersome to write. I also tried writing my own test framework with Q promises, but that came out <a href="https://twitter.com/SlexAxton/status/455568049181958144">Tea party code</a> too. If you’re curious how that looked like, <a href="https://github.com/nurpax/hswtrack/blob/0e820183ce28a6e62056c0dda7c99d5109ad3e68/test/rest/tests/workout.js">here’s an example</a>.</p>
+<p>Then I came across the new <a href="http://hackage.haskell.org/package/wreq">wreq</a> library from Bryan O’Sullivan and figured I should just rewrite my tests in Haskell.</p>
+<h3 id="types-of-tests">Types of tests</h3>
+<p>I wanted to develop the following types of tests:</p>
+<ul>
+<li>Test that user creation works</li>
+<li>Test that login works</li>
+<li>Test that REST entry points deny access if not logged in</li>
+<li>Test object creation, update and deletion when logged in</li>
+</ul>
+<p>Any tests that manipulate or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence, or that authentication cookies are passed to individual test cases. Turns out you can “abuse” <a href="https://batterseapower.github.io/test-framework/">test-framework’s</a> <code>TestGroup</code>s to achieve the latter. What I did was that I defined top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, and then run a list of sub-tests with cookies acquired from the login process.</p>
+<p>Here’s the definition of <code>loginUserTests</code>:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span>
+<span class="co">-- from the login process.</span>
+<span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span>
+loginUserTests tests <span class="fu">=</span> <span class="kw">do</span>
+  r <span class="ot">&lt;-</span> post (mkUrl <span class="st">&quot;/rest/login&quot;</span>) [<span class="st">&quot;login&quot;</span> <span class="fu">:=</span> login, <span class="st">&quot;password&quot;</span> <span class="fu">:=</span> passwd]
+  <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> cookies <span class="fu">.~</span> (r <span class="fu">^.</span> responseCookieJar)
+  return
+    <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span>
+    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</code></pre>
+<p>It’s used like so:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Test case that tests that we're successfully logged in</span>
+<span class="co">-- Options must contain the necessary login cookies.</span>
+<span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
+testLoggedInOk opts <span class="fu">=</span> <span class="kw">do</span>
+  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)
+  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _<span class="dt">Bool</span>)
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span>
+  defaultMain
+  [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
+  , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
+  ]</code></pre>
+<p>The benefit of nesting test cases with <code>TestGroup</code>s like this is that you can run a large batch of tests with a single login. <a href="https://batterseapower.github.io/test-framework/">Test-framework</a> output will also make more sense this way, as logins are also test cases and their execution is logged the same way as normal tests.</p>
+<p>You can also use the same pattern for other types of state passing from top-level tests to sub-tests. For example, you might want to have a top-level test that creates an object, and then calls sub-tests with that newly created object to modify it or delete it.</p>
+<h3 id="negative-testing">Negative testing</h3>
+<p>You will also want to test that your entry points respond with an error if accessed unauthenticated. Here’s an example:</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- GET requests against 'url' and expect to get error 403 back</span>
+<span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
+testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span>
+  E.try (getWith opts url) <span class="fu">&gt;&gt;=</span> check
+  <span class="kw">where</span>
+    check (<span class="dt">Left</span> (<span class="dt">HT.StatusCodeException</span> s _ _))
+      <span class="fu">|</span> s <span class="fu">^.</span> statusCode <span class="fu">==</span> <span class="dv">403</span> <span class="fu">=</span> assertBool <span class="st">&quot;error ok&quot;</span> <span class="dt">True</span>
+      <span class="fu">|</span> otherwise              <span class="fu">=</span> assertBool <span class="st">&quot;unexpected status code&quot;</span> <span class="dt">False</span>
+    check (<span class="dt">Left</span> _)  <span class="fu">=</span> assertBool <span class="st">&quot;unexpected exception caught&quot;</span> <span class="dt">False</span>
+    check (<span class="dt">Right</span> r) <span class="fu">=</span> assertBool <span class="st">&quot;req should've failed&quot;</span> <span class="dt">False</span>
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span>
+  defaultMain
+  [ testGroup <span class="st">&quot;Require auth fail&quot;</span> requireAuthFail
+  ]
+  <span class="kw">where</span>
+    requireAuthFail <span class="fu">=</span>
+      map (\u <span class="ot">-&gt;</span> testCase u (testLoggedInFail (mkUrl u) defaults)) authReqd
+    <span class="co">-- REST entry points which require user to be logged in</span>
+    authReqd <span class="fu">=</span> [ <span class="st">&quot;/rest/app&quot;</span>
+               , <span class="st">&quot;/rest/weights&quot;</span>
+               , <span class="st">&quot;/rest/notes&quot;</span>
+               , <span class="st">&quot;/rest/exercise&quot;</span>
+               , <span class="st">&quot;/rest/workout/exercise&quot;</span>
+               , <span class="st">&quot;/rest/workout&quot;</span>
+               , <span class="st">&quot;/rest/workout&quot;</span>
+               , <span class="st">&quot;/rest/stats/workout&quot;</span>
+               ]</code></pre>
+<h3 id="creating-objects">Creating objects</h3>
+<p>Here we will test two entry points: one for creating a new exercise like “Chin-ups” and one for listing existing exercises. Creation is done by POSTing to <code>/rest/exercise</code> and listing by GETting <code>/rest/exercise</code>.</p>
+<p>A successful POST to <code>/rest/exericise</code> will create a new object on the server and return the object as JSON. E.g.,</p>
+<pre><code>{ &quot;id&quot;:2, &quot;name&quot;: &quot;Chin-ups&quot;, &quot;type&quot;:&quot;BW&quot; }</code></pre>
+<p>A successful GET of <code>/rest/exercise</code> will retrieve the full list of available exercises:</p>
+<pre><code>[
+  { &quot;id&quot;:1, &quot;name&quot;: &quot;Push-ups&quot;, &quot;type&quot;:&quot;BW&quot; },
+  { &quot;id&quot;:2, &quot;name&quot;: &quot;Chin-ups&quot;, &quot;type&quot;:&quot;BW&quot; }
+]</code></pre>
+<p>To test such object creation, we’ll create an object, test that its returned properties match what we gave as input to the POST request, and finally retrieve the complete exercise list and check that it’s listed.</p>
+<p>Here’s the test code for the above test strategy. Wreq’s Lens API is really handy for this type of ad hoc JSON value inspection!</p>
+<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
+testAddExercise opts <span class="fu">=</span> <span class="kw">do</span>
+  <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span>
+      ty   <span class="fu">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span>
+  r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="fu">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="fu">:=</span> ty]
+  <span class="co">-- Verify that the newly created object matches creation params</span>
+  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _<span class="dt">String</span>
+  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _<span class="dt">String</span>
+  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span>
+  <span class="co">-- Verify that the object ended up in the global list of exercises</span>
+  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)
+  assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)
+  <span class="kw">where</span>
+    exercises r <span class="fu">=</span> r <span class="fu">^.</span> responseBody <span class="fu">^..</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span></code></pre>
+<h3 id="closing">Closing</h3>
+<p>You can find the full source to the above tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
+</article>
+
+<ul class="social">
+<li><a href="https://twitter.com/share" class="twitter-share-button share-button" data-via="nurpax" data-dnt="true">Tweet</a></li>
+<li><span class="fb-like" data-layout="button_count" data-action="like" data-show-faces="true" data-share="true"></span></li>
+</ul>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+</p>
+
+        </div>
+    </div>
+
+
+    </body>
+</html>
