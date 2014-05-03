@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>nurpax - Testing REST APIs in Haskell with wreq and test-framework</title>
+        <title>nurpax - REST API testing in Haskell with wreq and test-framework</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
@@ -29,7 +29,7 @@
 
     <div id="page-wrap">
         <div id="header">
-            <h1>Blog - Testing REST APIs in Haskell with wreq and test-framework</h1>
+            <h1>Blog - REST API testing in Haskell with wreq and test-framework</h1>
         </div>
         <div id="navigation">
              <a href="../">Home</a>
@@ -38,27 +38,27 @@
         <div id="content">
 <article>
 
-<h1>Testing REST APIs in Haskell with wreq and test-framework</h1>
+<h1>REST API testing in Haskell with wreq and test-framework</h1>
 
-<p>by <em>Janne Hellsten</em> on <strong>May  3, 2014</strong></p>
+<p>by <em>Janne Hellsten</em> on <strong>May  4, 2014</strong></p>
 
 <h3 id="introduction">Introduction</h3>
-<p>This blog post is about my experiences rewriting Node/JavaScript-based REST API unit tests with Haskell using <a href="http://hackage.haskell.org/package/wreq">wreq</a> and <a href="https://batterseapower.github.io/test-framework/">test-framework</a>. Some of the tests presented in this post might be useful to someone looking for practical examples of using <a href="https://batterseapower.github.io/test-framework/">test-framework</a> for IO-heavy testing, in particular, for tests which require setup/teardown in order to run efficiently.</p>
+<p>This blog post is about my experiences rewriting Node.js/JavaScript-based REST unit tests with Haskell using <a href="http://hackage.haskell.org/package/wreq">wreq</a> and <a href="https://batterseapower.github.io/test-framework/">test-framework</a>. Some of the tests presented in this post might be useful to someone looking for practical examples of using <code>test-framework</code> for IO-heavy testing.</p>
 <p>Tests discussed in this post are for my <a href="https://github.com/nurpax/hswtrack">Hswtrack</a> project. Hswtrack is a web application for exercise tracking. The application server is built with <a href="http://snapframework.com/">Snap</a> and the UI in JavaScript with JQuery and <a href="http://handlebarsjs.com/">Handlebars.js</a>.</p>
-<p>XXX REST APIs XXX some motivation on hunit trickyness, e.g. passing state from one test to another is useful.</p>
-<p>As the server talks to the client in JSON, I thought JavaScript + NodeJS would’ve been a nice combo to developing these tests. I first tried <a href="http://frisbyjs.com/">Frisby</a> which nice and simple. Unfortunately, some types of tests, especially ones where you pass dependent data from one HTTP request to another, turned out to be cumbersome to write. I also tried writing my own test framework with Q promises, but that came out like <a href="https://twitter.com/SlexAxton/status/455568049181958144">Tea party code</a> too. (You can view the source <a href="https://github.com/nurpax/hswtrack/blob/0e820183ce28a6e62056c0dda7c99d5109ad3e68/test/rest/tests/workout.js">here</a>.)</p>
-<p>Then I read about the new <a href="http://hackage.haskell.org/package/wreq">wreq</a> HTTP client library by Bryan O’Sullivan. This library inspired me to rewrite my unit tests in Haskell.</p>
+<p>XXX declare high-level entry points here in a table. E.g., I will not bore you with a lot of details on what the API does, but … XXX REST APIs</p>
+<p>As the server talks to the client in JSON, I thought JavaScript + NodeJS would’ve been a nice combo to developing these tests. I first tried <a href="http://frisbyjs.com/">Frisby</a> which is nice and simple, maybe even too simple. Unfortunately, some types of tests, especially ones where you pass dependent data from one HTTP request to another, turned out to be cumbersome to write. I also tried writing my own test framework with Q promises, but that came out like <a href="https://twitter.com/SlexAxton/status/455568049181958144">Tea party code</a> too. (You can view the source <a href="https://github.com/nurpax/hswtrack/blob/0e820183ce28a6e62056c0dda7c99d5109ad3e68/test/rest/tests/workout.js">here</a>.)</p>
+<p>Then I read about the new <a href="http://hackage.haskell.org/package/wreq">wreq</a> HTTP client library by Bryan O’Sullivan and decided to rewrite my unit tests in Haskell.</p>
 <h3 id="types-of-tests">Types of tests</h3>
 <p>I wanted to develop the following types of tests:</p>
 <ul>
 <li>Test that user creation works</li>
-<li>Test that log in works</li>
+<li>Test that login works</li>
 <li>Test that REST entry points deny access if not logged in</li>
 <li>Test object creation, update and deletion when logged in</li>
 <li>Test that attempts to modify or delete other users’ data are rejected</li>
 </ul>
-<p>Any tests that manipulate or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence or have its authentication cookies passed into individual test cases. I decided to go for the latter approach.</p>
-<p>I defined top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, followed by running a list of sub-tests with cookies acquired from the login process. The sequencing is explicitly declared by using <a href="https://batterseapower.github.io/test-framework/">test-framework</a>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
+<p>Any tests that manipulate or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence or have its authentication cookies passed into it. I decided to go for the latter approach.</p>
+<p>I defined top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, followed by running a list of sub-tests with cookies acquired from the login process. The sequencing is explicitly declared by using <code>test-framework</code>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
 <p>Here’s the definition of <code>loginUserTests</code>:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span>
 <span class="co">-- from the login process.</span>
@@ -69,7 +69,7 @@ loginUserTests tests <span class="fu">=</span> <span class="kw">do</span>
   return
     <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span>
     <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</code></pre>
-<p>It performs a POST request on <code>/rest/login</code> with a test user’s login credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes the cookies to sub-tests.</p>
+<p>It performs a POST request on <code>/rest/login</code> with the test user’s login credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes them to sub-tests.</p>
 <p>Here’s how <code>loginUserTests</code> gets used:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Test case that tests that we're successfully logged in</span>
 <span class="co">-- Options must contain the necessary login cookies.</span>
@@ -84,10 +84,9 @@ main <span class="fu">=</span>
   [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
   , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
   ]</code></pre>
-<p>The <code>testLoggedInOk</code> tests that it can GET <code>/rest/app</code> successfully. It also tests that the returned JSON response contains a <code>loggedIn:true</code> value.</p>
-<p>You could also use this pattern on top-level test passing data to sub-tests to implement other type of more complex tests. For example, you could have a top-level test that create an object, and then calls sub-tests with that newly created object to test that the object can be modified or deleted.</p>
+<p>The <code>testLoggedInOk</code> tests that it can GET <code>/rest/app</code> successfully. It also tests that the returned JSON response contains <code>loggedIn:true</code>.</p>
 <h3 id="negative-testing">Negative testing</h3>
-<p>It’s a good idea to also test that entry points respond with an error on unauthenticated access. Here’s an example:</p>
+<p>It’s a good idea to also test that entry points correctly respond with an error on unauthenticated access. Here’s an example:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- GET requests against 'url' and expect to get error 403 back</span>
 <span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span>
@@ -124,8 +123,8 @@ main <span class="fu">=</span>
   { &quot;id&quot;:1, &quot;name&quot;: &quot;Push-ups&quot;, &quot;type&quot;:&quot;BW&quot; },
   { &quot;id&quot;:2, &quot;name&quot;: &quot;Chin-ups&quot;, &quot;type&quot;:&quot;BW&quot; }
 ]</code></pre>
-<p>To test exercise object creation, we’ll create an exercise, test that its returned properties match what we gave as input to the POST request, and finally retrieve the complete exercise list and check that it’s on the list.</p>
-<p>Here’s the test code for the above test strategy. The Aeson Lens API is particularly handy for this type of ad hoc JSON value inspection!</p>
+<p>To test exercise object creation, we’ll create an exercise, verify that its returned properties match what we gave on creation, and finally retrieve the complete exercise list and check that the object is listed.</p>
+<p>Here’s the test code for the above test strategy. The <a href="http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html">Aeson Lens API</a> is particularly handy for this type of ad hoc JSON value inspection!</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testAddExercise opts <span class="fu">=</span> <span class="kw">do</span>
   <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span>
@@ -140,8 +139,10 @@ testAddExercise opts <span class="fu">=</span> <span class="kw">do</span>
   assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)
   <span class="kw">where</span>
     exercises r <span class="fu">=</span> r <span class="fu">^.</span> responseBody <span class="fu">^..</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span></code></pre>
-<h3 id="closing">Closing</h3>
-<p>You can find the full source to the above tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
+<h3 id="conclusion">Conclusion</h3>
+<p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
+<p>You can find the full test module where the above snippets came from <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
+<p>Thank you for reading.</p>
 </article>
 
 <ul class="social">
