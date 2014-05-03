@@ -37,6 +37,7 @@
         </div>
         <div id="content">
 <article>
+
 <h1>Benchmarking sqlite-simple</h1>
 
 <p>by <em>Janne Hellsten</em> on <strong>August 17, 2013</strong></p>
@@ -95,11 +96,11 @@ selectInts conn <span class="fu">=</span> <span class="kw">do</span>
 </ul>
 <p>Here’s how they perform:</p>
 <div>
-<h5 id="native-c-vs-haskell-bindings-rowss">Native C vs Haskell bindings (rows/s)</h5>
-<div id="chart-c-vs-haskell" style="width:600px;height:360px;"></div>
+<h5>Native C vs Haskell bindings (rows/s)</h5>
+<div id="chart-c-vs-haskell" style="width:600px;height:360px;">
+
 </div>
-
-
+</div>
 <h3 id="results-analysis">Results analysis</h3>
 <p>The collected benchmark data was used to identify various performance improvement opportunities in sqlite-simple.</p>
 <p>Original performance without optimizations was just barely over 50K rows/s. This was a performance bug I caused when I forked sqlite-simple from postgresql-simple. The problem was in a function called <code>stepStmt</code> that should’ve been tail recursive but wasn’t. Fixing this in <a href="https://github.com/nurpax/sqlite-simple/commit/d2b6f6a50e116e1bad28395eac4646c1e6b34c4b">d2b6f6a5</a> nicely bumped up the score from 53K to 750K rows/s.</p>
@@ -116,18 +117,18 @@ sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <
         i <span class="ot">&lt;-</span> DS.columnInt64 stmt <span class="dv">0</span>
         sumRowsColumnInt64 stmt (acc <span class="fu">+</span> i)
     <span class="dt">DS.Done</span> <span class="ot">-&gt;</span>
-      <span class="fu">return</span> acc</code></pre>
+      return acc</code></pre>
 <p>The direct-sqlite calls <code>DS.step</code> and <code>DS.columnInt64</code> map quite directly to their native SQLite counterparts <code><a href="http://www.sqlite.org/c3ref/step.html">sqlite3_step</a></code> and <code><a href="http://www.sqlite.org/c3ref/column_blob.html">sqlite3_column_int</a></code>. Thus the expectation is that their cost should be roughly the same as in the C version of this benchmark.</p>
 <p>No matter how bad a compiler you might have, there’s no way the simple Haskell code around <code>sqlite3_step</code> and <code>sqlite3_column_int</code> would add up to 840 clocks per row.</p>
 <p>Turns out FFI call overhead dominated this benchmark. It was possible to reduce this overhead by using the <code>unsafe</code> FFI calling convention for some of the SQLite column accessors. This change was made in direct-sqlite <a href="https://github.com/IreneKnapp/direct-sqlite/pull/20">pull request #20</a>. As the name <code>unsafe</code> implies, it’s not OK to simply mark all FFI functions as unsafe – please refer to the pull request discussion for details. The tl;dr of the FFI discussion was that it’s OK to mark result data accessors like <code>sqlite3_column_int64</code> and <code>sqlite3_column_count</code> as <code>unsafe</code> but that any functions doing the actual query heavy lifting like <code>sqlite3_step</code> should be kept safe.</p>
 <p>The FFI optimizations were a big deal: the direct-sqlite benchmark score went up from 2.43M to 3.6M rows/s. As expected, this bumped up the sqlite-simple score up to 1.8M rows/s.</p>
 <p>The following chart summarizes how performance progressed through the above optimizations:</p>
 <div>
-<h5 id="optimization-progress-rowss">Optimization progress (rows/s)</h5>
-<div id="chart-opt-progress" style="width:600px;height:360px;"></div>
+<h5>Optimization progress (rows/s)</h5>
+<div id="chart-opt-progress" style="width:600px;height:360px;">
+
 </div>
-
-
+</div>
 <h3 id="comparing-to-other-implementations-and-databases">Comparing to other implementations and databases</h3>
 <p>As an extra bonus, I also compared my results to other databases and to other Haskell database bindings. Furthermore, I wanted to know how well Python fares with its built-in sqlite3 module. I thus implemented a few more variants of my benchmark:</p>
 <ul>
@@ -137,10 +138,11 @@ sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <
 <li>Python sqlite3 (<a href="https://github.com/nurpax/db-bench/tree/master/python/bench.py">source</a>)</li>
 </ul>
 <div>
-<h5 id="databaselibrary-comparison-rowss">Database/library comparison (rows/s)</h5>
-<div id="chart-cross-db" style="width:600px;height:360px;"></div>
-</div>
+<h5>Database/library comparison (rows/s)</h5>
+<div id="chart-cross-db" style="width:600px;height:360px;">
 
+</div>
+</div>
 <p>I didn’t do any performance analysis for non-sqlite benchmark results, and wouldn’t draw too many conclusions about the results. These results do seem to confirm though that the HDBC library adds a fairly significant overhead to database row access. Comparing HDBC against sqlite-simple, we get 105K vs 1.8M rows/s.</p>
 <h3 id="next-steps">Next steps</h3>
 <p>There are still many areas that would need further analysis:</p>
@@ -215,6 +217,24 @@ $(function () {
 
 
 </article>
+
+<ul class="social">
+<li><a href="https://twitter.com/share" class="twitter-share-button share-button" data-via="nurpax" data-dnt="true">Tweet</a></li>
+<li><span class="fb-like" data-layout="button_count" data-action="like" data-show-faces="true" data-share="true"></span></li>
+</ul>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+</p>
 
         </div>
     </div>

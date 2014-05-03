@@ -37,6 +37,7 @@
         </div>
         <div id="content">
 <article>
+
 <h1>Reading TCX in Haskell</h1>
 
 <p>by <em>Janne Hellsten</em> on <strong>December 27, 2012</strong></p>
@@ -76,22 +77,22 @@
 <p>Note: As is probably obvious, this code is not meant to be comprehensive library for accessing TCX data – it’s really just an example of how to get started with HXT and TCX.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
 
-<span class="kw">import</span> Text.XML.HXT.Core
-<span class="kw">import</span> Data.Time (UTCTime, readTime)
-<span class="kw">import</span> System.Locale (defaultTimeLocale)
+<span class="kw">import </span><span class="dt">Text.XML.HXT.Core</span>
+<span class="kw">import </span><span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)
+<span class="kw">import </span><span class="dt">System.Locale</span> (defaultTimeLocale)
 
 <span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]
-  <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Lap</span> <span class="fu">=</span> <span class="dt">Lap</span> {
 <span class="ot">    lapDistance ::</span> <span class="dt">Float</span>
   ,<span class="ot"> lapTrackpoints ::</span> [<span class="dt">Trackpoint</span>]
-  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Trackpoint</span> <span class="fu">=</span> <span class="dt">Trackpoint</span> {
 <span class="ot">    tpTime ::</span> <span class="dt">UTCTime</span>
   ,<span class="ot"> tpBpm ::</span> <span class="dt">String</span>
-  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="ot">atTag ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">XmlTree</span>
 atTag tag <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName tag)
@@ -116,7 +117,7 @@ getLap <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span
   proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
     pts <span class="ot">&lt;-</span> listA getTrackpoint <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Track&quot;</span> <span class="fu">-&lt;</span> x
     dist <span class="ot">&lt;-</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;DistanceMeters&quot;</span> <span class="fu">&gt;&gt;&gt;</span> text <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (<span class="fu">read</span> dist) pts
+    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (read dist) pts
 
 <span class="ot">getActivity ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Activity</span>
 getActivity <span class="fu">=</span> atTag <span class="st">&quot;Activity&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
@@ -133,20 +134,38 @@ getActivities <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&g
 <span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span> <span class="kw">do</span>
   activities <span class="ot">&lt;-</span> runX (readDocument [withValidate no] <span class="st">&quot;test-act.tcx&quot;</span> <span class="fu">&gt;&gt;&gt;</span> getActivities)
-  <span class="fu">mapM_</span> printActivity (<span class="fu">head</span> activities)
+  mapM_ printActivity (head activities)
   <span class="kw">where</span>
     printActivity (<span class="dt">Activity</span> laps) <span class="fu">=</span> <span class="kw">do</span>
-      <span class="fu">putStrLn</span> <span class="st">&quot;Activity:&quot;</span>
-      <span class="fu">mapM_</span> printLaps laps
+      putStrLn <span class="st">&quot;Activity:&quot;</span>
+      mapM_ printLaps laps
 
     printLaps (<span class="dt">Lap</span> distance trackpts) <span class="fu">=</span> <span class="kw">do</span>
-      <span class="fu">putStrLn</span> <span class="st">&quot;  Lap:&quot;</span>
-      <span class="fu">putStrLn</span> (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> distance)
-      <span class="fu">mapM_</span> printTrackpoint trackpts
+      putStrLn <span class="st">&quot;  Lap:&quot;</span>
+      putStrLn (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> show distance)
+      mapM_ printTrackpoint trackpts
 
     printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
-      <span class="fu">putStrLn</span> (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> bpm)</code></pre>
+      putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</code></pre>
 </article>
+
+<ul class="social">
+<li><a href="https://twitter.com/share" class="twitter-share-button share-button" data-via="nurpax" data-dnt="true">Tweet</a></li>
+<li><span class="fb-like" data-layout="button_count" data-action="like" data-show-faces="true" data-share="true"></span></li>
+</ul>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+</p>
 
         </div>
     </div>

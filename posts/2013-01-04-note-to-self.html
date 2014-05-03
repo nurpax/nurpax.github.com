@@ -37,6 +37,7 @@
         </div>
         <div id="content">
 <article>
+
 <h1>Note to self</h1>
 
 <p>by <em>Janne Hellsten</em> on <strong>January  4, 2013</strong></p>
@@ -63,25 +64,25 @@
   directSqliteTest
   ) <span class="kw">where</span>
 
-<span class="kw">import</span> Control.Monad
-<span class="kw">import</span> Database.SQLite3.Direct
+<span class="kw">import </span><span class="dt">Control.Monad</span>
+<span class="kw">import </span><span class="dt">Database.SQLite3.Direct</span>
 
 <span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()
 directSqliteTest <span class="fu">=</span> <span class="kw">do</span>
-  <span class="kw">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
-  <span class="kw">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="dt">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="dt">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
 
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
 
-  <span class="kw">Right</span> (<span class="kw">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
+  <span class="dt">Right</span> (<span class="dt">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
   a <span class="ot">&lt;-</span> step sr
   a <span class="ot">&lt;-</span> step sr
-  <span class="fu">print</span> a
+  print a
   x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
   <span class="co">-- ^^ SQLITE_BUSY is triggered</span>
   finalize sr
-  <span class="fu">print</span> x
+  print x
 
   void <span class="fu">$</span> close conn1
   void <span class="fu">$</span> close conn2</code></pre>
@@ -94,6 +95,24 @@ Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
 <p>As a quick band-aid fix, I changed snaplet-sqlite-simple to not use a connection pool but instead allocate a single database handle on init and servicing the same handle sequentially to anyone that asks (<a href="https://github.com/nurpax/snaplet-sqlite-simple/commit/3957f722cce6abf7e1059f481668379e05b62286">commit 3957f722</a>). For extra safety, I also stuck the connection inside an <code>MVar</code> so that all SQLite operations get serialized within the Snap application.</p>
 <p>Hopefully I’ll be able to switch to a more concurrent model in the future, but at least the current v0.4.0 release works without SQLITE_BUSY errors.</p>
 </article>
+
+<ul class="social">
+<li><a href="https://twitter.com/share" class="twitter-share-button share-button" data-via="nurpax" data-dnt="true">Tweet</a></li>
+<li><span class="fb-like" data-layout="button_count" data-action="like" data-show-faces="true" data-share="true"></span></li>
+</ul>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+</p>
 
         </div>
     </div>
