@@ -175,7 +175,7 @@ testAddExercise opts <span class="fu">=</span> <span class="kw">do</span>
   r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)
   assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)
   <span class="kw">where</span>
-    exercises r <span class="fu">=</span> r <span class="fu">^.</span> responseBody <span class="fu">^..</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span></code></pre>
+    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span></code></pre>
 <h3 id="conclusion">Conclusion</h3>
 <p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
 <p>You can find the full source code to these tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
