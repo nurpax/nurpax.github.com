@@ -49,10 +49,12 @@
 <div class="screenshot white-bg">
 <img src="../images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
 </div>
+
 <p>If you create a new user and login to the app, you’re taken to the main page. Here the logged in user can add comments. The comments get persisted into a database and are associated with the current user (e.g., other users can’t see them.) Here’s how the main page looks like:</p>
 <div class="screenshot white-bg">
 <img src="../images/snaplet-sqlite-simple-example-comments.png" title="Main page" />
 </div>
+
 <p>The example demonstrates a few basic concepts in a complete example:</p>
 <ul>
 <li>Connecting to an SQLite database</li>
@@ -76,10 +78,10 @@
 withLoggedInUser action <span class="fu">=</span>
   currentUser <span class="fu">&gt;&gt;=</span> go
   <span class="kw">where</span>
-    go <span class="dt">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="dt">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
-    go (<span class="dt">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
+    go <span class="kw">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="kw">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
+    go (<span class="kw">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
       <span class="kw">where</span>
-        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (read <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre>
+        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (<span class="fu">read</span> <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre>
 <p>You can use it anywhere you need to access the currently logged in user. For example, here’s how the main page handler deals with the current user:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()
 mainPage <span class="fu">=</span> withLoggedInUser go

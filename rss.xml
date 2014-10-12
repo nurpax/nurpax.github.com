@@ -8,8 +8,71 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2014-05-04T00:00:00Z</updated>
+    <updated>2014-10-12T00:00:00Z</updated>
     <entry>
+    <title>Fixing Emacs GDB mode, part 1</title>
+    <link href="http://nurpax.github.com/posts/2014-10-12-fixing-gdb-many-windows-source-buffer.html" />
+    <id>http://nurpax.github.com/posts/2014-10-12-fixing-gdb-many-windows-source-buffer.html</id>
+    <published>2014-10-12T00:00:00Z</published>
+    <updated>2014-10-12T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>I like using use the Emacs <code>gud-mode</code> for my debugging sessions. Unfortunately, it’s pretty quirky in how it assigns source files to Emacs windows. This totally breaks my debugging flow. Today I decided to document this misbehavior and in a later post, explain how to fix it.</p>
+<p>The problem occurs when stepping through a program in <code>gud-mode</code> with <code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source buffers into the dedicated middle-left source window. Instead, source buffers are (randomly?) assigned on top of other GDB buffers like the GDB comint window. The layout problem gets even worse with multiple Emacs frames. Here are my reproduction instructions with a diagram of what happens and how I’d like Emacs to behave instead.</p>
+<h2 id="steps-to-reproduce-the-problem">Steps to reproduce the problem</h2>
+<p>I’m running Emacs 24.3.1.</p>
+<p>Bind <code>gud-next</code> and <code>gud-step</code> to <code>[f7]</code> and <code>[f8]</code>:</p>
+<pre class="lisp"><code>;; This goes into your .emacs
+(add-hook &#39;gud-mode-hook
+          &#39;(lambda ()
+             (global-set-key (kbd &quot;&lt;f7&gt;&quot;) &#39;gud-next)
+             (global-set-key (kbd &quot;&lt;f8&gt;&quot;) &#39;gud-step)))</code></pre>
+<p>Build my example program:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj
+<span class="kw">cd</span> emacs-gdb-proj
+<span class="kw">make</span></code></pre>
+<p>Start Emacs and enter GDB:</p>
+<pre><code>emacs &amp;
+M-x gdb
+M-x gdb-many-windows</code></pre>
+<p>Use <code>*gud-test*</code> comint buffer to set a break point in <code>main()</code> and run the program:</p>
+<pre><code>(gdb) b main
+Breakpoint 1 at 0x4004b1: file main.c, line 6.
+(gdb) r</code></pre>
+<p>The window layout should now look something like this (the source window with <code>main.c</code> highlighted):</p>
+<svg width="600" height="400">
+<!-- gud-test, locals of test -->
+  
+<g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-size="20" font-family="Helvetica" fill="rgb(131,148,150)">*gud-test*</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./main.c</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
+</svg>
+
+<p>The contents of <code>main.c</code> look like this:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+
+<span class="dt">int</span> main() 
+{
+    foo();
+    foo();
+    foo();
+}</code></pre>
+<p>If you step into the <code>foo()</code> function with <code>[f8]</code>, you’re taken into the <code>b.c</code> source file, which opens as expected into left-middle source window.</p>
+<p>However, if instead of directly stepping into <code>foo()</code> you open another source file in the source window, say, <code>C-x C-f</code>’ing the <code>Makefile</code> from the test project and hit <code>[f8]</code> again, BOOM, the <code>b.c</code> buffer opens in the comint <code>*gud-test*</code> window and not in the source window! The window layout now looks like this:</p>
+<svg width="600" height="400">
+<!-- b.c, locals of test -->
+  
+<g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./b.c</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./Makefile</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
+</svg>
+
+<p>Another way to trigger the same:</p>
+<ol style="list-style-type: decimal">
+<li>Start <code>gud-mode</code> + <code>gdb-many-windows</code> as above.</li>
+<li>Step into <code>foo()</code>.</li>
+<li>Open the <code>Makefile</code> into the source window.</li>
+<li>Click on any of the functions/source files into bottom-left stack frame window.</li>
+</ol>
+<p>Again, the source file opens on top of the upper-left comint window.</p>
+<p>I did find some related Stackoverflow posts. <a href="http://stackoverflow.com/questions/3473134/emacs-23-1-1-with-gdb-forcing-source-windows">This post</a> contains a <code>defadvice</code> trick that seems to work for the latter reproduction steps, but it didn’t make a difference in the former case. <a href="http://stackoverflow.com/questions/24386672/use-gdb-within-emacs-always-show-the-source-code.">Another post</a> discusses a related problem but concludes that there’s no problem if you just use <code>gdb-many-windows</code>.</p>
+<p>I hope to resolve this soon and update this post with a solution.</p>]]></summary>
+</entry>
+<entry>
     <title>REST API testing in Haskell with wreq and test-framework</title>
     <link href="http://nurpax.github.com/posts/2014-05-03-rest-testing-with-wreq.html" />
     <id>http://nurpax.github.com/posts/2014-05-03-rest-testing-with-wreq.html</id>
@@ -267,11 +330,11 @@ selectInts conn <span class="fu">=</span> <span class="kw">do</span>
 </ul>
 <p>Here’s how they perform:</p>
 <div>
-<h4>Native C vs Haskell bindings (rows/s)</h4>
-<div id="chart-c-vs-haskell" style="width:600px;height:360px;">
+<h4 id="native-c-vs-haskell-bindings-rowss">Native C vs Haskell bindings (rows/s)</h4>
+<div id="chart-c-vs-haskell" style="width:600px;height:360px;"></div>
+</div>
 
-</div>
-</div>
+
 <h2 id="results-analysis">Results analysis</h2>
 <p>The collected benchmark data was used to identify various performance improvement opportunities in sqlite-simple.</p>
 <p>Original performance without optimizations was just barely over 50K rows/s. This was a performance bug I caused when I forked sqlite-simple from postgresql-simple. The problem was in a function called <code>stepStmt</code> that should’ve been tail recursive but wasn’t. Fixing this in <a href="https://github.com/nurpax/sqlite-simple/commit/d2b6f6a50e116e1bad28395eac4646c1e6b34c4b">d2b6f6a5</a> nicely bumped up the score from 53K to 750K rows/s.</p>
@@ -288,18 +351,18 @@ sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <
         i <span class="ot">&lt;-</span> DS.columnInt64 stmt <span class="dv">0</span>
         sumRowsColumnInt64 stmt (acc <span class="fu">+</span> i)
     <span class="dt">DS.Done</span> <span class="ot">-&gt;</span>
-      return acc</code></pre>
+      <span class="fu">return</span> acc</code></pre>
 <p>The direct-sqlite calls <code>DS.step</code> and <code>DS.columnInt64</code> map quite directly to their native SQLite counterparts <code><a href="http://www.sqlite.org/c3ref/step.html">sqlite3_step</a></code> and <code><a href="http://www.sqlite.org/c3ref/column_blob.html">sqlite3_column_int</a></code>. Thus the expectation is that their cost should be roughly the same as in the C version of this benchmark.</p>
 <p>No matter how bad a compiler you might have, there’s no way the simple Haskell code around <code>sqlite3_step</code> and <code>sqlite3_column_int</code> would add up to 840 clocks per row.</p>
 <p>Turns out FFI call overhead dominated this benchmark. It was possible to reduce this overhead by using the <code>unsafe</code> FFI calling convention for some of the SQLite column accessors. This change was made in direct-sqlite <a href="https://github.com/IreneKnapp/direct-sqlite/pull/20">pull request #20</a>. As the name <code>unsafe</code> implies, it’s not OK to simply mark all FFI functions as unsafe – please refer to the pull request discussion for details. The tl;dr of the FFI discussion was that it’s OK to mark result data accessors like <code>sqlite3_column_int64</code> and <code>sqlite3_column_count</code> as <code>unsafe</code> but that any functions doing the actual query heavy lifting like <code>sqlite3_step</code> should be kept safe.</p>
 <p>The FFI optimizations were a big deal: the direct-sqlite benchmark score went up from 2.43M to 3.6M rows/s. As expected, this bumped up the sqlite-simple score up to 1.8M rows/s.</p>
 <p>The following chart summarizes how performance progressed through the above optimizations:</p>
 <div>
-<h4>Optimization progress (rows/s)</h4>
-<div id="chart-opt-progress" style="width:600px;height:360px;">
+<h4 id="optimization-progress-rowss">Optimization progress (rows/s)</h4>
+<div id="chart-opt-progress" style="width:600px;height:360px;"></div>
+</div>
 
-</div>
-</div>
+
 <h2 id="comparing-to-other-implementations-and-databases">Comparing to other implementations and databases</h2>
 <p>As an extra bonus, I also compared my results to other databases and to other Haskell database bindings. Furthermore, I wanted to know how well Python fares with its built-in sqlite3 module. I thus implemented a few more variants of my benchmark:</p>
 <ul>
@@ -309,11 +372,10 @@ sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <
 <li>Python sqlite3 (<a href="https://github.com/nurpax/db-bench/tree/master/python/bench.py">source</a>)</li>
 </ul>
 <div>
-<h4>Database/library comparison (rows/s)</h4>
-<div id="chart-cross-db" style="width:600px;height:360px;">
+<h4 id="databaselibrary-comparison-rowss">Database/library comparison (rows/s)</h4>
+<div id="chart-cross-db" style="width:600px;height:360px;"></div>
+</div>
 
-</div>
-</div>
 <p>I didn’t do any performance analysis for non-sqlite benchmark results, and wouldn’t draw too many conclusions about the results. These results do seem to confirm though that the HDBC library adds a fairly significant overhead to database row access. Comparing HDBC against sqlite-simple, we get 105K vs 1.8M rows/s.</p>
 <h2 id="next-steps">Next steps</h2>
 <p>There are still many areas that would need further analysis:</p>
@@ -406,6 +468,7 @@ $(function () {
 <div class="screenshot white-bg">
 <img src="/images/angular-todo1.png" title="AngularJS ToDo app with Haskell" />
 </div>
+
 <p>I will not go into much detail about AngularJS usage here – you should read more about it on their <a href="http://angularjs.org/">homepage</a>. This post will focus on what’s needed in order to build an AngularJS app with a Haskell backend.</p>
 <p>In an AngularJS app, a major part of the application is JavaScript and runs in the the browser. These applications are usually backed by a central server. In our case, the backend is written in Haskell. This server takes care of user management, authentication and persistence. The frontend talks to the backend via a REST API. The REST API communicates things like adding or listing to-do items.</p>
 <h2 id="frontend-javascript-parts">Frontend JavaScript parts</h2>
@@ -430,7 +493,7 @@ $(function () {
   {<span class="ot"> todoId   ::</span> <span class="dt">Maybe</span> <span class="dt">Int64</span>  <span class="co">-- database row id</span>
   ,<span class="ot"> todoText ::</span> <span class="dt">T.Text</span>       <span class="co">-- todo text</span>
   ,<span class="ot"> todoDone ::</span> <span class="dt">Bool</span>         <span class="co">-- completed?</span>
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)</code></pre>
+  } <span class="kw">deriving</span> (<span class="kw">Show</span>)</code></pre>
 <p>The <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module defines how these objects can be serialized to/from JSON using the <a href="http://hackage.haskell.org/package/aeson">aeson package</a>:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">Todo</span> <span class="kw">where</span>
   parseJSON (<span class="dt">Object</span> v) <span class="fu">=</span>
@@ -449,7 +512,7 @@ $(function () {
 <p>The final piece of the puzzle is the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">Site</a> module which plugs all of the above server bits together. It manages routing, authentication and serves to-do items over a REST API. The server-side routing is defined as follows:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Render main page</span>
 <span class="ot">mainPage ::</span> <span class="dt">H</span> ()
-mainPage <span class="fu">=</span> withLoggedInUser (const <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)
+mainPage <span class="fu">=</span> withLoggedInUser (<span class="fu">const</span> <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)
 
 <span class="co">-- | The application&#39;s routes.</span>
 <span class="ot">routes ::</span> [(<span class="dt">ByteString</span>, <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">App</span> ())]
@@ -477,7 +540,7 @@ handleTodos <span class="fu">=</span>
 
     saveTodo user <span class="fu">=</span> <span class="kw">do</span>
       newTodo <span class="ot">&lt;-</span> getJSON
-      either (const <span class="fu">$</span> return ()) persist newTodo
+      <span class="fu">either</span> (<span class="fu">const</span> <span class="fu">$</span> <span class="fu">return</span> ()) persist newTodo
         <span class="kw">where</span>
           persist todo <span class="fu">=</span> <span class="kw">do</span>
             savedTodo <span class="ot">&lt;-</span> withDb <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.saveTodo conn user todo
@@ -488,6 +551,7 @@ handleTodos <span class="fu">=</span>
 <div class="screenshot white-bg">
 <img src="/images/angular-todo2-check.png" title="Chrome dev tool view" />
 </div>
+
 <p>This is the result of a <code>todo.$save()</code> AJAX call.</p>
 <h2 id="what-next">What next?</h2>
 <p>Well.. The easy part is over. If you want to learn more about using AngularJS with Snap, I suggest that you:</p>
@@ -527,25 +591,25 @@ handleTodos <span class="fu">=</span>
   directSqliteTest
   ) <span class="kw">where</span>
 
-<span class="kw">import </span><span class="dt">Control.Monad</span>
-<span class="kw">import </span><span class="dt">Database.SQLite3.Direct</span>
+<span class="kw">import</span> Control.Monad
+<span class="kw">import</span> Database.SQLite3.Direct
 
 <span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()
 directSqliteTest <span class="fu">=</span> <span class="kw">do</span>
-  <span class="dt">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
-  <span class="dt">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="kw">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="kw">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
 
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
 
-  <span class="dt">Right</span> (<span class="dt">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
+  <span class="kw">Right</span> (<span class="kw">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
   a <span class="ot">&lt;-</span> step sr
   a <span class="ot">&lt;-</span> step sr
-  print a
+  <span class="fu">print</span> a
   x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
   <span class="co">-- ^^ SQLITE_BUSY is triggered</span>
   finalize sr
-  print x
+  <span class="fu">print</span> x
 
   void <span class="fu">$</span> close conn1
   void <span class="fu">$</span> close conn2</code></pre>
@@ -599,22 +663,22 @@ Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
 <p>Note: As is probably obvious, this code is not meant to be comprehensive library for accessing TCX data – it’s really just an example of how to get started with HXT and TCX.</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
 
-<span class="kw">import </span><span class="dt">Text.XML.HXT.Core</span>
-<span class="kw">import </span><span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)
-<span class="kw">import </span><span class="dt">System.Locale</span> (defaultTimeLocale)
+<span class="kw">import</span> Text.XML.HXT.Core
+<span class="kw">import</span> Data.Time (UTCTime, readTime)
+<span class="kw">import</span> System.Locale (defaultTimeLocale)
 
 <span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]
-  <span class="kw">deriving</span> (<span class="dt">Show</span>)
+  <span class="kw">deriving</span> (<span class="kw">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Lap</span> <span class="fu">=</span> <span class="dt">Lap</span> {
 <span class="ot">    lapDistance ::</span> <span class="dt">Float</span>
   ,<span class="ot"> lapTrackpoints ::</span> [<span class="dt">Trackpoint</span>]
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
+  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Trackpoint</span> <span class="fu">=</span> <span class="dt">Trackpoint</span> {
 <span class="ot">    tpTime ::</span> <span class="dt">UTCTime</span>
   ,<span class="ot"> tpBpm ::</span> <span class="dt">String</span>
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
+  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
 
 <span class="ot">atTag ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">XmlTree</span>
 atTag tag <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName tag)
@@ -639,7 +703,7 @@ getLap <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span
   proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
     pts <span class="ot">&lt;-</span> listA getTrackpoint <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Track&quot;</span> <span class="fu">-&lt;</span> x
     dist <span class="ot">&lt;-</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;DistanceMeters&quot;</span> <span class="fu">&gt;&gt;&gt;</span> text <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (read dist) pts
+    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (<span class="fu">read</span> dist) pts
 
 <span class="ot">getActivity ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Activity</span>
 getActivity <span class="fu">=</span> atTag <span class="st">&quot;Activity&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
@@ -656,19 +720,19 @@ getActivities <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&g
 <span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span> <span class="kw">do</span>
   activities <span class="ot">&lt;-</span> runX (readDocument [withValidate no] <span class="st">&quot;test-act.tcx&quot;</span> <span class="fu">&gt;&gt;&gt;</span> getActivities)
-  mapM_ printActivity (head activities)
+  <span class="fu">mapM_</span> printActivity (<span class="fu">head</span> activities)
   <span class="kw">where</span>
     printActivity (<span class="dt">Activity</span> laps) <span class="fu">=</span> <span class="kw">do</span>
-      putStrLn <span class="st">&quot;Activity:&quot;</span>
-      mapM_ printLaps laps
+      <span class="fu">putStrLn</span> <span class="st">&quot;Activity:&quot;</span>
+      <span class="fu">mapM_</span> printLaps laps
 
     printLaps (<span class="dt">Lap</span> distance trackpts) <span class="fu">=</span> <span class="kw">do</span>
-      putStrLn <span class="st">&quot;  Lap:&quot;</span>
-      putStrLn (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> show distance)
-      mapM_ printTrackpoint trackpts
+      <span class="fu">putStrLn</span> <span class="st">&quot;  Lap:&quot;</span>
+      <span class="fu">putStrLn</span> (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> distance)
+      <span class="fu">mapM_</span> printTrackpoint trackpts
 
     printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
-      putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</code></pre>]]></summary>
+      <span class="fu">putStrLn</span> (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> bpm)</code></pre>]]></summary>
 </entry>
 <entry>
     <title>Snap with SQLite</title>
@@ -683,10 +747,12 @@ main <span class="fu">=</span> <span class="kw">do</span>
 <div class="screenshot white-bg">
 <img src="/images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
 </div>
+
 <p>If you create a new user and login to the app, you’re taken to the main page. Here the logged in user can add comments. The comments get persisted into a database and are associated with the current user (e.g., other users can’t see them.) Here’s how the main page looks like:</p>
 <div class="screenshot white-bg">
 <img src="/images/snaplet-sqlite-simple-example-comments.png" title="Main page" />
 </div>
+
 <p>The example demonstrates a few basic concepts in a complete example:</p>
 <ul>
 <li>Connecting to an SQLite database</li>
@@ -710,10 +776,10 @@ main <span class="fu">=</span> <span class="kw">do</span>
 withLoggedInUser action <span class="fu">=</span>
   currentUser <span class="fu">&gt;&gt;=</span> go
   <span class="kw">where</span>
-    go <span class="dt">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="dt">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
-    go (<span class="dt">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
+    go <span class="kw">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="kw">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
+    go (<span class="kw">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
       <span class="kw">where</span>
-        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (read <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre>
+        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (<span class="fu">read</span> <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre>
 <p>You can use it anywhere you need to access the currently logged in user. For example, here’s how the main page handler deals with the current user:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()
 mainPage <span class="fu">=</span> withLoggedInUser go

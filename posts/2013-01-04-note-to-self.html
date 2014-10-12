@@ -64,25 +64,25 @@
   directSqliteTest
   ) <span class="kw">where</span>
 
-<span class="kw">import </span><span class="dt">Control.Monad</span>
-<span class="kw">import </span><span class="dt">Database.SQLite3.Direct</span>
+<span class="kw">import</span> Control.Monad
+<span class="kw">import</span> Database.SQLite3.Direct
 
 <span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()
 directSqliteTest <span class="fu">=</span> <span class="kw">do</span>
-  <span class="dt">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
-  <span class="dt">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="kw">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="kw">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
 
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
 
-  <span class="dt">Right</span> (<span class="dt">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
+  <span class="kw">Right</span> (<span class="kw">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
   a <span class="ot">&lt;-</span> step sr
   a <span class="ot">&lt;-</span> step sr
-  print a
+  <span class="fu">print</span> a
   x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span>
   <span class="co">-- ^^ SQLITE_BUSY is triggered</span>
   finalize sr
-  print x
+  <span class="fu">print</span> x
 
   void <span class="fu">$</span> close conn1
   void <span class="fu">$</span> close conn2</code></pre>

@@ -54,6 +54,7 @@
 <div class="screenshot white-bg">
 <img src="../images/angular-todo1.png" title="AngularJS ToDo app with Haskell" />
 </div>
+
 <p>I will not go into much detail about AngularJS usage here – you should read more about it on their <a href="http://angularjs.org/">homepage</a>. This post will focus on what’s needed in order to build an AngularJS app with a Haskell backend.</p>
 <p>In an AngularJS app, a major part of the application is JavaScript and runs in the the browser. These applications are usually backed by a central server. In our case, the backend is written in Haskell. This server takes care of user management, authentication and persistence. The frontend talks to the backend via a REST API. The REST API communicates things like adding or listing to-do items.</p>
 <h3 id="frontend-javascript-parts">Frontend JavaScript parts</h3>
@@ -78,7 +79,7 @@
   {<span class="ot"> todoId   ::</span> <span class="dt">Maybe</span> <span class="dt">Int64</span>  <span class="co">-- database row id</span>
   ,<span class="ot"> todoText ::</span> <span class="dt">T.Text</span>       <span class="co">-- todo text</span>
   ,<span class="ot"> todoDone ::</span> <span class="dt">Bool</span>         <span class="co">-- completed?</span>
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)</code></pre>
+  } <span class="kw">deriving</span> (<span class="kw">Show</span>)</code></pre>
 <p>The <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module defines how these objects can be serialized to/from JSON using the <a href="http://hackage.haskell.org/package/aeson">aeson package</a>:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">Todo</span> <span class="kw">where</span>
   parseJSON (<span class="dt">Object</span> v) <span class="fu">=</span>
@@ -97,7 +98,7 @@
 <p>The final piece of the puzzle is the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">Site</a> module which plugs all of the above server bits together. It manages routing, authentication and serves to-do items over a REST API. The server-side routing is defined as follows:</p>
 <pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Render main page</span>
 <span class="ot">mainPage ::</span> <span class="dt">H</span> ()
-mainPage <span class="fu">=</span> withLoggedInUser (const <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)
+mainPage <span class="fu">=</span> withLoggedInUser (<span class="fu">const</span> <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)
 
 <span class="co">-- | The application's routes.</span>
 <span class="ot">routes ::</span> [(<span class="dt">ByteString</span>, <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">App</span> ())]
@@ -125,7 +126,7 @@ handleTodos <span class="fu">=</span>
 
     saveTodo user <span class="fu">=</span> <span class="kw">do</span>
       newTodo <span class="ot">&lt;-</span> getJSON
-      either (const <span class="fu">$</span> return ()) persist newTodo
+      <span class="fu">either</span> (<span class="fu">const</span> <span class="fu">$</span> <span class="fu">return</span> ()) persist newTodo
         <span class="kw">where</span>
           persist todo <span class="fu">=</span> <span class="kw">do</span>
             savedTodo <span class="ot">&lt;-</span> withDb <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.saveTodo conn user todo
@@ -136,6 +137,7 @@ handleTodos <span class="fu">=</span>
 <div class="screenshot white-bg">
 <img src="../images/angular-todo2-check.png" title="Chrome dev tool view" />
 </div>
+
 <p>This is the result of a <code>todo.$save()</code> AJAX call.</p>
 <h3 id="what-next">What next?</h3>
 <p>Well.. The easy part is over. If you want to learn more about using AngularJS with Snap, I suggest that you:</p>
