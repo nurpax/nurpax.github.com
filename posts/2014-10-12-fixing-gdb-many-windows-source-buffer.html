@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>nurpax - Fixing Emacs GDB mode, part 1</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
+
+        <script src="../js/jquery.min.js" type="text/javascript"></script>
+        <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>Blog - Fixing Emacs GDB mode, part 1</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+
+<h1>Fixing Emacs GDB mode, part 1</h1>
+
+<p>by <em>Janne Hellsten</em> on <strong>October 12, 2014</strong></p>
+
+<p>I like using use the Emacs <code>gud-mode</code> for my debugging sessions. Unfortunately, it’s pretty quirky in how it assigns source files to Emacs windows. This totally breaks my debugging flow. Today I decided to document this misbehavior and in a later post, explain how to fix it.</p>
+<p>The problem occurs when stepping through a program in <code>gud-mode</code> with <code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source buffers into the dedicated middle-left source window. Instead, source buffers are (randomly?) assigned on top of other GDB buffers like the GDB comint window. The layout problem gets even worse with multiple Emacs frames. Here are my reproduction instructions with a diagram of what happens and how I’d like Emacs to behave instead.</p>
+<h3 id="steps-to-reproduce-the-problem">Steps to reproduce the problem</h3>
+<p>I’m running Emacs 24.3.1.</p>
+<p>Bind <code>gud-next</code> and <code>gud-step</code> to <code>[f7]</code> and <code>[f8]</code>:</p>
+<pre class="lisp"><code>;; This goes into your .emacs
+(add-hook 'gud-mode-hook
+          '(lambda ()
+             (global-set-key (kbd &quot;&lt;f7&gt;&quot;) 'gud-next)
+             (global-set-key (kbd &quot;&lt;f8&gt;&quot;) 'gud-step)))</code></pre>
+<p>Build my example program:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj
+<span class="kw">cd</span> emacs-gdb-proj
+<span class="kw">make</span></code></pre>
+<p>Start Emacs and enter GDB:</p>
+<pre><code>emacs &amp;
+M-x gdb
+M-x gdb-many-windows</code></pre>
+<p>Use <code>*gud-test*</code> comint buffer to set a break point in <code>main()</code> and run the program:</p>
+<pre><code>(gdb) b main
+Breakpoint 1 at 0x4004b1: file main.c, line 6.
+(gdb) r</code></pre>
+<p>The window layout should now look something like this (the source window with <code>main.c</code> highlighted):</p>
+<svg width="600" height="400">
+<!-- gud-test, locals of test -->
+  
+<g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-size="20" font-family="Helvetica" fill="rgb(131,148,150)">*gud-test*</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./main.c</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
+</svg>
+
+<p>The contents of <code>main.c</code> look like this:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+
+<span class="dt">int</span> main() 
+{
+    foo();
+    foo();
+    foo();
+}</code></pre>
+<p>If you step into the <code>foo()</code> function with <code>[f8]</code>, you’re taken into the <code>b.c</code> source file, which opens as expected into left-middle source window.</p>
+<p>However, if instead of directly stepping into <code>foo()</code> you open another source file in the source window, say, <code>C-x C-f</code>’ing the <code>Makefile</code> from the test project and hit <code>[f8]</code> again, BOOM, the <code>b.c</code> buffer opens in the comint <code>*gud-test*</code> window and not in the source window! The window layout now looks like this:</p>
+<svg width="600" height="400">
+<!-- b.c, locals of test -->
+  
+<g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./b.c</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./Makefile</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
+</svg>
+
+<p>Another way to trigger the same:</p>
+<ol style="list-style-type: decimal">
+<li>Start <code>gud-mode</code> + <code>gdb-many-windows</code> as above.</li>
+<li>Step into <code>foo()</code>.</li>
+<li>Open the <code>Makefile</code> into the source window.</li>
+<li>Click on any of the functions/source files into bottom-left stack frame window.</li>
+</ol>
+<p>Again, the source file opens on top of the upper-left comint window.</p>
+<p>I did find some related Stackoverflow posts. <a href="http://stackoverflow.com/questions/3473134/emacs-23-1-1-with-gdb-forcing-source-windows">This post</a> contains a <code>defadvice</code> trick that seems to work for the latter reproduction steps, but it didn’t make a difference in the former case. <a href="http://stackoverflow.com/questions/24386672/use-gdb-within-emacs-always-show-the-source-code.">Another post</a> discusses a related problem but concludes that there’s no problem if you just use <code>gdb-many-windows</code>.</p>
+<p>I hope to resolve this soon and update this post with a solution.</p>
+</article>
+
+<ul class="social">
+<li><a href="https://twitter.com/share" class="twitter-share-button share-button" data-via="nurpax" data-dnt="true">Tweet</a></li>
+<li><span class="fb-like" data-layout="button_count" data-action="like" data-show-faces="true" data-share="true"></span></li>
+</ul>
+
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+</p>
+
+        </div>
+    </div>
+
+
+    </body>
+</html>
