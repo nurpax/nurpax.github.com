@@ -17,8 +17,7 @@
     <updated>2014-10-12T00:00:00Z</updated>
     <summary type="html"><![CDATA[<p>I like using use the Emacs <code>gud-mode</code> for my debugging sessions. Unfortunately, it’s pretty quirky in how it assigns source files to Emacs windows. This totally breaks my debugging flow. Today I decided to document this misbehavior and in a later post, explain how to fix it.</p>
 <p>The problem occurs when stepping through a program in <code>gud-mode</code> with <code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source buffers into the dedicated middle-left source window. Instead, source buffers are (randomly?) assigned on top of other GDB buffers like the GDB comint window. The layout problem gets even worse with multiple Emacs frames. Here are my repro steps with a diagram of what happens and how I’d like Emacs to behave instead.</p>
-<h2 id="steps-to-reproduce-the-problem">Steps to reproduce the problem</h2>
-<p>I’m running Emacs 24.3.1.</p>
+<p>Here are the steps to reproduce the problem on Emacs 24.3.1.</p>
 <p>Bind <code>gud-next</code> and <code>gud-step</code> to <code>[f7]</code> and <code>[f8]</code>:</p>
 <pre class="lisp"><code>;; This goes into your .emacs
 (add-hook &#39;gud-mode-hook
