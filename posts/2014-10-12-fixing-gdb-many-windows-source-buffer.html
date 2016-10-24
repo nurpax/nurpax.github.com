@@ -46,15 +46,15 @@
 <p>The problem occurs when stepping through a program in <code>gud-mode</code> with <code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source buffers into the dedicated middle-left source window. Instead, source buffers are (randomly?) assigned on top of other GDB buffers like the GDB comint window. The layout problem gets even worse with multiple Emacs frames. Here are my repro steps with a diagram of what happens and how I’d like Emacs to behave instead.</p>
 <p>Here are the steps to reproduce the problem on Emacs 24.3.1.</p>
 <p>Bind <code>gud-next</code> and <code>gud-step</code> to <code>[f7]</code> and <code>[f8]</code>:</p>
-<pre class="lisp"><code>;; This goes into your .emacs
+<div class="sourceCode"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span class="co">;; This goes into your .emacs</span>
 (add-hook 'gud-mode-hook
-          '(lambda ()
-             (global-set-key (kbd &quot;&lt;f7&gt;&quot;) 'gud-next)
-             (global-set-key (kbd &quot;&lt;f8&gt;&quot;) 'gud-step)))</code></pre>
+          '(<span class="kw">lambda</span> ()
+             (global-set-key (kbd <span class="st">&quot;&lt;f7&gt;&quot;</span>) 'gud-next)
+             (global-set-key (kbd <span class="st">&quot;&lt;f8&gt;&quot;</span>) 'gud-step)))</code></pre></div>
 <p>Build my example program:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj
-<span class="kw">cd</span> emacs-gdb-proj
-<span class="kw">make</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj
+<span class="bu">cd</span> emacs-gdb-proj
+<span class="fu">make</span></code></pre></div>
 <p>Start Emacs and enter GDB:</p>
 <pre><code>emacs &amp;
 M-x gdb
@@ -66,27 +66,23 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <p>The window layout should now look something like this (the source window with <code>main.c</code> highlighted):</p>
 <svg width="600" height="400">
 <!-- gud-test, locals of test -->
-  
 <g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-size="20" font-family="Helvetica" fill="rgb(131,148,150)">*gud-test*</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./main.c</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
 </svg>
-
 <p>The contents of <code>main.c</code> look like this:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
 
 <span class="dt">int</span> main() 
 {
     foo();
     foo();
     foo();
-}</code></pre>
+}</code></pre></div>
 <p>If you step into the <code>foo()</code> function with <code>[f8]</code>, you’re taken into the <code>b.c</code> source file, which opens as expected into left-middle source window.</p>
 <p>However, if instead of directly stepping into <code>foo()</code> you open another source file in the source window, say, <code>C-x C-f</code>’ing the <code>Makefile</code> from the test project and hit <code>[f8]</code> again, BOOM, the <code>b.c</code> buffer opens in the comint <code>*gud-test*</code> window and not in the source window! The window layout now looks like this:</p>
 <svg width="600" height="400">
 <!-- b.c, locals of test -->
-  
 <g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./b.c</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./Makefile</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
 </svg>
-
 <p>Another way to trigger the same:</p>
 <ol style="list-style-type: decimal">
 <li>Start <code>gud-mode</code> + <code>gdb-many-windows</code> as above.</li>

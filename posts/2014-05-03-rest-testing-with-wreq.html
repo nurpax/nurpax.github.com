@@ -49,36 +49,36 @@
 <table>
 <thead>
 <tr class="header">
-<th align="left">Entry point</th>
-<th align="left">Verb</th>
-<th align="left">Description</th>
+<th>Entry point</th>
+<th>Verb</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left"><code>/rest/login</code></td>
-<td align="left">POST</td>
-<td align="left">Login with <code>login</code> and <code>password</code> parameters.</td>
+<td><code>/rest/login</code></td>
+<td>POST</td>
+<td>Login with <code>login</code> and <code>password</code> parameters.</td>
 </tr>
 <tr class="even">
-<td align="left"><code>/rest/new_user</code></td>
-<td align="left">POST</td>
-<td align="left">Create a user with <code>login</code> and <code>password</code> parameters.</td>
+<td><code>/rest/new_user</code></td>
+<td>POST</td>
+<td>Create a user with <code>login</code> and <code>password</code> parameters.</td>
 </tr>
 <tr class="odd">
-<td align="left"><code>/rest/app</code></td>
-<td align="left">GET</td>
-<td align="left">Get logged in user login name and status.</td>
+<td><code>/rest/app</code></td>
+<td>GET</td>
+<td>Get logged in user login name and status.</td>
 </tr>
 <tr class="even">
-<td align="left"><code>/rest/exercise</code></td>
-<td align="left">GET</td>
-<td align="left">List existing exercises.</td>
+<td><code>/rest/exercise</code></td>
+<td>GET</td>
+<td>List existing exercises.</td>
 </tr>
 <tr class="odd">
-<td align="left"><code>/rest/exercise</code></td>
-<td align="left">POST</td>
-<td align="left">Create a new exercise with <code>name</code> and <code>type</code> parameters.</td>
+<td><code>/rest/exercise</code></td>
+<td>POST</td>
+<td>Create a new exercise with <code>name</code> and <code>type</code> parameters.</td>
 </tr>
 </tbody>
 </table>
@@ -97,7 +97,7 @@
 <p>Any tests that modify or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence or have its authentication cookies passed into it. I went for the latter approach as it allows logging in once and running multiple tests with the same cookies.</p>
 <p>I define top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, followed by running a list of sub-tests with cookies acquired from the login process. The sequencing is explicitly declared by using <code>test-framework</code>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
 <p>Here’s the definition of <code>loginUserTests</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span>
 <span class="co">-- from the login process.</span>
 <span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span>
 loginUserTests tests <span class="fu">=</span> <span class="kw">do</span>
@@ -105,26 +105,26 @@ loginUserTests tests <span class="fu">=</span> <span class="kw">do</span>
   <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> cookies <span class="fu">.~</span> (r <span class="fu">^.</span> responseCookieJar)
   return
     <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span>
-    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</code></pre>
+    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</code></pre></div>
 <p>It performs a HTTP POST on <code>/rest/login</code> with the test user’s login credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes them to sub-tests so that they can run authenticated.</p>
 <p>Here’s how <code>loginUserTests</code> gets used:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Test case that tests that we're successfully logged in</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Test case that tests that we're successfully logged in</span>
 <span class="co">-- Options must contain the necessary login cookies.</span>
 <span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testLoggedInOk opts <span class="fu">=</span> <span class="kw">do</span>
   r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)
-  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _<span class="dt">Bool</span>)
+  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _Bool)
 
 <span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span>
   defaultMain
   [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
   , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
-  ]</code></pre>
+  ]</code></pre></div>
 <p>Function <code>testLoggedInOk</code> tests that it can HTTP GET <code>/rest/app</code> successfully. It also tests that the returned JSON object contains a field <code>loggedIn</code> with value <code>true</code>.</p>
 <h3 id="negative-testing">Negative testing</h3>
 <p>One shouldn’t forget about negative testing, so let’s develop a test for checking that entry points correctly respond with an error 403 on unauthenticated access:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- GET requests against 'url' and expect to get error 403 back</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- GET requests against 'url' and expect to get error 403 back</span>
 <span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span>
   E.try (getWith opts url) <span class="fu">&gt;&gt;=</span> check
@@ -150,7 +150,7 @@ main <span class="fu">=</span>
                , <span class="st">&quot;/rest/workout&quot;</span>
                , <span class="st">&quot;/rest/workout&quot;</span>
                , <span class="st">&quot;/rest/stats/workout&quot;</span>
-               ]</code></pre>
+               ]</code></pre></div>
 <h3 id="creating-objects">Creating objects</h3>
 <p>Here we will test two entry points: one for creating a new exercise like “Chin-ups” and one for listing existing exercises. Creation is a HTTP POST to <code>/rest/exercise</code> and listing exercises is HTTP GET <code>/rest/exercise</code>.</p>
 <p>A successful POST to <code>/rest/exercise</code> will create a new object on the server and return the object to the client as JSON. Here’s what that repsonse might look like:</p>
@@ -162,20 +162,20 @@ main <span class="fu">=</span>
 ]</code></pre>
 <p>To test creating exercise objects, we’ll create an exercise, verify that its returned properties match what we gave on creation, and finally retrieve the complete exercise list and check that the object is listed.</p>
 <p>Here’s the code for the above test strategy. The <a href="http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html">Aeson Lens API</a> is particularly handy for this type of ad hoc JSON value inspection!</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testAddExercise opts <span class="fu">=</span> <span class="kw">do</span>
   <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span>
       ty   <span class="fu">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span>
   r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="fu">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="fu">:=</span> ty]
   <span class="co">-- Verify that the newly created object matches creation params</span>
-  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _<span class="dt">String</span>
-  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _<span class="dt">String</span>
+  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _String
+  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _String
   <span class="co">-- Verify that the object ended up in the global list of exercises</span>
-  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span>
+  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer
   r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)
   assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)
   <span class="kw">where</span>
-    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span></code></pre>
+    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</code></pre></div>
 <h3 id="conclusion">Conclusion</h3>
 <p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
 <p>You can find the full source code to these tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>

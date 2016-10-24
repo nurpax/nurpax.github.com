@@ -19,15 +19,15 @@
 <p>The problem occurs when stepping through a program in <code>gud-mode</code> with <code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source buffers into the dedicated middle-left source window. Instead, source buffers are (randomly?) assigned on top of other GDB buffers like the GDB comint window. The layout problem gets even worse with multiple Emacs frames. Here are my repro steps with a diagram of what happens and how I’d like Emacs to behave instead.</p>
 <p>Here are the steps to reproduce the problem on Emacs 24.3.1.</p>
 <p>Bind <code>gud-next</code> and <code>gud-step</code> to <code>[f7]</code> and <code>[f8]</code>:</p>
-<pre class="lisp"><code>;; This goes into your .emacs
+<div class="sourceCode"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span class="co">;; This goes into your .emacs</span>
 (add-hook &#39;gud-mode-hook
-          &#39;(lambda ()
-             (global-set-key (kbd &quot;&lt;f7&gt;&quot;) &#39;gud-next)
-             (global-set-key (kbd &quot;&lt;f8&gt;&quot;) &#39;gud-step)))</code></pre>
+          &#39;(<span class="kw">lambda</span> ()
+             (global-set-key (kbd <span class="st">&quot;&lt;f7&gt;&quot;</span>) &#39;gud-next)
+             (global-set-key (kbd <span class="st">&quot;&lt;f8&gt;&quot;</span>) &#39;gud-step)))</code></pre></div>
 <p>Build my example program:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj
-<span class="kw">cd</span> emacs-gdb-proj
-<span class="kw">make</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj
+<span class="bu">cd</span> emacs-gdb-proj
+<span class="fu">make</span></code></pre></div>
 <p>Start Emacs and enter GDB:</p>
 <pre><code>emacs &amp;
 M-x gdb
@@ -39,27 +39,23 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <p>The window layout should now look something like this (the source window with <code>main.c</code> highlighted):</p>
 <svg width="600" height="400">
 <!-- gud-test, locals of test -->
-  
 <g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-size="20" font-family="Helvetica" fill="rgb(131,148,150)">*gud-test*</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./main.c</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
 </svg>
-
 <p>The contents of <code>main.c</code> look like this:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
 
 <span class="dt">int</span> main() 
 {
     foo();
     foo();
     foo();
-}</code></pre>
+}</code></pre></div>
 <p>If you step into the <code>foo()</code> function with <code>[f8]</code>, you’re taken into the <code>b.c</code> source file, which opens as expected into left-middle source window.</p>
 <p>However, if instead of directly stepping into <code>foo()</code> you open another source file in the source window, say, <code>C-x C-f</code>’ing the <code>Makefile</code> from the test project and hit <code>[f8]</code> again, BOOM, the <code>b.c</code> buffer opens in the comint <code>*gud-test*</code> window and not in the source window! The window layout now looks like this:</p>
 <svg width="600" height="400">
 <!-- b.c, locals of test -->
-  
 <g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./b.c</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./Makefile</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
 </svg>
-
 <p>Another way to trigger the same:</p>
 <ol style="list-style-type: decimal">
 <li>Start <code>gud-mode</code> + <code>gdb-many-windows</code> as above.</li>
@@ -84,36 +80,36 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <table>
 <thead>
 <tr class="header">
-<th align="left">Entry point</th>
-<th align="left">Verb</th>
-<th align="left">Description</th>
+<th>Entry point</th>
+<th>Verb</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left"><code>/rest/login</code></td>
-<td align="left">POST</td>
-<td align="left">Login with <code>login</code> and <code>password</code> parameters.</td>
+<td><code>/rest/login</code></td>
+<td>POST</td>
+<td>Login with <code>login</code> and <code>password</code> parameters.</td>
 </tr>
 <tr class="even">
-<td align="left"><code>/rest/new_user</code></td>
-<td align="left">POST</td>
-<td align="left">Create a user with <code>login</code> and <code>password</code> parameters.</td>
+<td><code>/rest/new_user</code></td>
+<td>POST</td>
+<td>Create a user with <code>login</code> and <code>password</code> parameters.</td>
 </tr>
 <tr class="odd">
-<td align="left"><code>/rest/app</code></td>
-<td align="left">GET</td>
-<td align="left">Get logged in user login name and status.</td>
+<td><code>/rest/app</code></td>
+<td>GET</td>
+<td>Get logged in user login name and status.</td>
 </tr>
 <tr class="even">
-<td align="left"><code>/rest/exercise</code></td>
-<td align="left">GET</td>
-<td align="left">List existing exercises.</td>
+<td><code>/rest/exercise</code></td>
+<td>GET</td>
+<td>List existing exercises.</td>
 </tr>
 <tr class="odd">
-<td align="left"><code>/rest/exercise</code></td>
-<td align="left">POST</td>
-<td align="left">Create a new exercise with <code>name</code> and <code>type</code> parameters.</td>
+<td><code>/rest/exercise</code></td>
+<td>POST</td>
+<td>Create a new exercise with <code>name</code> and <code>type</code> parameters.</td>
 </tr>
 </tbody>
 </table>
@@ -132,7 +128,7 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <p>Any tests that modify or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence or have its authentication cookies passed into it. I went for the latter approach as it allows logging in once and running multiple tests with the same cookies.</p>
 <p>I define top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, followed by running a list of sub-tests with cookies acquired from the login process. The sequencing is explicitly declared by using <code>test-framework</code>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
 <p>Here’s the definition of <code>loginUserTests</code>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span>
 <span class="co">-- from the login process.</span>
 <span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span>
 loginUserTests tests <span class="fu">=</span> <span class="kw">do</span>
@@ -140,26 +136,26 @@ loginUserTests tests <span class="fu">=</span> <span class="kw">do</span>
   <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> cookies <span class="fu">.~</span> (r <span class="fu">^.</span> responseCookieJar)
   return
     <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span>
-    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</code></pre>
+    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</code></pre></div>
 <p>It performs a HTTP POST on <code>/rest/login</code> with the test user’s login credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes them to sub-tests so that they can run authenticated.</p>
 <p>Here’s how <code>loginUserTests</code> gets used:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Test case that tests that we&#39;re successfully logged in</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Test case that tests that we&#39;re successfully logged in</span>
 <span class="co">-- Options must contain the necessary login cookies.</span>
 <span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testLoggedInOk opts <span class="fu">=</span> <span class="kw">do</span>
   r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)
-  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _<span class="dt">Bool</span>)
+  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _Bool)
 
 <span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span>
   defaultMain
   [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
   , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
-  ]</code></pre>
+  ]</code></pre></div>
 <p>Function <code>testLoggedInOk</code> tests that it can HTTP GET <code>/rest/app</code> successfully. It also tests that the returned JSON object contains a field <code>loggedIn</code> with value <code>true</code>.</p>
 <h2 id="negative-testing">Negative testing</h2>
 <p>One shouldn’t forget about negative testing, so let’s develop a test for checking that entry points correctly respond with an error 403 on unauthenticated access:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- GET requests against &#39;url&#39; and expect to get error 403 back</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- GET requests against &#39;url&#39; and expect to get error 403 back</span>
 <span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span>
   E.try (getWith opts url) <span class="fu">&gt;&gt;=</span> check
@@ -185,7 +181,7 @@ main <span class="fu">=</span>
                , <span class="st">&quot;/rest/workout&quot;</span>
                , <span class="st">&quot;/rest/workout&quot;</span>
                , <span class="st">&quot;/rest/stats/workout&quot;</span>
-               ]</code></pre>
+               ]</code></pre></div>
 <h2 id="creating-objects">Creating objects</h2>
 <p>Here we will test two entry points: one for creating a new exercise like “Chin-ups” and one for listing existing exercises. Creation is a HTTP POST to <code>/rest/exercise</code> and listing exercises is HTTP GET <code>/rest/exercise</code>.</p>
 <p>A successful POST to <code>/rest/exercise</code> will create a new object on the server and return the object to the client as JSON. Here’s what that repsonse might look like:</p>
@@ -197,20 +193,20 @@ main <span class="fu">=</span>
 ]</code></pre>
 <p>To test creating exercise objects, we’ll create an exercise, verify that its returned properties match what we gave on creation, and finally retrieve the complete exercise list and check that the object is listed.</p>
 <p>Here’s the code for the above test strategy. The <a href="http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html">Aeson Lens API</a> is particularly handy for this type of ad hoc JSON value inspection!</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
 testAddExercise opts <span class="fu">=</span> <span class="kw">do</span>
   <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span>
       ty   <span class="fu">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span>
   r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="fu">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="fu">:=</span> ty]
   <span class="co">-- Verify that the newly created object matches creation params</span>
-  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _<span class="dt">String</span>
-  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _<span class="dt">String</span>
+  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _String
+  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _String
   <span class="co">-- Verify that the object ended up in the global list of exercises</span>
-  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span>
+  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer
   r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)
   assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)
   <span class="kw">where</span>
-    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _<span class="dt">Integer</span></code></pre>
+    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</code></pre></div>
 <h2 id="conclusion">Conclusion</h2>
 <p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
 <p>You can find the full source code to these tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
@@ -302,13 +298,13 @@ Main.hs:118:8:
 <li>Measure the time it takes to query the first column of all these rows.</li>
 </ol>
 <p>The schema consists of a single <code>testdata</code> table, defined as:</p>
-<pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">CREATE</span> <span class="kw">TABLE</span> testdata (<span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, str TEXT, t <span class="dt">TIMESTAMP</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">CREATE</span> <span class="kw">TABLE</span> testdata (<span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, str TEXT, t <span class="dt">TIMESTAMP</span>)</code></pre></div>
 <p>See <a href="https://github.com/nurpax/db-bench/tree/master/db-util">db-bench/db-util</a> for more details.</p>
 <p>The sqlite-simple query being measured is defined as:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">selectInts ::</span> <span class="dt">S.Connection</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">selectInts ::</span> <span class="dt">S.Connection</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
 selectInts conn <span class="fu">=</span> <span class="kw">do</span>
   rows <span class="ot">&lt;-</span> S.query_ conn <span class="st">&quot;SELECT id FROM testdata&quot;</span><span class="ot"> ::</span> <span class="dt">IO</span> [(<span class="dt">S.Only</span> <span class="dt">Int</span>)]
-  checksum <span class="fu">$</span> foldl&#39; (\acc (<span class="dt">S.Only</span> v) <span class="ot">-&gt;</span> v <span class="fu">+</span> acc) <span class="dv">0</span> rows</code></pre>
+  checksum <span class="fu">$</span> foldl&#39; (\acc (<span class="dt">S.Only</span> v) <span class="ot">-&gt;</span> v <span class="fu">+</span> acc) <span class="dv">0</span> rows</code></pre></div>
 <p>Basically, it SELECTs all the rows from the <code>testdata</code> table and converts the result into a Haskell list of <code>Int</code>s and, as a sanity check, sums the resulting integers together.</p>
 <p>Several variants of this function are benchmarked. The main variants for SQLite are:</p>
 <ul>
@@ -330,10 +326,10 @@ selectInts conn <span class="fu">=</span> <span class="kw">do</span>
 <p>Here’s how they perform:</p>
 <div>
 <h4 id="native-c-vs-haskell-bindings-rowss">Native C vs Haskell bindings (rows/s)</h4>
-<div id="chart-c-vs-haskell" style="width:600px;height:360px;"></div>
+<div id="chart-c-vs-haskell" style="width:600px;height:360px;">
+
 </div>
-
-
+</div>
 <h2 id="results-analysis">Results analysis</h2>
 <p>The collected benchmark data was used to identify various performance improvement opportunities in sqlite-simple.</p>
 <p>Original performance without optimizations was just barely over 50K rows/s. This was a performance bug I caused when I forked sqlite-simple from postgresql-simple. The problem was in a function called <code>stepStmt</code> that should’ve been tail recursive but wasn’t. Fixing this in <a href="https://github.com/nurpax/sqlite-simple/commit/d2b6f6a50e116e1bad28395eac4646c1e6b34c4b">d2b6f6a5</a> nicely bumped up the score from 53K to 750K rows/s.</p>
@@ -341,7 +337,7 @@ selectInts conn <span class="fu">=</span> <span class="kw">do</span>
 <p>At this point I ran out of low hanging fruit in sqlite-simple and started to look elsewhere for optimizations. A low-level direct-sqlite benchmark was clocking around 2.43M rows/s which seemed a little low when a C implementation of the same was processing rows at almost 6.9M rows/s. Even a Python reimplementation of my benchmark case was faster at 2.5M rows/s. To highlight how large the performance delta between C and direct-sqlite were, it’s helpful to turn the comparison into absolute clock cycles. On my 3.2GHz machine, 6.9M rows/s means SQLite spends roughly 460 clock cycles per row.</p>
 <p>Similarly, at 2.43M rows/s on direct-sqlite, each row cost roughly 1300 clock cycles out of which 460 was spent in the native SQLite library. Somehow roughly 840 clock cycles per row were spent in Haskell SQLite bindings. The overhead of just calling into SQLite from Haskell was higher than the actual cost of computing the result set inside SQLite! Yet, there wasn’t much going on in the wrapper library.</p>
 <p>Consider the innerloop of the direct-sqlite benchmark:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">sumRowsColumnInt64 ::</span> <span class="dt">DS.Statement</span> <span class="ot">-&gt;</span> <span class="dt">Int64</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int64</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">sumRowsColumnInt64 ::</span> <span class="dt">DS.Statement</span> <span class="ot">-&gt;</span> <span class="dt">Int64</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int64</span>
 sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <span class="kw">do</span>
   r <span class="ot">&lt;-</span> DS.step stmt
   <span class="kw">case</span> r <span class="kw">of</span>
@@ -350,7 +346,7 @@ sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <
         i <span class="ot">&lt;-</span> DS.columnInt64 stmt <span class="dv">0</span>
         sumRowsColumnInt64 stmt (acc <span class="fu">+</span> i)
     <span class="dt">DS.Done</span> <span class="ot">-&gt;</span>
-      <span class="fu">return</span> acc</code></pre>
+      return acc</code></pre></div>
 <p>The direct-sqlite calls <code>DS.step</code> and <code>DS.columnInt64</code> map quite directly to their native SQLite counterparts <code><a href="http://www.sqlite.org/c3ref/step.html">sqlite3_step</a></code> and <code><a href="http://www.sqlite.org/c3ref/column_blob.html">sqlite3_column_int</a></code>. Thus the expectation is that their cost should be roughly the same as in the C version of this benchmark.</p>
 <p>No matter how bad a compiler you might have, there’s no way the simple Haskell code around <code>sqlite3_step</code> and <code>sqlite3_column_int</code> would add up to 840 clocks per row.</p>
 <p>Turns out FFI call overhead dominated this benchmark. It was possible to reduce this overhead by using the <code>unsafe</code> FFI calling convention for some of the SQLite column accessors. This change was made in direct-sqlite <a href="https://github.com/IreneKnapp/direct-sqlite/pull/20">pull request #20</a>. As the name <code>unsafe</code> implies, it’s not OK to simply mark all FFI functions as unsafe – please refer to the pull request discussion for details. The tl;dr of the FFI discussion was that it’s OK to mark result data accessors like <code>sqlite3_column_int64</code> and <code>sqlite3_column_count</code> as <code>unsafe</code> but that any functions doing the actual query heavy lifting like <code>sqlite3_step</code> should be kept safe.</p>
@@ -358,10 +354,10 @@ sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <
 <p>The following chart summarizes how performance progressed through the above optimizations:</p>
 <div>
 <h4 id="optimization-progress-rowss">Optimization progress (rows/s)</h4>
-<div id="chart-opt-progress" style="width:600px;height:360px;"></div>
+<div id="chart-opt-progress" style="width:600px;height:360px;">
+
 </div>
-
-
+</div>
 <h2 id="comparing-to-other-implementations-and-databases">Comparing to other implementations and databases</h2>
 <p>As an extra bonus, I also compared my results to other databases and to other Haskell database bindings. Furthermore, I wanted to know how well Python fares with its built-in sqlite3 module. I thus implemented a few more variants of my benchmark:</p>
 <ul>
@@ -372,9 +368,10 @@ sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <
 </ul>
 <div>
 <h4 id="databaselibrary-comparison-rowss">Database/library comparison (rows/s)</h4>
-<div id="chart-cross-db" style="width:600px;height:360px;"></div>
-</div>
+<div id="chart-cross-db" style="width:600px;height:360px;">
 
+</div>
+</div>
 <p>I didn’t do any performance analysis for non-sqlite benchmark results, and wouldn’t draw too many conclusions about the results. These results do seem to confirm though that the HDBC library adds a fairly significant overhead to database row access. Comparing HDBC against sqlite-simple, we get 105K vs 1.8M rows/s.</p>
 <h2 id="next-steps">Next steps</h2>
 <p>There are still many areas that would need further analysis:</p>
@@ -445,9 +442,7 @@ $(function () {
      barchart("#chart-c-vs-haskell", "ne", dataNativeVsHaskell);
      barchart("#chart-opt-progress", "nw", dataProgression);
 });
-</script>
-
-]]></summary>
+</script>]]></summary>
 </entry>
 <entry>
     <title>AngularJS with Haskell</title>
@@ -458,16 +453,18 @@ $(function () {
     <summary type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
 <p>I recently wrote a simple To-Do app in <a href="http://angularjs.org/">AngularJS</a> using the Haskell web development framework called <a href="http://snapframework.com/">Snap</a>. I started with the To-Do example I found on the <a href="http://angularjs.org/">AngularJS’s homepage</a> and added the necessary JavaScript plumbing to enable talking to a Haskell web server over a REST API. I figured someone might find my little app a useful starting point for developing web applications with AngularJS and Snap, and so I decided to upload the <a href="https://github.com/nurpax/snap-examples/tree/master/angularjs-todo">code on github</a> and write this code walkthrough.</p>
 <p>To get started, you can try to build &amp; run the app:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">git</span> clone git://github.com/nurpax/snap-examples
-<span class="kw">cd</span> snap-examples/angularjs-todo
-<span class="kw">cabal-dev</span> install
-<span class="kw">./cabal-dev/bin/angularjs-todo</span>
-<span class="co"># browse to http://localhost:8000</span></code></pre>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">git</span> clone git://github.com/nurpax/snap-examples
+<span class="bu">cd</span> snap-examples/angularjs-todo
+<span class="ex">cabal-dev</span> install
+<span class="ex">./cabal-dev/bin/angularjs-todo</span>
+<span class="co"># browse to http://localhost:8000</span></code></pre></div>
 <p>You should see something like this:</p>
 <div class="screenshot white-bg">
+<div class="figure">
 <img src="/images/angular-todo1.png" title="AngularJS ToDo app with Haskell" />
-</div>
 
+</div>
+</div>
 <p>I will not go into much detail about AngularJS usage here – you should read more about it on their <a href="http://angularjs.org/">homepage</a>. This post will focus on what’s needed in order to build an AngularJS app with a Haskell backend.</p>
 <p>In an AngularJS app, a major part of the application is JavaScript and runs in the the browser. These applications are usually backed by a central server. In our case, the backend is written in Haskell. This server takes care of user management, authentication and persistence. The frontend talks to the backend via a REST API. The REST API communicates things like adding or listing to-do items.</p>
 <h2 id="frontend-javascript-parts">Frontend JavaScript parts</h2>
@@ -487,14 +484,14 @@ $(function () {
 <li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">src/Db.hs</a> - Model definition (types, JSON serialization, database persistence)</li>
 </ul>
 <p>The model definition of our to-do app is quite simple. The main type is the <code>Todo</code> item:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Todo</span> <span class="fu">=</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Todo</span> <span class="fu">=</span>
   <span class="dt">Todo</span>
   {<span class="ot"> todoId   ::</span> <span class="dt">Maybe</span> <span class="dt">Int64</span>  <span class="co">-- database row id</span>
   ,<span class="ot"> todoText ::</span> <span class="dt">T.Text</span>       <span class="co">-- todo text</span>
   ,<span class="ot"> todoDone ::</span> <span class="dt">Bool</span>         <span class="co">-- completed?</span>
-  } <span class="kw">deriving</span> (<span class="kw">Show</span>)</code></pre>
+  } <span class="kw">deriving</span> (<span class="dt">Show</span>)</code></pre></div>
 <p>The <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module defines how these objects can be serialized to/from JSON using the <a href="http://hackage.haskell.org/package/aeson">aeson package</a>:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">Todo</span> <span class="kw">where</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">Todo</span> <span class="kw">where</span>
   parseJSON (<span class="dt">Object</span> v) <span class="fu">=</span>
     <span class="dt">Todo</span> <span class="fu">&lt;$&gt;</span> optional (v <span class="fu">.:</span> <span class="st">&quot;id&quot;</span>)
          <span class="fu">&lt;*&gt;</span> v <span class="fu">.:</span> <span class="st">&quot;text&quot;</span>
@@ -506,12 +503,12 @@ $(function () {
     object [ <span class="st">&quot;id&quot;</span> <span class="fu">.=</span> fromJust i
            , <span class="st">&quot;text&quot;</span> <span class="fu">.=</span> text
            , <span class="st">&quot;done&quot;</span> <span class="fu">.=</span> done
-           ]</code></pre>
+           ]</code></pre></div>
 <p>The rest of the module is about persisting <code>Todo</code>s in an SQLite database.</p>
 <p>The final piece of the puzzle is the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">Site</a> module which plugs all of the above server bits together. It manages routing, authentication and serves to-do items over a REST API. The server-side routing is defined as follows:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Render main page</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Render main page</span>
 <span class="ot">mainPage ::</span> <span class="dt">H</span> ()
-mainPage <span class="fu">=</span> withLoggedInUser (<span class="fu">const</span> <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)
+mainPage <span class="fu">=</span> withLoggedInUser (const <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)
 
 <span class="co">-- | The application&#39;s routes.</span>
 <span class="ot">routes ::</span> [(<span class="dt">ByteString</span>, <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">App</span> ())]
@@ -521,14 +518,14 @@ routes <span class="fu">=</span> [ (<span class="st">&quot;/login&quot;</span>, 
          , (<span class="st">&quot;/api/todo&quot;</span>,     with auth handleTodos)
          , (<span class="st">&quot;/&quot;</span>,             with auth mainPage)
          , (<span class="st">&quot;/static&quot;</span>,       serveDirectory <span class="st">&quot;static&quot;</span>)
-         ]</code></pre>
+         ]</code></pre></div>
 <p>There’s a couple of things to note about the above routing table:</p>
 <ul>
 <li>The REST interface is at <code>/api/todo</code> and gets handled by <code>handleTodos</code></li>
 <li>Serving the main page is just a matter of serving static files. This is because all the important templating happens on client-side in <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>.</li>
 </ul>
 <p>The actual implementation of the <code>/api/todo</code> handler is straightforward (esp. with the hidden gem that is <a href="http://hackage.haskell.org/package/snap-extras">snap-extras</a>):</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">handleTodos ::</span> <span class="dt">H</span> ()
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">handleTodos ::</span> <span class="dt">H</span> ()
 handleTodos <span class="fu">=</span>
   method <span class="dt">GET</span>  (withLoggedInUser getTodos) <span class="fu">&lt;|&gt;</span>
   method <span class="dt">POST</span> (withLoggedInUser saveTodo)
@@ -539,18 +536,20 @@ handleTodos <span class="fu">=</span>
 
     saveTodo user <span class="fu">=</span> <span class="kw">do</span>
       newTodo <span class="ot">&lt;-</span> getJSON
-      <span class="fu">either</span> (<span class="fu">const</span> <span class="fu">$</span> <span class="fu">return</span> ()) persist newTodo
+      either (const <span class="fu">$</span> return ()) persist newTodo
         <span class="kw">where</span>
           persist todo <span class="fu">=</span> <span class="kw">do</span>
             savedTodo <span class="ot">&lt;-</span> withDb <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.saveTodo conn user todo
-            writeJSON savedTodo</code></pre>
+            writeJSON savedTodo</code></pre></div>
 <p>Function <code>handleTodos</code> handles either <code>GET</code> or <code>POST</code> requests, for retrieving and modifying todo items. All its request parameters come in as JSON – these are turned into Haskell objects using <code>getJSON</code> from <a href="http://hackage.haskell.org/packages/archive/snap-extras/0.3/doc/html/Snap-Extras-JSON.html">Snap.Extras.JSON</a>. Similarly, we use <code>writeJSON</code> for outputting the request response. Automatic JSON encode and decode is made possible by the <code>FromJSON</code> and <code>ToJSON</code> instances defined in the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module.</p>
 <h2 id="debugging-json-responses">Debugging JSON responses</h2>
 <p>A good way to debug your REST APIs is to use Chrome’s Developer Tools. Open the Developer console and click on the Network tab. When you load a page, you can see what requests are being made and you can inspect what JSON gets sent by clicking on the individual <code>/api/todo</code> requests. Here’s an example of what traffic gets generated when complete a to-do:</p>
 <div class="screenshot white-bg">
+<div class="figure">
 <img src="/images/angular-todo2-check.png" title="Chrome dev tool view" />
-</div>
 
+</div>
+</div>
 <p>This is the result of a <code>todo.$save()</code> AJAX call.</p>
 <h2 id="what-next">What next?</h2>
 <p>Well.. The easy part is over. If you want to learn more about using AngularJS with Snap, I suggest that you:</p>
@@ -572,46 +571,46 @@ handleTodos <span class="fu">=</span>
 <p>I recently implemented a To-Do app (the “Hello World” of web apps) using <a href="http://angularjs.org/">AngularJS</a> on the frontend and <a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t heard about AngularJS, I highly recommend you to check it out – it’s got a very clean approach to developing modern single-page web apps.</p>
 <p>In my app, the Snap-based server was used mainly for authentication and persistence. The rest of the app runs client-side in JavaScript and talks to the server over a simple REST API. Getting all this up and running was surprisingly easy.</p>
 <p>Anyhow.. Turns out it’s easy to write an AngularJS app that sends a lot of concurrent requests to the server, even in the single user case. As an example, you can iterate through a list of todo-items in JavaScript, persisting each item with a call to <code>item.$save()</code>:</p>
-<pre class="sourceCode javascript"><code class="sourceCode javascript">    <span class="ot">$scope</span>.<span class="fu">archive</span> = <span class="kw">function</span>() {
-        <span class="kw">var</span> oldTodos = <span class="ot">$scope</span>.<span class="fu">todos</span>;
-        <span class="ot">$scope</span>.<span class="fu">todos</span> = [];
-        <span class="ot">angular</span>.<span class="fu">forEach</span>(oldTodos, <span class="kw">function</span>(todo) {
-            <span class="kw">if</span> (!<span class="ot">todo</span>.<span class="fu">done</span>)
-                <span class="ot">$scope</span>.<span class="ot">todos</span>.<span class="fu">push</span>(todo);
+<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript">    <span class="va">$scope</span>.<span class="at">archive</span> <span class="op">=</span> <span class="kw">function</span>() <span class="op">{</span>
+        <span class="kw">var</span> oldTodos <span class="op">=</span> <span class="va">$scope</span>.<span class="at">todos</span><span class="op">;</span>
+        <span class="va">$scope</span>.<span class="at">todos</span> <span class="op">=</span> []<span class="op">;</span>
+        <span class="va">angular</span>.<span class="at">forEach</span>(oldTodos<span class="op">,</span> <span class="kw">function</span>(todo) <span class="op">{</span>
+            <span class="cf">if</span> (<span class="op">!</span><span class="va">todo</span>.<span class="at">done</span>)
+                <span class="va">$scope</span>.<span class="va">todos</span>.<span class="at">push</span>(todo)<span class="op">;</span>
 
-            <span class="ot">todo</span>.<span class="fu">$save</span>();
-        });
-    };</code></pre>
+            <span class="va">todo</span>.<span class="at">$save</span>()<span class="op">;</span>
+        <span class="op">}</span>)<span class="op">;</span>
+    <span class="op">};</span></code></pre></div>
 <p>Each <code>$save()</code> triggers an AJAX call and the server will see these as multiple concurrent requests.</p>
 <p>Unfortunately though, I started seeing lot of SQLITE_BUSY errors on the server side with this usage. Turns out accessing a single SQLite3 database from multiple threads, each with its own connection is not as simple as I thought. If you’re in the middle of reading rows from a SELECT and you issue an INSERT from another connection, the INSERT will fail with an SQLITE_BUSY error. Here’s Haskell code that reproduces this problem:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span>
 
 <span class="kw">module</span> <span class="dt">Direct</span> (
   directSqliteTest
   ) <span class="kw">where</span>
 
-<span class="kw">import</span> Control.Monad
-<span class="kw">import</span> Database.SQLite3.Direct
+<span class="kw">import </span><span class="dt">Control.Monad</span>
+<span class="kw">import </span><span class="dt">Database.SQLite3.Direct</span>
 
 <span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()
 directSqliteTest <span class="fu">=</span> <span class="kw">do</span>
-  <span class="kw">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
-  <span class="kw">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="dt">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
+  <span class="dt">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
 
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
   exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
 
-  <span class="kw">Right</span> (<span class="kw">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
+  <span class="dt">Right</span> (<span class="dt">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
   a <span class="ot">&lt;-</span> step sr
   a <span class="ot">&lt;-</span> step sr
-  <span class="fu">print</span> a
+  print a
   x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
   <span class="co">-- ^^ SQLITE_BUSY is triggered</span>
   finalize sr
-  <span class="fu">print</span> x
+  print x
 
   void <span class="fu">$</span> close conn1
-  void <span class="fu">$</span> close conn2</code></pre>
+  void <span class="fu">$</span> close conn2</code></pre></div>
 <p>The above code will print:</p>
 <pre><code>$ ./dist/build/sqlite-test/sqlite-test
 Right Row
@@ -631,7 +630,7 @@ Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
 <p>I decided to do a bit of data mining on Garmin GPS files to figure out how RunKeeper interprets it differently. Garmin’s tools can export GPS data as both GPX and <a href="http://en.wikipedia.org/wiki/Training_Center_XML">TCX</a>. The latter format is developed by Garmin and quite likely the closest match to the their native format. Both GPX and TCX are XML.</p>
 <p>I didn’t get very far with actual GPS track analysis but I did write a TCX file reader in Haskell using the <a href="http://hackage.haskell.org/package/hxt">Haskell XML Toolbox (hxt)</a> library. As there seems to be a bit of a lack of Haskell XML parsing examples on the Internet, I decided to post my TCX reader here as an example of parsing Real World XML data in Haskell.</p>
 <p>Here’s a short sample of what a TCX file looks like (some elements have been omitted and xmlns URLs truncated for brevity):</p>
-<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
+<div class="sourceCode"><pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
 <span class="co">&lt;!-- Some elements omitted for brevity --&gt;</span>
 <span class="kw">&lt;TrainingCenterDatabase</span>
 <span class="ot">  xsi:schemaLocation=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/...d&quot;</span>
@@ -652,7 +651,7 @@ Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
             <span class="kw">&lt;DistanceMeters&gt;</span>0.0<span class="kw">&lt;/DistanceMeters&gt;</span>
             <span class="kw">&lt;HeartRateBpm&gt;</span>
               <span class="kw">&lt;Value&gt;</span>134<span class="kw">&lt;/Value&gt;</span>
-            <span class="kw">&lt;/HeartRateBpm&gt;</span></code></pre>
+            <span class="kw">&lt;/HeartRateBpm&gt;</span></code></pre></div>
 <p>The Haskell code for TCX file reading can be found below (also up on <a href="https://github.com/nurpax/hs-tcx">github</a> with a .cabal file). Here’s an outline of what it does:</p>
 <ul>
 <li>The input XML document is read from a file called <code>test-act.tcx</code></li>
@@ -660,24 +659,24 @@ Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
 <li>The resulting Haskell objects (<code>Activity</code>, <code>Lap</code> and <code>Trackpoint</code>) are traversed and output to stdout</li>
 </ul>
 <p>Note: As is probably obvious, this code is not meant to be comprehensive library for accessing TCX data – it’s really just an example of how to get started with HXT and TCX.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
 
-<span class="kw">import</span> Text.XML.HXT.Core
-<span class="kw">import</span> Data.Time (UTCTime, readTime)
-<span class="kw">import</span> System.Locale (defaultTimeLocale)
+<span class="kw">import </span><span class="dt">Text.XML.HXT.Core</span>
+<span class="kw">import </span><span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)
+<span class="kw">import </span><span class="dt">System.Locale</span> (defaultTimeLocale)
 
 <span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]
-  <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Lap</span> <span class="fu">=</span> <span class="dt">Lap</span> {
 <span class="ot">    lapDistance ::</span> <span class="dt">Float</span>
   ,<span class="ot"> lapTrackpoints ::</span> [<span class="dt">Trackpoint</span>]
-  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Trackpoint</span> <span class="fu">=</span> <span class="dt">Trackpoint</span> {
 <span class="ot">    tpTime ::</span> <span class="dt">UTCTime</span>
   ,<span class="ot"> tpBpm ::</span> <span class="dt">String</span>
-  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="ot">atTag ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">XmlTree</span>
 atTag tag <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName tag)
@@ -702,7 +701,7 @@ getLap <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span
   proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
     pts <span class="ot">&lt;-</span> listA getTrackpoint <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Track&quot;</span> <span class="fu">-&lt;</span> x
     dist <span class="ot">&lt;-</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;DistanceMeters&quot;</span> <span class="fu">&gt;&gt;&gt;</span> text <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (<span class="fu">read</span> dist) pts
+    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (read dist) pts
 
 <span class="ot">getActivity ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Activity</span>
 getActivity <span class="fu">=</span> atTag <span class="st">&quot;Activity&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
@@ -719,19 +718,19 @@ getActivities <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&g
 <span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span> <span class="kw">do</span>
   activities <span class="ot">&lt;-</span> runX (readDocument [withValidate no] <span class="st">&quot;test-act.tcx&quot;</span> <span class="fu">&gt;&gt;&gt;</span> getActivities)
-  <span class="fu">mapM_</span> printActivity (<span class="fu">head</span> activities)
+  mapM_ printActivity (head activities)
   <span class="kw">where</span>
     printActivity (<span class="dt">Activity</span> laps) <span class="fu">=</span> <span class="kw">do</span>
-      <span class="fu">putStrLn</span> <span class="st">&quot;Activity:&quot;</span>
-      <span class="fu">mapM_</span> printLaps laps
+      putStrLn <span class="st">&quot;Activity:&quot;</span>
+      mapM_ printLaps laps
 
     printLaps (<span class="dt">Lap</span> distance trackpts) <span class="fu">=</span> <span class="kw">do</span>
-      <span class="fu">putStrLn</span> <span class="st">&quot;  Lap:&quot;</span>
-      <span class="fu">putStrLn</span> (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> distance)
-      <span class="fu">mapM_</span> printTrackpoint trackpts
+      putStrLn <span class="st">&quot;  Lap:&quot;</span>
+      putStrLn (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> show distance)
+      mapM_ printTrackpoint trackpts
 
     printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
-      <span class="fu">putStrLn</span> (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> bpm)</code></pre>]]></summary>
+      putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</code></pre></div>]]></summary>
 </entry>
 <entry>
     <title>Snap with SQLite</title>
@@ -744,14 +743,18 @@ main <span class="fu">=</span> <span class="kw">do</span>
 <p>This example project implements a simple web app that has a login screen (with new user registration) and a main page where logged in users can drop comments. Users and comments are both persisted into an SQLite database.</p>
 <p>Here’s a couple of screenshots to show how it looks like. Let’s start with the login screen:</p>
 <div class="screenshot white-bg">
+<div class="figure">
 <img src="/images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
-</div>
 
+</div>
+</div>
 <p>If you create a new user and login to the app, you’re taken to the main page. Here the logged in user can add comments. The comments get persisted into a database and are associated with the current user (e.g., other users can’t see them.) Here’s how the main page looks like:</p>
 <div class="screenshot white-bg">
+<div class="figure">
 <img src="/images/snaplet-sqlite-simple-example-comments.png" title="Main page" />
-</div>
 
+</div>
+</div>
 <p>The example demonstrates a few basic concepts in a complete example:</p>
 <ul>
 <li>Connecting to an SQLite database</li>
@@ -761,26 +764,26 @@ main <span class="fu">=</span> <span class="kw">do</span>
 </ul>
 <p>Setting up the connection is easy, see the <code>app</code> function in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Site.hs">Site.hs</a>.</p>
 <p>Creating the database schema on app startup is perhaps less obvious. This also happens on app init:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | The application initializer.</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | The application initializer.</span>
 <span class="ot">app ::</span> <span class="dt">SnapletInit</span> <span class="dt">App</span> <span class="dt">App</span>
 <span class="co">-- ...</span>
     <span class="co">-- Grab the DB connection pool from the sqlite snaplet and call</span>
     <span class="co">-- into the Model to create all the DB tables if necessary.</span>
     <span class="kw">let</span> connPool <span class="fu">=</span> sqlitePool <span class="fu">$</span> d <span class="fu">^#</span> snapletValue
-    liftIO <span class="fu">$</span> withResource connPool <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.createTables conn</code></pre>
+    liftIO <span class="fu">$</span> withResource connPool <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.createTables conn</code></pre></div>
 <p>The actual table creation is done in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Db.hs">Db.hs</a>. This module also contains query functions for saving and listing comments for a given user.</p>
 <p>Everything on the main page requires a logged in user. Requiring a logged in user is ensured using <code>withLoggedInUser</code> which either calls a handler with the currently logged in user or redirects to the login screen. It’s defined as:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Run actions with a logged in user or go back to the login screen</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Run actions with a logged in user or go back to the login screen</span>
 <span class="ot">withLoggedInUser ::</span> (<span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()) <span class="ot">-&gt;</span> <span class="dt">H</span> ()
 withLoggedInUser action <span class="fu">=</span>
   currentUser <span class="fu">&gt;&gt;=</span> go
   <span class="kw">where</span>
-    go <span class="kw">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="kw">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
-    go (<span class="kw">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
+    go <span class="dt">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="dt">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
+    go (<span class="dt">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
       <span class="kw">where</span>
-        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (<span class="fu">read</span> <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre>
+        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (read <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre></div>
 <p>You can use it anywhere you need to access the currently logged in user. For example, here’s how the main page handler deals with the current user:</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()
 mainPage <span class="fu">=</span> withLoggedInUser go
   <span class="kw">where</span>
 <span class="ot">    go ::</span> <span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()
@@ -788,13 +791,13 @@ mainPage <span class="fu">=</span> withLoggedInUser go
       comments <span class="ot">&lt;-</span> withTop db <span class="fu">$</span> Db.listComments user
       heistLocal (splices comments) <span class="fu">$</span> render <span class="st">&quot;/index&quot;</span>
     splices cs <span class="fu">=</span>
-      I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</code></pre>
+      I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</code></pre></div>
 <p>To learn more about using sqlite-simple with Snap, I recommend you clone the code from Git, build the example, play with the app and read the <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example source code</a>:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">git</span> clone git://github.com/nurpax/snaplet-sqlite-simple.git
-<span class="kw">cd</span> example
-<span class="kw">cabal-dev</span> install
-<span class="kw">./cabal-dev/bin/example</span>
-<span class="co"># browse to http://localhost:8000</span></code></pre>]]></summary>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">git</span> clone git://github.com/nurpax/snaplet-sqlite-simple.git
+<span class="bu">cd</span> example
+<span class="ex">cabal-dev</span> install
+<span class="ex">./cabal-dev/bin/example</span>
+<span class="co"># browse to http://localhost:8000</span></code></pre></div>]]></summary>
 </entry>
 
 </feed>

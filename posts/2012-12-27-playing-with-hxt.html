@@ -46,7 +46,7 @@
 <p>I decided to do a bit of data mining on Garmin GPS files to figure out how RunKeeper interprets it differently. Garmin’s tools can export GPS data as both GPX and <a href="http://en.wikipedia.org/wiki/Training_Center_XML">TCX</a>. The latter format is developed by Garmin and quite likely the closest match to the their native format. Both GPX and TCX are XML.</p>
 <p>I didn’t get very far with actual GPS track analysis but I did write a TCX file reader in Haskell using the <a href="http://hackage.haskell.org/package/hxt">Haskell XML Toolbox (hxt)</a> library. As there seems to be a bit of a lack of Haskell XML parsing examples on the Internet, I decided to post my TCX reader here as an example of parsing Real World XML data in Haskell.</p>
 <p>Here’s a short sample of what a TCX file looks like (some elements have been omitted and xmlns URLs truncated for brevity):</p>
-<pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
+<div class="sourceCode"><pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
 <span class="co">&lt;!-- Some elements omitted for brevity --&gt;</span>
 <span class="kw">&lt;TrainingCenterDatabase</span>
 <span class="ot">  xsi:schemaLocation=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/...d&quot;</span>
@@ -67,7 +67,7 @@
             <span class="kw">&lt;DistanceMeters&gt;</span>0.0<span class="kw">&lt;/DistanceMeters&gt;</span>
             <span class="kw">&lt;HeartRateBpm&gt;</span>
               <span class="kw">&lt;Value&gt;</span>134<span class="kw">&lt;/Value&gt;</span>
-            <span class="kw">&lt;/HeartRateBpm&gt;</span></code></pre>
+            <span class="kw">&lt;/HeartRateBpm&gt;</span></code></pre></div>
 <p>The Haskell code for TCX file reading can be found below (also up on <a href="https://github.com/nurpax/hs-tcx">github</a> with a .cabal file). Here’s an outline of what it does:</p>
 <ul>
 <li>The input XML document is read from a file called <code>test-act.tcx</code></li>
@@ -75,24 +75,24 @@
 <li>The resulting Haskell objects (<code>Activity</code>, <code>Lap</code> and <code>Trackpoint</code>) are traversed and output to stdout</li>
 </ul>
 <p>Note: As is probably obvious, this code is not meant to be comprehensive library for accessing TCX data – it’s really just an example of how to get started with HXT and TCX.</p>
-<pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
 
-<span class="kw">import</span> Text.XML.HXT.Core
-<span class="kw">import</span> Data.Time (UTCTime, readTime)
-<span class="kw">import</span> System.Locale (defaultTimeLocale)
+<span class="kw">import </span><span class="dt">Text.XML.HXT.Core</span>
+<span class="kw">import </span><span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)
+<span class="kw">import </span><span class="dt">System.Locale</span> (defaultTimeLocale)
 
 <span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]
-  <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Lap</span> <span class="fu">=</span> <span class="dt">Lap</span> {
 <span class="ot">    lapDistance ::</span> <span class="dt">Float</span>
   ,<span class="ot"> lapTrackpoints ::</span> [<span class="dt">Trackpoint</span>]
-  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="kw">data</span> <span class="dt">Trackpoint</span> <span class="fu">=</span> <span class="dt">Trackpoint</span> {
 <span class="ot">    tpTime ::</span> <span class="dt">UTCTime</span>
   ,<span class="ot"> tpBpm ::</span> <span class="dt">String</span>
-  } <span class="kw">deriving</span> (<span class="kw">Show</span>)
+  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
 
 <span class="ot">atTag ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">XmlTree</span>
 atTag tag <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName tag)
@@ -117,7 +117,7 @@ getLap <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span
   proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
     pts <span class="ot">&lt;-</span> listA getTrackpoint <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Track&quot;</span> <span class="fu">-&lt;</span> x
     dist <span class="ot">&lt;-</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;DistanceMeters&quot;</span> <span class="fu">&gt;&gt;&gt;</span> text <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (<span class="fu">read</span> dist) pts
+    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (read dist) pts
 
 <span class="ot">getActivity ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Activity</span>
 getActivity <span class="fu">=</span> atTag <span class="st">&quot;Activity&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
@@ -134,19 +134,19 @@ getActivities <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&g
 <span class="ot">main ::</span> <span class="dt">IO</span> ()
 main <span class="fu">=</span> <span class="kw">do</span>
   activities <span class="ot">&lt;-</span> runX (readDocument [withValidate no] <span class="st">&quot;test-act.tcx&quot;</span> <span class="fu">&gt;&gt;&gt;</span> getActivities)
-  <span class="fu">mapM_</span> printActivity (<span class="fu">head</span> activities)
+  mapM_ printActivity (head activities)
   <span class="kw">where</span>
     printActivity (<span class="dt">Activity</span> laps) <span class="fu">=</span> <span class="kw">do</span>
-      <span class="fu">putStrLn</span> <span class="st">&quot;Activity:&quot;</span>
-      <span class="fu">mapM_</span> printLaps laps
+      putStrLn <span class="st">&quot;Activity:&quot;</span>
+      mapM_ printLaps laps
 
     printLaps (<span class="dt">Lap</span> distance trackpts) <span class="fu">=</span> <span class="kw">do</span>
-      <span class="fu">putStrLn</span> <span class="st">&quot;  Lap:&quot;</span>
-      <span class="fu">putStrLn</span> (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> distance)
-      <span class="fu">mapM_</span> printTrackpoint trackpts
+      putStrLn <span class="st">&quot;  Lap:&quot;</span>
+      putStrLn (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> show distance)
+      mapM_ printTrackpoint trackpts
 
     printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
-      <span class="fu">putStrLn</span> (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> <span class="fu">show</span> bpm)</code></pre>
+      putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</code></pre></div>
 </article>
 
 <ul class="social">
