@@ -8,8 +8,96 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2014-10-12T00:00:00Z</updated>
+    <updated>2016-11-01T00:00:00Z</updated>
     <entry>
+    <title>React Redux Todo app running on a Haskell server</title>
+    <link href="http://nurpax.github.com/posts/2016-11-01-react-redux-haskell-snap.html" />
+    <id>http://nurpax.github.com/posts/2016-11-01-react-redux-haskell-snap.html</id>
+    <published>2016-11-01T00:00:00Z</published>
+    <updated>2016-11-01T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>I put together a single-page web app (SPA) todo example for use in my personal projects. Its most noteworthy feature is end-to-end authentication implemented using <a href="https://github.com/mjrussell/redux-auth-wrapper">redux-auth-wrapper</a> and <a href="https://jwt.io/">JWT</a>. The project implements a simple todo application with user account support. Data is persisted on a server implemented in Haskell. It’s not super complex but it took quite a bit of reading to put all the pieces together, so I figured I might as well publish it for others to learn from.</p>
+<p>You can find the application source code <a href="https://github.com/nurpax/snap-reactjs-todo/tree/blog-0.1">on github</a>.</p>
+<p>The project uses the following tools, libraries and techniques:</p>
+<ul>
+<li><a href="https://facebook.github.io/react/">React</a>, <a href="https://github.com/reactjs/redux">Redux</a> and <a href="https://github.com/reactjs/react-redux">React-redux</a></li>
+<li><a href="https://webpack.github.io/">Webpack</a> and <a href="https://babeljs.io/">Babel</a> (for JSX, ES6+ and CSS modules)</li>
+<li><a href="https://github.com/gaearon/redux-thunk">Redux-thunk</a> for async fetching in Redux actions</li>
+<li><a href="https://github.com/ReactTraining/react-router">React-router</a> and <a href="https://github.com/reactjs/react-router-redux">React-router-redux</a> for routing</li>
+<li><a href="https://github.com/mjrussell/redux-auth-wrapper">Redux-auth-wrapper</a> for implementing robust authenticated routing and login screens</li>
+<li><a href="https://jwt.io/">JWT</a>-based authentication that works well with Redux and routing</li>
+<li>Haskell for the backend using the <a href="http://snapframework.com/">Snap web framework</a> to serve the REST API</li>
+<li>Roll-my-own JWT authentication code for the Haskell backend</li>
+</ul>
+<p>The development setup does not implement hot module reloading (HMR) or server-side rendering (SSR). I imagine it’s possible to extend this setup for HMR. I don’t know if SSR is feasible without a Node.js based server.</p>
+<p>I won’t explain each and every one of the above libraries in details. They all have fairly good documentation and a whole bunch of tutorials on the net. Instead, I will just highlight some of the most relevant parts.</p>
+<h1 id="client-side">Client-side</h1>
+<p>Client routes are setup in <a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/client/containers/Root.js">client/containers/Root.js</a>:</p>
+<pre><code>const Root = () =&gt; (
+  &lt;Provider store={store}&gt;
+    &lt;Router history={history}&gt;
+      &lt;Route path=&#39;/&#39; component={Main} /&gt;
+      &lt;Route path=&#39;/todos&#39; component={UserIsAuthenticated(TodoList)} /&gt;
+      &lt;Route path=&#39;/login&#39; component={Login} /&gt;
+      &lt;Route path=&#39;/profile&#39; component={UserIsAuthenticated(Profile)} /&gt;
+      &lt;Route path=&#39;/signup&#39; component={SignUp} /&gt;
+    &lt;/Router&gt;
+  &lt;/Provider&gt;)</code></pre>
+<p>This sets up various routes like the home screen, todo list and login and logout routes. Notice the <code>UserIsAuthenticated</code> higher-order component that applies authentication constraints on the <code>TodoList</code> and <code>Profile</code> components. Those routes won’t be accessible unless the user is logged in.</p>
+<p>See <a href="https://github.com/mjrussell/redux-auth-wrapper">redux-auth-wrapper</a> for more information on setting up authentication and redux.</p>
+<h2 id="authenticated-fetch">Authenticated fetch</h2>
+<p>Client-side JWT handling is implemented in <a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/client/auth.js">client/auth.js</a>. It implements Redux actions and reducers related to user authentication. It exports a function called <code>fetchWithAuth</code> which is used instead of <code>fetch</code> whenever accessing API endpoints that require authentication.</p>
+<p>Here’s an example of how <code>fetchWithAuth</code> is used in <a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/client/actions.js">client/actions.js</a> to save a todo item:</p>
+<pre><code>export function saveTodo (todo) {
+  return function (dispatch, getState) {
+    return fetchWithAuth(getState, &#39;/api/todo&#39;, { method: &#39;POST&#39;, body: todo })
+      .then(json =&gt; dispatch(receiveTodo(json)))
+  }
+}</code></pre>
+<p>The <code>fetchWithAuth</code> function is basically just a wrapper around <code>fetch</code> that inserts the JWT user token into the Authorization header when issuing a fetch call.</p>
+<p>It currently does not handle expired tokens, though. It should be easy to extend it such that it will detect an expired token error, and issue an action that triggers a client-side redirect to the login screen.</p>
+<h1 id="api-server">API server</h1>
+<p>The backend is written in Haskell. It uses the Snap framework to get a basic web server running. It’s main functionality is to persist users and todo items and serve them via a JSON API. Apart from the one static <a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/static/index.html">index.html</a> used to bootstrap React, the server does not render any HTML.</p>
+<p>The relevant source files are:</p>
+<ul>
+<li><a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Site.hs">src/Site.hs</a> – Routes and API implementation</li>
+<li><a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Db.hs">src/Db.hs</a> – <a href="https://hackage.haskell.org/package/aeson">sqlite-simple</a> code for persisting todo items into a SQLite3 database</li>
+<li><a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Snap/Snaplet/SqliteJwt.hs">src/Snaplet/SqliteJwt.hs</a> – A Snap middleware that implements user accounts, password hashing and salting using BCrypt, and JWT for sessionless authentication.</li>
+</ul>
+<p>The request handler for todo items looks like so:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">handleRestTodos ::</span> <span class="dt">H</span> ()
+handleRestTodos <span class="fu">=</span> (method <span class="dt">GET</span> listTodos) <span class="fu">&lt;|&gt;</span> (method <span class="dt">POST</span> saveTodo)
+  <span class="kw">where</span>
+<span class="ot">    listTodos ::</span> <span class="dt">H</span> ()
+    listTodos <span class="fu">=</span> replyJson query
+      <span class="kw">where</span>
+        query (<span class="dt">J.User</span> uid _) <span class="fu">=</span> withTop db <span class="fu">$</span> Db.listTodos (<span class="dt">Db.UserId</span> uid)
+
+    saveTodo <span class="fu">=</span> <span class="kw">do</span>
+      ps <span class="ot">&lt;-</span> reqJSON
+      replyJson (query ps)
+      <span class="kw">where</span>
+        query ps (<span class="dt">J.User</span> uid _) <span class="fu">=</span>
+          <span class="co">-- If the input todo id is Nothing, create a new todo.  Otherwise update</span>
+          <span class="co">-- an existing one.</span>
+          <span class="kw">case</span> ptId ps <span class="kw">of</span>
+            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="kw">do</span>
+              withTop db <span class="fu">$</span> Db.newTodo (<span class="dt">Db.UserId</span> uid) (ptText ps)
+            <span class="dt">Just</span> tid <span class="ot">-&gt;</span> <span class="kw">do</span>
+              <span class="kw">let</span> newTodo <span class="fu">=</span> <span class="dt">Db.Todo</span> tid (ptSavedOn ps) (ptCompleted ps) (ptText ps)
+              withTop db <span class="fu">$</span> Db.saveTodo (<span class="dt">Db.UserId</span> uid) newTodo
+
+<span class="ot">    replyJson ::</span> <span class="dt">ToJSON</span> a <span class="ot">=&gt;</span> (<span class="dt">J.User</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">J.SqliteJwt</span> a) <span class="ot">-&gt;</span> <span class="dt">H</span> ()
+    replyJson action <span class="fu">=</span> <span class="kw">do</span>
+      res <span class="ot">&lt;-</span> with jwt <span class="fu">$</span> J.requireAuth action
+      writeJSON res</code></pre></div>
+<p>Query parameters for the <code>saveTodo</code> POST requests are passed in as JSON and parsed with the <a href="https://hackage.haskell.org/package/aeson">aeson</a> JSON parser. Static type checking enforces that invalid request parameters don’t get past the JSON parser.</p>
+<p>Server-side authentication is implemented in the <a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Snap/Snaplet/SqliteJwt.hs">SqliteJwt</a> module. It exports the <code>requireAuth</code> function which is used above to wrap request handlers. A wrapped handler will either be passed down the currently authenticated user or the request is terminated if JWT authentication failed.</p>
+<h1 id="future-work">Future work</h1>
+<p>The Haskell SqliteJwt module is work-in-progress and certainly not ready for production. For example, it doesn’t currently support token expiration or revoking existing tokens. It also hardcodes the site secret used to sign JWTs. I am planning to develop this module further to support these features and maybe publish it on Hackage.</p>
+<p>It’d also be interesting to plug in an external authentication mechanism like Google OAuth 2.0. I haven’t found good examples on how to do this robustly. There is discussion about this in redux-auth-wrapper <a href="https://github.com/mjrussell/redux-auth-wrapper/issues/46">github issue #46</a> but I haven’t tried toying around with those ideas yet. It will probably be quite a bit trickier than local authentication.</p>
+<p>Thanks for reading!</p>]]></summary>
+</entry>
+<entry>
     <title>Fixing Emacs GDB mode, part 1</title>
     <link href="http://nurpax.github.com/posts/2014-10-12-fixing-gdb-many-windows-source-buffer.html" />
     <id>http://nurpax.github.com/posts/2014-10-12-fixing-gdb-many-windows-source-buffer.html</id>
