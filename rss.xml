@@ -8,8 +8,65 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2016-11-01T00:00:00Z</updated>
+    <updated>2017-01-06T00:00:00Z</updated>
     <entry>
+    <title>CMake builds from within Sublime Text 3</title>
+    <link href="http://nurpax.github.com/posts/2017-01-06-cmake-sublime-text-3.html" />
+    <id>http://nurpax.github.com/posts/2017-01-06-cmake-sublime-text-3.html</id>
+    <published>2017-01-06T00:00:00Z</published>
+    <updated>2017-01-06T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>How to setup a C++11 project with CMake and make it buildable from within a Sublime Text 3 project.</p>
+<p>Example project can be found <a href="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab">here</a>.</p>
+<h2 id="step-1-create-c-and-cmake-files">Step 1: Create C++ and CMake files</h2>
+<p>Create a C++ source file:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
+
+<span class="dt">int</span> main()
+{
+    printf(<span class="st">&quot;Hello, world!</span><span class="sc">\n</span><span class="st">&quot;</span>);
+    <span class="cf">return</span> <span class="dv">0</span>;
+}</code></pre></div>
+<p>Create a CMakeLists.txt to build your C++ file:</p>
+<pre><code>cmake_minimum_required (VERSION 2.6)
+project (example)
+set (CMAKE_CXX_FLAGS &quot;${CMAKE_CXX_FLAGS} -std=c++11&quot;)
+add_executable(example main.cpp)</code></pre>
+<h2 id="step-2">Step 2:</h2>
+<p>Use CMake to generate your makefiles. We put these temporaries under a <code>./build</code> directory.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">mkdir</span> build
+<span class="bu">cd</span> build
+<span class="fu">cmake</span> ..</code></pre></div>
+<p>If you now run <code>make</code> in the <code>./build</code> directory, your project should build.</p>
+<h2 id="step-3-create-your-st3-project">Step 3: Create your ST3 project</h2>
+<p>Create a <code>example.sublime-project</code> file for your project.</p>
+<p>Edit the project file and add a build system (see “build_systems”):</p>
+<div class="sourceCode"><pre class="sourceCode json"><code class="sourceCode json"><span class="fu">{</span>
+    <span class="dt">&quot;folders&quot;</span><span class="fu">:</span>
+    <span class="ot">[</span>
+        <span class="fu">{</span>
+            <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;.&quot;</span>
+        <span class="fu">}</span>
+    <span class="ot">]</span><span class="fu">,</span>
+    <span class="dt">&quot;build_systems&quot;</span><span class="fu">:</span>
+    <span class="ot">[</span>
+        <span class="fu">{</span>
+            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;cmake&quot;</span><span class="fu">,</span>
+            <span class="dt">&quot;shell_cmd&quot;</span><span class="fu">:</span> <span class="st">&quot;make -C build&quot;</span><span class="fu">,</span>
+            <span class="dt">&quot;file_regex&quot;</span><span class="fu">:</span> <span class="st">&quot;/([^/:]+):(</span><span class="ch">\\</span><span class="st">d+):(</span><span class="ch">\\</span><span class="st">d+): &quot;</span>
+        <span class="fu">}</span>
+    <span class="ot">]</span>
+<span class="fu">}</span></code></pre></div>
+<p>This will add a “cmake” build system into ST3 when you open this project file. The convention used is to put the CMake generated makefiles under ./build, and thus the build command uses <code>make -C build</code> instead of just <code>make</code>.</p>
+<h2 id="step-4-build-from-within-st3">Step 4: Build from within ST3</h2>
+<p>Load the example project into ST3.</p>
+<p>You should be able to choose <code>cmake</code> as your current build system from ST3 Tools/Build System menu.</p>
+<p>If you now hit Ctrl-Shift-B (or ⌘ + ⇧ + V), your project should build and you should see the build output in bottom console window.</p>
+<p>If you encountered build errors, you can go to next/prev error with F4 and Shift-F4.</p>
+<h2 id="full-source-code">Full source code</h2>
+<p><a href="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab">Project gist</a>, embedded below.</p>
+<script src="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab.js"></script>]]></summary>
+</entry>
+<entry>
     <title>React Redux Todo app running on a Haskell server</title>
     <link href="http://nurpax.github.com/posts/2016-11-01-react-redux-haskell-snap.html" />
     <id>http://nurpax.github.com/posts/2016-11-01-react-redux-haskell-snap.html</id>
