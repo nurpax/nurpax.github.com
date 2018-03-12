@@ -8,8 +8,31 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2017-01-06T00:00:00Z</updated>
+    <updated>2018-03-12T00:00:00Z</updated>
     <entry>
+    <title>3D Starfield in React Native</title>
+    <link href="http://nurpax.github.com/posts/2018-03-02-react-native-60fps-starfield.html" />
+    <id>http://nurpax.github.com/posts/2018-03-02-react-native-60fps-starfield.html</id>
+    <published>2018-03-12T00:00:00Z</published>
+    <updated>2018-03-12T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>I’ve been working on an iOS port of my web game <a href="http://nurpax.com/bintris">Bintris</a>. I ported the HTML/Javascript version to React Native (RN) to make it run on iOS.</p>
+<p>One of the game’s main visual ingredients is the real-time 3D starfield background. I originally put it in as a kind of placeholder but came to like it over time. So I had to figure out a performant way to implement it on RN.</p>
+<p>The web Bintris uses a pure-CSS starfield effect that I borrowed from <a href="https://codepen.io/keithclark/pen/ibEnk">here</a>. Here’s how my RN re-implementation looks like:</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/thBijc6x7e0?rel=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+<p>Both the CSS and RN versions use a trick to project the starfield random 3d-points onto a fixed number of xy-planes. This makes it quite a bit faster to animate and render than animating each 3D point separately. In the above video, the starfield consists of ten Animated.Views each containing 150 random stars. Each star is an absolutely positioned view with a white background color.</p>
+<p>React renders the starfield only once upon mounting. All further frame updates are done purely using RN animation with the native animation driver enabled using <code>useNativeDriver:true</code>. This moves starfield rendering completely off the main JavaScript UI thread. This results in buttery smooth animation and frees up the UI thread from processing all the 1500 views that make up the individual stars.</p>
+<p>If you want to see it running on your phone, install the Expo app on your phone and use it to scan the QR code from <a href="https://snack.expo.io/@nurpax/starfield">this Expo Snack</a>. The full source code to the starfield is contained within the Snack project.</p>
+<h2 id="improvements-ideas">Improvements ideas</h2>
+<p>Here are some thoughts on what could still be improved:</p>
+<ul>
+<li><p><code>shouldRasterizerIOS</code> should probably be used for any views rendered on top of the starfield. Should you have any views that are rendered on top of the starfield, RN will render them at 60 FPS. If the views are complex, you may run into performance or battery consumption problems. The <code>shouldRasterizeIOS</code> should help by first rendering the static views into an image and then compositing the images on top using alpha blending. Unfortunately, I didn’t find enough information on how exactly the RN and/or iOS view renderer works, so I didn’t enable this for my menus.</p></li>
+<li><p>The starfield would look smoother and less aliased if, instead of a white rectangle, a circle shaped image was used to render each individual star.</p></li>
+<li><p>RN stylesheet documentation recommends using <code>StyleSheet.create()</code> instead of inline styles. I’m now using inline styles everywhere. There may be a performance benefit to using <code>StyleSheet.create()</code>. In my case though, each individual star needs its own stylesheet as a star’s absolute position must be set using a stylesheet.</p></li>
+</ul>
+<p>Thoughts? Questions? Let’s discuss on <a href="https://reddit.com/TODO">Reddit</a>.</p>]]></summary>
+</entry>
+<entry>
     <title>CMake builds from within Sublime Text 3</title>
     <link href="http://nurpax.github.com/posts/2017-01-06-cmake-sublime-text-3.html" />
     <id>http://nurpax.github.com/posts/2017-01-06-cmake-sublime-text-3.html</id>
@@ -876,73 +899,6 @@ main <span class="fu">=</span> <span class="kw">do</span>
 
     printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
       putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</code></pre></div>]]></summary>
-</entry>
-<entry>
-    <title>Snap with SQLite</title>
-    <link href="http://nurpax.github.com/posts/2012-12-20-snaplet-sqlite-simple-example.html" />
-    <id>http://nurpax.github.com/posts/2012-12-20-snaplet-sqlite-simple-example.html</id>
-    <published>2012-12-20T00:00:00Z</published>
-    <updated>2012-12-20T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple 0.3</a>, a compatibility update for the recently released <a href="http://hackage.haskell.org/package/snap">Snap 0.10</a>. This library is glue for hooking up a Snap application to an <a href="http://www.sqlite.org/">SQLite</a> database using the <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a> library. Using SQLite with Snap is a handy, light-weight approach for quickly prototyping database-backed web apps – you don’t need to configure a separate SQL server just to run your web app.</p>
-<p>While the new snaplet-sqlite-simple 0.3 release doesn’t add any significant new functionality, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example project</a> would be worth a mention.</p>
-<p>This example project implements a simple web app that has a login screen (with new user registration) and a main page where logged in users can drop comments. Users and comments are both persisted into an SQLite database.</p>
-<p>Here’s a couple of screenshots to show how it looks like. Let’s start with the login screen:</p>
-<div class="screenshot white-bg">
-<div class="figure">
-<img src="/images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
-
-</div>
-</div>
-<p>If you create a new user and login to the app, you’re taken to the main page. Here the logged in user can add comments. The comments get persisted into a database and are associated with the current user (e.g., other users can’t see them.) Here’s how the main page looks like:</p>
-<div class="screenshot white-bg">
-<div class="figure">
-<img src="/images/snaplet-sqlite-simple-example-comments.png" title="Main page" />
-
-</div>
-</div>
-<p>The example demonstrates a few basic concepts in a complete example:</p>
-<ul>
-<li>Connecting to an SQLite database</li>
-<li>Creating database tables (if not created) on web app’s init</li>
-<li>Associating your own user data with Snap’s <a href="http://hackage.haskell.org/packages/archive/snap/0.10.0.1/doc/html/Snap-Snaplet-Auth.html">Snap.Snaplet.Auth</a> user objects</li>
-<li>Making simple database queries and rendering the results on the main screen</li>
-</ul>
-<p>Setting up the connection is easy, see the <code>app</code> function in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Site.hs">Site.hs</a>.</p>
-<p>Creating the database schema on app startup is perhaps less obvious. This also happens on app init:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | The application initializer.</span>
-<span class="ot">app ::</span> <span class="dt">SnapletInit</span> <span class="dt">App</span> <span class="dt">App</span>
-<span class="co">-- ...</span>
-    <span class="co">-- Grab the DB connection pool from the sqlite snaplet and call</span>
-    <span class="co">-- into the Model to create all the DB tables if necessary.</span>
-    <span class="kw">let</span> connPool <span class="fu">=</span> sqlitePool <span class="fu">$</span> d <span class="fu">^#</span> snapletValue
-    liftIO <span class="fu">$</span> withResource connPool <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.createTables conn</code></pre></div>
-<p>The actual table creation is done in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Db.hs">Db.hs</a>. This module also contains query functions for saving and listing comments for a given user.</p>
-<p>Everything on the main page requires a logged in user. Requiring a logged in user is ensured using <code>withLoggedInUser</code> which either calls a handler with the currently logged in user or redirects to the login screen. It’s defined as:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Run actions with a logged in user or go back to the login screen</span>
-<span class="ot">withLoggedInUser ::</span> (<span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()) <span class="ot">-&gt;</span> <span class="dt">H</span> ()
-withLoggedInUser action <span class="fu">=</span>
-  currentUser <span class="fu">&gt;&gt;=</span> go
-  <span class="kw">where</span>
-    go <span class="dt">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="dt">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)
-    go (<span class="dt">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)
-      <span class="kw">where</span>
-        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (read <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</code></pre></div>
-<p>You can use it anywhere you need to access the currently logged in user. For example, here’s how the main page handler deals with the current user:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()
-mainPage <span class="fu">=</span> withLoggedInUser go
-  <span class="kw">where</span>
-<span class="ot">    go ::</span> <span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()
-    go user <span class="fu">=</span> <span class="kw">do</span>
-      comments <span class="ot">&lt;-</span> withTop db <span class="fu">$</span> Db.listComments user
-      heistLocal (splices comments) <span class="fu">$</span> render <span class="st">&quot;/index&quot;</span>
-    splices cs <span class="fu">=</span>
-      I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</code></pre></div>
-<p>To learn more about using sqlite-simple with Snap, I recommend you clone the code from Git, build the example, play with the app and read the <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example source code</a>:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">git</span> clone git://github.com/nurpax/snaplet-sqlite-simple.git
-<span class="bu">cd</span> example
-<span class="ex">cabal-dev</span> install
-<span class="ex">./cabal-dev/bin/example</span>
-<span class="co"># browse to http://localhost:8000</span></code></pre></div>]]></summary>
 </entry>
 
 </feed>
