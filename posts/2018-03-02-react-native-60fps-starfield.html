@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>nurpax - 3D Starfield in React Native</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
+
+        <script src="../js/jquery.min.js" type="text/javascript"></script>
+        <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>Blog - 3D Starfield in React Native</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+
+<h1>3D Starfield in React Native</h1>
+
+<p>by <em>Janne Hellsten</em> on <strong>March 12, 2018</strong></p>
+
+<p>I’ve been working on an iOS port of my web game <a href="http://nurpax.com/bintris">Bintris</a>. I ported the HTML/Javascript version to React Native (RN) to make it run on iOS.</p>
+<p>One of the game’s main visual ingredients is the real-time 3D starfield background. I originally put it in as a kind of placeholder but came to like it over time. So I had to figure out a performant way to implement it on RN.</p>
+<p>The web Bintris uses a pure-CSS starfield effect that I borrowed from <a href="https://codepen.io/keithclark/pen/ibEnk">here</a>. Here’s how my RN re-implementation looks like:</p>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/thBijc6x7e0?rel=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+<p>Both the CSS and RN versions use a trick to project the starfield random 3d-points onto a fixed number of xy-planes. This makes it quite a bit faster to animate and render than animating each 3D point separately. In the above video, the starfield consists of ten Animated.Views each containing 150 random stars. Each star is an absolutely positioned view with a white background color.</p>
+<p>React renders the starfield only once upon mounting. All further frame updates are done purely using RN animation with the native animation driver enabled using <code>useNativeDriver:true</code>. This moves starfield rendering completely off the main JavaScript UI thread. This results in buttery smooth animation and frees up the UI thread from processing all the 1500 views that make up the individual stars.</p>
+<p>If you want to see it running on your phone, install the Expo app on your phone and use it to scan the QR code from <a href="https://snack.expo.io/@nurpax/starfield">this Expo Snack</a>. The full source code to the starfield is contained within the Snack project.</p>
+<h3 id="improvements-ideas">Improvements ideas</h3>
+<p>Here are some thoughts on what could still be improved:</p>
+<ul>
+<li><p><code>shouldRasterizerIOS</code> should probably be used for any views rendered on top of the starfield. Should you have any views that are rendered on top of the starfield, RN will render them at 60 FPS. If the views are complex, you may run into performance or battery consumption problems. The <code>shouldRasterizeIOS</code> should help by first rendering the static views into an image and then compositing the images on top using alpha blending. Unfortunately, I didn’t find enough information on how exactly the RN and/or iOS view renderer works, so I didn’t enable this for my menus.</p></li>
+<li><p>The starfield would look smoother and less aliased if, instead of a white rectangle, a circle shaped image was used to render each individual star.</p></li>
+<li><p>RN stylesheet documentation recommends using <code>StyleSheet.create()</code> instead of inline styles. I’m now using inline styles everywhere. There may be a performance benefit to using <code>StyleSheet.create()</code>. In my case though, each individual star needs its own stylesheet as a star’s absolute position must be set using a stylesheet.</p></li>
+</ul>
+<p>Thoughts? Questions? Let’s discuss on <a href="https://reddit.com/TODO">Reddit</a>.</p>
+</article>
+
+        </div>
+    </div>
+
+
+    </body>
+</html>
