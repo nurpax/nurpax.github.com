@@ -30,7 +30,7 @@
 <li><p>The starfield would look smoother and less aliased if, instead of a white rectangle, a circle shaped image was used to render each individual star.</p></li>
 <li><p>RN stylesheet documentation recommends using <code>StyleSheet.create()</code> instead of inline styles. I’m now using inline styles everywhere. There may be a performance benefit to using <code>StyleSheet.create()</code>. In my case though, each individual star needs its own stylesheet as a star’s absolute position must be set using a stylesheet.</p></li>
 </ul>
-<p>Thoughts? Questions? Let’s discuss on <a href="https://reddit.com/TODO">Reddit</a>.</p>]]></summary>
+<p>Thoughts? Questions? Let’s discuss on <a href="https://www.reddit.com/r/reactjs/comments/83yrad/60_fps_3d_starfield_in_react_native/">Reddit</a>.</p>]]></summary>
 </entry>
 <entry>
     <title>CMake builds from within Sublime Text 3</title>
