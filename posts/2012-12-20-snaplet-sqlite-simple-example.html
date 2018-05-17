@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width">
         <title>nurpax - Snap with SQLite</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
@@ -29,7 +30,7 @@
 
     <div id="page-wrap">
         <div id="header">
-            <h1>Blog - Snap with SQLite</h1>
+            <h1>&nbsp;</h1>
         </div>
         <div id="navigation">
              <a href="../">Home</a>
@@ -40,7 +41,7 @@
 
 <h1>Snap with SQLite</h1>
 
-<p>by <em>Janne Hellsten</em> on <strong>December 20, 2012</strong></p>
+<p class="post-author">Janne Hellsten on December 20, 2012</p>
 
 <p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple 0.3</a>, a compatibility update for the recently released <a href="http://hackage.haskell.org/package/snap">Snap 0.10</a>. This library is glue for hooking up a Snap application to an <a href="http://www.sqlite.org/">SQLite</a> database using the <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a> library. Using SQLite with Snap is a handy, light-weight approach for quickly prototyping database-backed web apps – you don’t need to configure a separate SQL server just to run your web app.</p>
 <p>While the new snaplet-sqlite-simple 0.3 release doesn’t add any significant new functionality, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example project</a> would be worth a mention.</p>

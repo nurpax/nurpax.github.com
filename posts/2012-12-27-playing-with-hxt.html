@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width">
         <title>nurpax - Reading TCX in Haskell</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
@@ -29,7 +30,7 @@
 
     <div id="page-wrap">
         <div id="header">
-            <h1>Blog - Reading TCX in Haskell</h1>
+            <h1>&nbsp;</h1>
         </div>
         <div id="navigation">
              <a href="../">Home</a>
@@ -40,7 +41,7 @@
 
 <h1>Reading TCX in Haskell</h1>
 
-<p>by <em>Janne Hellsten</em> on <strong>December 27, 2012</strong></p>
+<p class="post-author">Janne Hellsten on December 27, 2012</p>
 
 <p>I use a Garmin GPS/heart-rate monitor watch to track my running. I also upload this GPS data to a service called <a href="http://www.runkeeper.com">RunKeeper</a> to keep a history of my runs. While I’ve generally been happy with RunKeeper, my experience uploading Garmin GPS data to RunKeeper has been less than stellar. My biggest complaint is that usually the original GPS data changes significantly when uploaded to RunKeeper. For example, a 10.0 km run (according to Garmin) can become 10.2 km in RunKeeper.</p>
 <p>I decided to do a bit of data mining on Garmin GPS files to figure out how RunKeeper interprets it differently. Garmin’s tools can export GPS data as both GPX and <a href="http://en.wikipedia.org/wiki/Training_Center_XML">TCX</a>. The latter format is developed by Garmin and quite likely the closest match to the their native format. Both GPX and TCX are XML.</p>
