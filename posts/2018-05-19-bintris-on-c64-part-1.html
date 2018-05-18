@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width">
+        <title>nurpax - BINTRIS on the C64, part 1</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
+
+        <script src="../js/jquery.min.js" type="text/javascript"></script>
+        <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>&nbsp;</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+
+<h1>BINTRIS on the C64, part 1</h1>
+
+<p class="post-author">Janne Hellsten on May 18, 2018</p>
+
+<h3 id="introduction">Introduction</h3>
+<p>This is the first part of a blog series on making a small game called <a href="http://nurpax.com/bintris">BINTRIS</a> for the Commodore 64.</p>
+<p>Here are a some of the topics I plan to cover in the series:</p>
+<ul>
+<li>Tooling</li>
+<li>Sprite multiplexing</li>
+<li>Mixed text and bitmap mode display</li>
+<li>Vertical raster scroll and flexible line distance (FLD)</li>
+<li>A line-by-line sprite sine-wave animation</li>
+<li>SID sound effects</li>
+</ul>
+<p>As most of these are well-documented on the internet, my posts won’t be full-blown tutorials but rather examples of how to apply the above techniques in a game. I’ll start this series by covering tools.</p>
+<h3 id="bintris">BINTRIS</h3>
+<p>BINTRIS is a puzzle game that plays a little like Tetris but using binary numbers. Here’s a little gameplay video:</p>
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/RSAlFunPlYI?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+</div>
+<p>The idea is that each row is a binary number (black is zero, white is one) and you need to build rows that match the numbers listed below the DECIMAL heading.</p>
+<p>Here’s a little teaser showcasing the readme.prg file from the bintris disk image:</p>
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/AYDKdRmlxFs?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+</div>
+<p>The game will be released any day now – I’ll update this post with a download link when it’s out. I’ll also post some more videos once I have the final version captured on real hardware.</p>
+<h3 id="how-to-develop-for-the-c64">How to develop for the C64</h3>
+<p>Probably the best choice for developing for the C64 is to use an emulator. I went with <a href="vice">VICE</a>.</p>
+<p>I used <a href="kickass">KickAssembler</a> for compiling my assembly code. Its macro support is some seriously good stuff – I wish I had something like this when I used to work on PC demos.</p>
+<p>For editing and compiling 6510 assembly source, I ended up going with the <a href="https://packagecontrol.io/packages/Kick%20Assembler%20(C64)">Sublime Text 3 and KickAssembler package</a>. This sets up your editor such that you can just press F7 and it will compile and run your code on VICE. It also supports building a debug version of your binary that allows setting breakpoints to break into the VICE monitor (read: debugger). The monitor can be remotely accessed with telnet from your host machine. Editing monitor commands on your host makes things like copy &amp; paste easier.</p>
+<p>I had some problems with the VICE emulator though. For example, sound is pretty buggy on my MacBook Pro and sometimes buggy even on Windows 10. I also couldn’t get video capture to work on Mac at all, and on Windows h.264 export crashes the emulator right away. I found <a href="http://www.hoxs64.net/default.aspx">hoxs64</a> to have more stable sound but it’s otherwise not as featureful as VICE. I also tried to build my own VICE binary on Windows but that got ugly real quick when I tried to deal with the MinGW build environment.</p>
+<p>Other tools used to develop BINTRIS:</p>
+<ul>
+<li><a href="multipaint">Multipaint</a> – for painting pixel graphics and sprites. (Although in the end, most sprites were done in Photoshop.)</li>
+<li><a href="petscii">PETSCII editor</a> – for PETSCII “art” used in the readme.prg.</li>
+<li><a href="https://github.com/nurpax/c64-sid-edit">SID sound editor</a> – I wrote this C64 sound editor to make it easier to tweak SID registers for my sound effects.</li>
+<li><a href="https://github.com/nurpax/c64-sid-edit/blob/master/GrabSounds.hs">VICE snapshot parser</a> – a Haskell program I wrote for parsing memory snapshots. I used this to save/load the SID editor sounds. Rather than implementing save/load into my C64 app, I grabbed the sound data directly from RAM.</li>
+<li><a href="https://sourceforge.net/projects/goattracker2/">GoatTracker</a> - for SID music.</li>
+<li>Python - a bunch of LUT generators using numpy and PIL.</li>
+</ul>
+<h3 id="c64-learning-resources">C64 learning resources</h3>
+<p>Here are some of my favorite C64 resources:</p>
+<ul>
+<li><a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">The MOS 6567/6569 video controller (VIC-II) and its application in the Commodore 64</a> – a pretty exchaustive document on the VIC-II graphics chip.</li>
+<li><a href="https://www.c64-wiki.com/wiki/Main_Page">c64-wiki</a> – I often use this for looking up assembly instructions (see e.g. <a href="https://www.c64-wiki.com/wiki/BPL">BPL</a>. I’m not a huge fan of some of the pages though. For example, the instruction reference pages would be better if they specified how an instruction works with pseudo code.</li>
+<li><a href="http://sta.c64.org/cbm64mem.html">C64 memory map</a> – this is a super helpful reference for C64 registers.</li>
+<li><a href="http://codebase64.org/doku.php">codebase64</a> – found a bunch of good examples here (but also many bugs!)</li>
+</ul>
+<p>The list is missing a good starter guide for 6510 assembly.</p>
+<h3 id="next-in-series">Next in series</h3>
+<p>The next blog in the series will showcase the game itself, hopefully with final version captured on real hardware.</p>
+<p>All posts in this series:</p>
+<ul>
+<li>
+<a href="2018-05-19-bintris-on-c64-part-1.html">BINTRIS on C64, part 1</a>
+</li>
+</ul>
+<!--
+Bug:
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">You can tell the release day is near when your game goes all wonky like this. <a href="https://twitter.com/hashtag/bintris?src=hash&amp;ref_src=twsrc%5Etfw">#bintris</a> <a href="https://twitter.com/hashtag/c64?src=hash&amp;ref_src=twsrc%5Etfw">#c64</a> <a href="https://t.co/Dr7orgnkSF">pic.twitter.com/Dr7orgnkSF</a></p>&mdash; Janne Hellsten (@nurpax) <a href="https://twitter.com/nurpax/status/993934121935228929?ref_src=twsrc%5Etfw">May 8, 2018</a></blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+-->
+<!--
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/8UjTcipfRJc?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+-->
+<p>Thoughts? Questions? Let’s discuss on <a href="https://www.reddit.com/r/c64coding">/r/c64coding</a>.</p>
+</article>
+
+        </div>
+        <div id="footer">
+          <p>Like what you saw here?  Suggestions, improvements?</p>
+          <p>Get in touch: jjhellst@gmail.com or <a href="https://twitter.com/nurpax">@nurpax</a></p>
+        </div>
+    </div>
+
+
+    </body>
+</html>

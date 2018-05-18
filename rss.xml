@@ -8,8 +8,83 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2018-03-12T00:00:00Z</updated>
+    <updated>2018-05-18T00:00:00Z</updated>
     <entry>
+    <title>BINTRIS on the C64, part 1</title>
+    <link href="http://nurpax.github.com/posts/2018-05-19-bintris-on-c64-part-1.html" />
+    <id>http://nurpax.github.com/posts/2018-05-19-bintris-on-c64-part-1.html</id>
+    <published>2018-05-18T00:00:00Z</published>
+    <updated>2018-05-18T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>This is the first part of a blog series on making a small game called <a href="http://nurpax.com/bintris">BINTRIS</a> for the Commodore 64.</p>
+<p>Here are a some of the topics I plan to cover in the series:</p>
+<ul>
+<li>Tooling</li>
+<li>Sprite multiplexing</li>
+<li>Mixed text and bitmap mode display</li>
+<li>Vertical raster scroll and flexible line distance (FLD)</li>
+<li>A line-by-line sprite sine-wave animation</li>
+<li>SID sound effects</li>
+</ul>
+<p>As most of these are well-documented on the internet, my posts won’t be full-blown tutorials but rather examples of how to apply the above techniques in a game. I’ll start this series by covering tools.</p>
+<h2 id="bintris">BINTRIS</h2>
+<p>BINTRIS is a puzzle game that plays a little like Tetris but using binary numbers. Here’s a little gameplay video:</p>
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/RSAlFunPlYI?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+</div>
+<p>The idea is that each row is a binary number (black is zero, white is one) and you need to build rows that match the numbers listed below the DECIMAL heading.</p>
+<p>Here’s a little teaser showcasing the readme.prg file from the bintris disk image:</p>
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/AYDKdRmlxFs?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+</div>
+<p>The game will be released any day now – I’ll update this post with a download link when it’s out. I’ll also post some more videos once I have the final version captured on real hardware.</p>
+<h2 id="how-to-develop-for-the-c64">How to develop for the C64</h2>
+<p>Probably the best choice for developing for the C64 is to use an emulator. I went with <a href="vice">VICE</a>.</p>
+<p>I used <a href="kickass">KickAssembler</a> for compiling my assembly code. Its macro support is some seriously good stuff – I wish I had something like this when I used to work on PC demos.</p>
+<p>For editing and compiling 6510 assembly source, I ended up going with the <a href="https://packagecontrol.io/packages/Kick%20Assembler%20(C64)">Sublime Text 3 and KickAssembler package</a>. This sets up your editor such that you can just press F7 and it will compile and run your code on VICE. It also supports building a debug version of your binary that allows setting breakpoints to break into the VICE monitor (read: debugger). The monitor can be remotely accessed with telnet from your host machine. Editing monitor commands on your host makes things like copy &amp; paste easier.</p>
+<p>I had some problems with the VICE emulator though. For example, sound is pretty buggy on my MacBook Pro and sometimes buggy even on Windows 10. I also couldn’t get video capture to work on Mac at all, and on Windows h.264 export crashes the emulator right away. I found <a href="http://www.hoxs64.net/default.aspx">hoxs64</a> to have more stable sound but it’s otherwise not as featureful as VICE. I also tried to build my own VICE binary on Windows but that got ugly real quick when I tried to deal with the MinGW build environment.</p>
+<p>Other tools used to develop BINTRIS:</p>
+<ul>
+<li><a href="multipaint">Multipaint</a> – for painting pixel graphics and sprites. (Although in the end, most sprites were done in Photoshop.)</li>
+<li><a href="petscii">PETSCII editor</a> – for PETSCII “art” used in the readme.prg.</li>
+<li><a href="https://github.com/nurpax/c64-sid-edit">SID sound editor</a> – I wrote this C64 sound editor to make it easier to tweak SID registers for my sound effects.</li>
+<li><a href="https://github.com/nurpax/c64-sid-edit/blob/master/GrabSounds.hs">VICE snapshot parser</a> – a Haskell program I wrote for parsing memory snapshots. I used this to save/load the SID editor sounds. Rather than implementing save/load into my C64 app, I grabbed the sound data directly from RAM.</li>
+<li><a href="https://sourceforge.net/projects/goattracker2/">GoatTracker</a> - for SID music.</li>
+<li>Python - a bunch of LUT generators using numpy and PIL.</li>
+</ul>
+<h2 id="c64-learning-resources">C64 learning resources</h2>
+<p>Here are some of my favorite C64 resources:</p>
+<ul>
+<li><a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">The MOS 6567/6569 video controller (VIC-II) and its application in the Commodore 64</a> – a pretty exchaustive document on the VIC-II graphics chip.</li>
+<li><a href="https://www.c64-wiki.com/wiki/Main_Page">c64-wiki</a> – I often use this for looking up assembly instructions (see e.g. <a href="https://www.c64-wiki.com/wiki/BPL">BPL</a>. I’m not a huge fan of some of the pages though. For example, the instruction reference pages would be better if they specified how an instruction works with pseudo code.</li>
+<li><a href="http://sta.c64.org/cbm64mem.html">C64 memory map</a> – this is a super helpful reference for C64 registers.</li>
+<li><a href="http://codebase64.org/doku.php">codebase64</a> – found a bunch of good examples here (but also many bugs!)</li>
+</ul>
+<p>The list is missing a good starter guide for 6510 assembly.</p>
+<h2 id="next-in-series">Next in series</h2>
+<p>The next blog in the series will showcase the game itself, hopefully with final version captured on real hardware.</p>
+<p>All posts in this series:</p>
+<ul>
+<li>
+<a href="2018-05-19-bintris-on-c64-part-1.html">BINTRIS on C64, part 1</a>
+</li>
+</ul>
+<!--
+Bug:
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">You can tell the release day is near when your game goes all wonky like this. <a href="https://twitter.com/hashtag/bintris?src=hash&amp;ref_src=twsrc%5Etfw">#bintris</a> <a href="https://twitter.com/hashtag/c64?src=hash&amp;ref_src=twsrc%5Etfw">#c64</a> <a href="https://t.co/Dr7orgnkSF">pic.twitter.com/Dr7orgnkSF</a></p>&mdash; Janne Hellsten (@nurpax) <a href="https://twitter.com/nurpax/status/993934121935228929?ref_src=twsrc%5Etfw">May 8, 2018</a></blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+-->
+<!--
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/8UjTcipfRJc?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+-->
+<p>Thoughts? Questions? Let’s discuss on <a href="https://www.reddit.com/r/c64coding">/r/c64coding</a>.</p>]]></summary>
+</entry>
+<entry>
     <title>3D Starfield in React Native</title>
     <link href="http://nurpax.github.com/posts/2018-03-02-react-native-60fps-starfield.html" />
     <id>http://nurpax.github.com/posts/2018-03-02-react-native-60fps-starfield.html</id>
@@ -789,118 +864,6 @@ Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
 <p>As <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple</a> does connection pooling, the above pattern is very likely to happen. The SQLite snaplet maintains a connection pool which is used to service connections to request handlers. Concurrent requests will each be handed their own connection instead of using a single shared connection. A request can be in the middle of reading database rows from the while another request tries to write to the database using another connection, and <em>boom</em>, the above SQLITE_BUSY scenario triggers.</p>
 <p>As a quick band-aid fix, I changed snaplet-sqlite-simple to not use a connection pool but instead allocate a single database handle on init and servicing the same handle sequentially to anyone that asks (<a href="https://github.com/nurpax/snaplet-sqlite-simple/commit/3957f722cce6abf7e1059f481668379e05b62286">commit 3957f722</a>). For extra safety, I also stuck the connection inside an <code>MVar</code> so that all SQLite operations get serialized within the Snap application.</p>
 <p>Hopefully I’ll be able to switch to a more concurrent model in the future, but at least the current v0.4.0 release works without SQLITE_BUSY errors.</p>]]></summary>
-</entry>
-<entry>
-    <title>Reading TCX in Haskell</title>
-    <link href="http://nurpax.github.com/posts/2012-12-27-playing-with-hxt.html" />
-    <id>http://nurpax.github.com/posts/2012-12-27-playing-with-hxt.html</id>
-    <published>2012-12-27T00:00:00Z</published>
-    <updated>2012-12-27T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>I use a Garmin GPS/heart-rate monitor watch to track my running. I also upload this GPS data to a service called <a href="http://www.runkeeper.com">RunKeeper</a> to keep a history of my runs. While I’ve generally been happy with RunKeeper, my experience uploading Garmin GPS data to RunKeeper has been less than stellar. My biggest complaint is that usually the original GPS data changes significantly when uploaded to RunKeeper. For example, a 10.0 km run (according to Garmin) can become 10.2 km in RunKeeper.</p>
-<p>I decided to do a bit of data mining on Garmin GPS files to figure out how RunKeeper interprets it differently. Garmin’s tools can export GPS data as both GPX and <a href="http://en.wikipedia.org/wiki/Training_Center_XML">TCX</a>. The latter format is developed by Garmin and quite likely the closest match to the their native format. Both GPX and TCX are XML.</p>
-<p>I didn’t get very far with actual GPS track analysis but I did write a TCX file reader in Haskell using the <a href="http://hackage.haskell.org/package/hxt">Haskell XML Toolbox (hxt)</a> library. As there seems to be a bit of a lack of Haskell XML parsing examples on the Internet, I decided to post my TCX reader here as an example of parsing Real World XML data in Haskell.</p>
-<p>Here’s a short sample of what a TCX file looks like (some elements have been omitted and xmlns URLs truncated for brevity):</p>
-<div class="sourceCode"><pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
-<span class="co">&lt;!-- Some elements omitted for brevity --&gt;</span>
-<span class="kw">&lt;TrainingCenterDatabase</span>
-<span class="ot">  xsi:schemaLocation=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/...d&quot;</span>
-<span class="ot">  xmlns:ns5=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/ActivityGoals/v1&quot;</span>
-<span class="ot">  xmlns:ns3=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/ActivityExtension/v2&quot;</span>
-<span class="ot">  xmlns:ns2=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/UserProfile/v2&quot;</span>
-<span class="ot">  xmlns=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2&quot;</span>
-<span class="ot">  xmlns:xsi=</span><span class="st">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span><span class="ot"> xmlns:ns4=</span><span class="st">&quot;...&quot;</span><span class="kw">&gt;</span>
-  <span class="kw">&lt;Activities&gt;</span>
-    <span class="kw">&lt;Activity</span><span class="ot"> Sport=</span><span class="st">&quot;Biking&quot;</span><span class="kw">&gt;</span>
-      <span class="kw">&lt;Id&gt;</span>2012-12-22T13:47:50.000Z<span class="kw">&lt;/Id&gt;</span>
-      <span class="kw">&lt;Lap</span><span class="ot"> StartTime=</span><span class="st">&quot;2012-12-22T13:47:50.000Z&quot;</span><span class="kw">&gt;</span>
-        <span class="kw">&lt;DistanceMeters&gt;</span>1000.0<span class="kw">&lt;/DistanceMeters&gt;</span>
-        <span class="kw">&lt;Track&gt;</span>
-          <span class="kw">&lt;Trackpoint&gt;</span>
-            <span class="kw">&lt;Time&gt;</span>2012-12-22T13:47:49.000Z<span class="kw">&lt;/Time&gt;</span>
-            <span class="kw">&lt;AltitudeMeters&gt;</span>-2.799999952316284<span class="kw">&lt;/AltitudeMeters&gt;</span>
-            <span class="kw">&lt;DistanceMeters&gt;</span>0.0<span class="kw">&lt;/DistanceMeters&gt;</span>
-            <span class="kw">&lt;HeartRateBpm&gt;</span>
-              <span class="kw">&lt;Value&gt;</span>134<span class="kw">&lt;/Value&gt;</span>
-            <span class="kw">&lt;/HeartRateBpm&gt;</span></code></pre></div>
-<p>The Haskell code for TCX file reading can be found below (also up on <a href="https://github.com/nurpax/hs-tcx">github</a> with a .cabal file). Here’s an outline of what it does:</p>
-<ul>
-<li>The input XML document is read from a file called <code>test-act.tcx</code></li>
-<li>The XML document is massaged into Haskell objects using HXT combinators</li>
-<li>The resulting Haskell objects (<code>Activity</code>, <code>Lap</code> and <code>Trackpoint</code>) are traversed and output to stdout</li>
-</ul>
-<p>Note: As is probably obvious, this code is not meant to be comprehensive library for accessing TCX data – it’s really just an example of how to get started with HXT and TCX.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
-
-<span class="kw">import </span><span class="dt">Text.XML.HXT.Core</span>
-<span class="kw">import </span><span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)
-<span class="kw">import </span><span class="dt">System.Locale</span> (defaultTimeLocale)
-
-<span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]
-  <span class="kw">deriving</span> (<span class="dt">Show</span>)
-
-<span class="kw">data</span> <span class="dt">Lap</span> <span class="fu">=</span> <span class="dt">Lap</span> {
-<span class="ot">    lapDistance ::</span> <span class="dt">Float</span>
-  ,<span class="ot"> lapTrackpoints ::</span> [<span class="dt">Trackpoint</span>]
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
-
-<span class="kw">data</span> <span class="dt">Trackpoint</span> <span class="fu">=</span> <span class="dt">Trackpoint</span> {
-<span class="ot">    tpTime ::</span> <span class="dt">UTCTime</span>
-  ,<span class="ot"> tpBpm ::</span> <span class="dt">String</span>
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
-
-<span class="ot">atTag ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">XmlTree</span>
-atTag tag <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName tag)
-
-<span class="ot">text ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">String</span>
-text <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span> getText
-
-<span class="co">-- Note: the hardcoded .000 part is kludge but for my inputs this was</span>
-<span class="co">-- an easy way to get timestamps to parse.</span>
-<span class="ot">readt ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">UTCTime</span>
-readt <span class="fu">=</span> readTime defaultTimeLocale <span class="st">&quot;%FT%T.000%Z&quot;</span>
-
-<span class="ot">getTrackpoint ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Trackpoint</span>
-getTrackpoint <span class="fu">=</span> atTag <span class="st">&quot;Trackpoint&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    time <span class="ot">&lt;-</span> text <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Time&quot;</span> <span class="fu">-&lt;</span> x
-    bpm <span class="ot">&lt;-</span> text <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Value&quot;</span> <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;HeartRateBpm&quot;</span> <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Trackpoint</span> (readt time) bpm
-
-<span class="ot">getLap ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Lap</span>
-getLap <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;Lap&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    pts <span class="ot">&lt;-</span> listA getTrackpoint <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Track&quot;</span> <span class="fu">-&lt;</span> x
-    dist <span class="ot">&lt;-</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;DistanceMeters&quot;</span> <span class="fu">&gt;&gt;&gt;</span> text <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (read dist) pts
-
-<span class="ot">getActivity ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Activity</span>
-getActivity <span class="fu">=</span> atTag <span class="st">&quot;Activity&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    laps <span class="ot">&lt;-</span> listA getLap <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Activity</span> laps
-
-<span class="ot">getActivities ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> [<span class="dt">Activity</span>]
-getActivities <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;TrainingCenterDatabase&quot;</span> <span class="fu">/&gt;</span> hasName <span class="st">&quot;Activities&quot;</span>) <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    activities <span class="ot">&lt;-</span> listA getActivity <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> activities
-
-<span class="ot">main ::</span> <span class="dt">IO</span> ()
-main <span class="fu">=</span> <span class="kw">do</span>
-  activities <span class="ot">&lt;-</span> runX (readDocument [withValidate no] <span class="st">&quot;test-act.tcx&quot;</span> <span class="fu">&gt;&gt;&gt;</span> getActivities)
-  mapM_ printActivity (head activities)
-  <span class="kw">where</span>
-    printActivity (<span class="dt">Activity</span> laps) <span class="fu">=</span> <span class="kw">do</span>
-      putStrLn <span class="st">&quot;Activity:&quot;</span>
-      mapM_ printLaps laps
-
-    printLaps (<span class="dt">Lap</span> distance trackpts) <span class="fu">=</span> <span class="kw">do</span>
-      putStrLn <span class="st">&quot;  Lap:&quot;</span>
-      putStrLn (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> show distance)
-      mapM_ printTrackpoint trackpts
-
-    printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
-      putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</code></pre></div>]]></summary>
 </entry>
 
 </feed>
