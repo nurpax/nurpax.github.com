@@ -8,8 +8,39 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2018-05-18T00:00:00Z</updated>
+    <updated>2018-05-21T00:00:00Z</updated>
     <entry>
+    <title>BINTRIS on the C64 is released!</title>
+    <link href="http://nurpax.github.com/posts/2018-05-21-bintris-on-c64-part-2.html" />
+    <id>http://nurpax.github.com/posts/2018-05-21-bintris-on-c64-part-2.html</id>
+    <published>2018-05-21T00:00:00Z</published>
+    <updated>2018-05-21T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>The Commodore 64 version of <a href="http://nurpax.com/bintris">BINTRIS</a> has been released! Find your bintris.d64 copy at: <a href="http://csdb.dk/release/index.php?id=164874" class="uri">http://csdb.dk/release/index.php?id=164874</a>.</p>
+<p>Here’s a quick VICE video cap (real hardware capture is coming online very soon):</p>
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/XRdg8u9umHo?rel=0&amp;controls=1&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+</div>
+<p>Here’s the game objective in a nutshell:</p>
+<div class="screenshot white-bg">
+<div class="figure">
+<img src="/images/bintris_how_to_play2.png" title="BINTRIS HOWTO PLAY" />
+
+</div>
+</div>
+<h2 id="next-in-series">Next in series</h2>
+<p>The next post will discuss how the title screen mixes multicolor bitmap mode (the BINTRIS image) and text mode (the scroller).</p>
+<p>All posts in this series:</p>
+<ul>
+<li>
+<a href="2018-05-19-bintris-on-c64-part-1.html">BINTRIS on C64, part 1</a>
+</li>
+<li>
+<a href="2018-05-21-bintris-on-c64-part-2.html">BINTRIS ships!, part 2</a>
+</li>
+</ul>]]></summary>
+</entry>
+<entry>
     <title>BINTRIS on the C64, part 1</title>
     <link href="http://nurpax.github.com/posts/2018-05-19-bintris-on-c64-part-1.html" />
     <id>http://nurpax.github.com/posts/2018-05-19-bintris-on-c64-part-1.html</id>
@@ -70,7 +101,11 @@
 <li>
 <a href="2018-05-19-bintris-on-c64-part-1.html">BINTRIS on C64, part 1</a>
 </li>
+<li>
+<a href="2018-05-21-bintris-on-c64-part-2.html">BINTRIS ships!, part 2</a>
+</li>
 </ul>
+<!--$snippet("includes/bintris-c64-series.html")$-->
 <!--
 Bug:
 
@@ -805,65 +840,6 @@ handleTodos <span class="fu">=</span>
 <li>Compile, run and play with the example</li>
 </ul>
 <p>HTH.</p>]]></summary>
-</entry>
-<entry>
-    <title>Note to self</title>
-    <link href="http://nurpax.github.com/posts/2013-01-04-note-to-self.html" />
-    <id>http://nurpax.github.com/posts/2013-01-04-note-to-self.html</id>
-    <published>2013-01-04T00:00:00Z</published>
-    <updated>2013-01-04T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>Note to self: Don’t use SQLite3 from multiple Haskell threads – at least not with <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a>.</p>
-<p>I recently implemented a To-Do app (the “Hello World” of web apps) using <a href="http://angularjs.org/">AngularJS</a> on the frontend and <a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t heard about AngularJS, I highly recommend you to check it out – it’s got a very clean approach to developing modern single-page web apps.</p>
-<p>In my app, the Snap-based server was used mainly for authentication and persistence. The rest of the app runs client-side in JavaScript and talks to the server over a simple REST API. Getting all this up and running was surprisingly easy.</p>
-<p>Anyhow.. Turns out it’s easy to write an AngularJS app that sends a lot of concurrent requests to the server, even in the single user case. As an example, you can iterate through a list of todo-items in JavaScript, persisting each item with a call to <code>item.$save()</code>:</p>
-<div class="sourceCode"><pre class="sourceCode javascript"><code class="sourceCode javascript">    <span class="va">$scope</span>.<span class="at">archive</span> <span class="op">=</span> <span class="kw">function</span>() <span class="op">{</span>
-        <span class="kw">var</span> oldTodos <span class="op">=</span> <span class="va">$scope</span>.<span class="at">todos</span><span class="op">;</span>
-        <span class="va">$scope</span>.<span class="at">todos</span> <span class="op">=</span> []<span class="op">;</span>
-        <span class="va">angular</span>.<span class="at">forEach</span>(oldTodos<span class="op">,</span> <span class="kw">function</span>(todo) <span class="op">{</span>
-            <span class="cf">if</span> (<span class="op">!</span><span class="va">todo</span>.<span class="at">done</span>)
-                <span class="va">$scope</span>.<span class="va">todos</span>.<span class="at">push</span>(todo)<span class="op">;</span>
-
-            <span class="va">todo</span>.<span class="at">$save</span>()<span class="op">;</span>
-        <span class="op">}</span>)<span class="op">;</span>
-    <span class="op">};</span></code></pre></div>
-<p>Each <code>$save()</code> triggers an AJAX call and the server will see these as multiple concurrent requests.</p>
-<p>Unfortunately though, I started seeing lot of SQLITE_BUSY errors on the server side with this usage. Turns out accessing a single SQLite3 database from multiple threads, each with its own connection is not as simple as I thought. If you’re in the middle of reading rows from a SELECT and you issue an INSERT from another connection, the INSERT will fail with an SQLITE_BUSY error. Here’s Haskell code that reproduces this problem:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span>
-
-<span class="kw">module</span> <span class="dt">Direct</span> (
-  directSqliteTest
-  ) <span class="kw">where</span>
-
-<span class="kw">import </span><span class="dt">Control.Monad</span>
-<span class="kw">import </span><span class="dt">Database.SQLite3.Direct</span>
-
-<span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()
-directSqliteTest <span class="fu">=</span> <span class="kw">do</span>
-  <span class="dt">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
-  <span class="dt">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span>
-
-  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
-  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
-
-  <span class="dt">Right</span> (<span class="dt">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span>
-  a <span class="ot">&lt;-</span> step sr
-  a <span class="ot">&lt;-</span> step sr
-  print a
-  x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES (&#39;foo&#39;)&quot;</span>
-  <span class="co">-- ^^ SQLITE_BUSY is triggered</span>
-  finalize sr
-  print x
-
-  void <span class="fu">$</span> close conn1
-  void <span class="fu">$</span> close conn2</code></pre></div>
-<p>The above code will print:</p>
-<pre><code>$ ./dist/build/sqlite-test/sqlite-test
-Right Row
-Right Row
-Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
-<p>As <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple</a> does connection pooling, the above pattern is very likely to happen. The SQLite snaplet maintains a connection pool which is used to service connections to request handlers. Concurrent requests will each be handed their own connection instead of using a single shared connection. A request can be in the middle of reading database rows from the while another request tries to write to the database using another connection, and <em>boom</em>, the above SQLITE_BUSY scenario triggers.</p>
-<p>As a quick band-aid fix, I changed snaplet-sqlite-simple to not use a connection pool but instead allocate a single database handle on init and servicing the same handle sequentially to anyone that asks (<a href="https://github.com/nurpax/snaplet-sqlite-simple/commit/3957f722cce6abf7e1059f481668379e05b62286">commit 3957f722</a>). For extra safety, I also stuck the connection inside an <code>MVar</code> so that all SQLite operations get serialized within the Snap application.</p>
-<p>Hopefully I’ll be able to switch to a more concurrent model in the future, but at least the current v0.4.0 release works without SQLITE_BUSY errors.</p>]]></summary>
 </entry>
 
 </feed>
