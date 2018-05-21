@@ -15,14 +15,20 @@
     <id>http://nurpax.github.com/posts/2018-05-21-bintris-on-c64-part-2.html</id>
     <published>2018-05-21T00:00:00Z</published>
     <updated>2018-05-21T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>The Commodore 64 version of <a href="http://nurpax.com/bintris">BINTRIS</a> has been released! Find your bintris.d64 copy at: <a href="http://csdb.dk/release/index.php?id=164874" class="uri">http://csdb.dk/release/index.php?id=164874</a>.</p>
+    <summary type="html"><![CDATA[<div class="screenshotMax">
+<div class="figure">
+<img src="/images/bintris_titlescreen.png" title="BINTRIS" />
+
+</div>
+</div>
+<p>The Commodore 64 version of <a href="http://nurpax.com/bintris">BINTRIS</a> has been released! Find your bintris.d64 copy at: <a href="http://csdb.dk/release/index.php?id=164874" class="uri">http://csdb.dk/release/index.php?id=164874</a>.</p>
 <p>Here’s a quick VICE video cap (real hardware capture is coming online very soon):</p>
 <div class="youtube">
 <iframe class="video" src="https://www.youtube.com/embed/XRdg8u9umHo?rel=0&amp;controls=1&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
 </iframe>
 </div>
 <p>Here’s the game objective in a nutshell:</p>
-<div class="screenshot white-bg">
+<div class="screenshotMax">
 <div class="figure">
 <img src="/images/bintris_how_to_play2.png" title="BINTRIS HOWTO PLAY" />
 
