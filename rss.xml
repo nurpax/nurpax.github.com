@@ -37,16 +37,7 @@
 </div>
 </div>
 <h2 id="next-in-series">Next in series</h2>
-<p>The next post will discuss how the title screen mixes multicolor bitmap mode (the BINTRIS image) and text mode (the scroller).</p>
-<p>All posts in this series:</p>
-<ul>
-<li>
-<a href="2018-05-19-bintris-on-c64-part-1.html">BINTRIS on C64, part 1</a>
-</li>
-<li>
-<a href="2018-05-21-bintris-on-c64-part-2.html">BINTRIS ships!, part 2</a>
-</li>
-</ul>]]></summary>
+<p>The next post will discuss how the title screen mixes multicolor bitmap mode (the BINTRIS image) and text mode (the scroller).</p>]]></summary>
 </entry>
 <entry>
     <title>BINTRIS on the C64, part 1</title>
@@ -104,15 +95,6 @@
 <p>The list is missing a good starter guide for 6510 assembly.</p>
 <h2 id="next-in-series">Next in series</h2>
 <p>The next blog in the series will showcase the game itself, hopefully with final version captured on real hardware.</p>
-<p>All posts in this series:</p>
-<ul>
-<li>
-<a href="2018-05-19-bintris-on-c64-part-1.html">BINTRIS on C64, part 1</a>
-</li>
-<li>
-<a href="2018-05-21-bintris-on-c64-part-2.html">BINTRIS ships!, part 2</a>
-</li>
-</ul>
 <!--$snippet("includes/bintris-c64-series.html")$-->
 <!--
 Bug:
