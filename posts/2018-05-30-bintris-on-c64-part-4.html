@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width">
+        <title>nurpax - BINTRIS C64 game screen rendering (series part 4)</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
+        
+        <meta property="og:image" content="http://nurpax.github.io/images/bintris/gamescreen-social-thumb.png">
+        
+        <script src="../js/jquery.min.js" type="text/javascript"></script>
+        <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>&nbsp;</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+
+<h1>BINTRIS C64 game screen rendering (series part 4)</h1>
+
+<p class="post-author">Janne Hellsten on May 30, 2018</p>
+
+<p>(Looking for the BINTRIS C64 disk image? Find it <a href="../posts/2018-05-21-bintris-on-c64-part-2.html">here</a>.)</p>
+<p>Let’s take a look at how the actual BINTRIS game screen is rendered. This is the first thing I implemented for this projet (after maybe 25 years of C64 dev hiatus) and in hindsight I think it could’ve been simpler with less sprites and more charset manipulation.</p>
+<p>The graphic elements of this screen are:</p>
+<ul>
+<li>The BINTRIS logo at the top (4 multicolor sprites)</li>
+<li>Currently falling bit (one single color sprite)</li>
+<li>Current score (3 multicolor sprites, one sprite per number, max 3 digits)</li>
+<li>The collapse noise animation (3 multicolor sprites)</li>
+<li>The game board rendered in text mode (one character per bit)</li>
+<li>Decimal targets (standard text)</li>
+</ul>
+<p>Here’s how it looks like (with red &amp; green rectangles highlighting sprite locations):</p>
+<p><?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 384 272"><style>text { font-family: "arial";}
+
+.pointsample { image-rendering: pixelated; }</style><g><image width="384.0" height="272.0" class="pointsample" xlink:href="/images/bintris/gamescreen-collapse.gif"></image><rect width="1120.0" height="1.0" x="-8.0" y="26.0" fill="#393"></rect><rect width="1120.0" height="1.0" x="-8.0" y="62.0" fill="#933"></rect><rect width="24.0" height="1.0" x="72.0" y="110.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="96.0" y="110.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="72.0" y="131.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="72.0" y="110.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="72.0" y="158.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="96.0" y="158.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="72.0" y="179.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="72.0" y="158.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="96.0" y="158.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="120.0" y="158.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="96.0" y="179.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="96.0" y="158.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="120.0" y="158.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="144.0" y="158.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="120.0" y="179.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="120.0" y="158.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="158.0" y="68.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="182.0" y="68.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="158.0" y="89.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="158.0" y="68.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="182.0" y="68.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="206.0" y="68.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="182.0" y="89.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="182.0" y="68.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="206.0" y="68.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="230.0" y="68.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="206.0" y="89.0" fill="#ff4422"></rect><rect width="1.0" height="21.0" x="206.0" y="68.0" fill="#ff4422"></rect><rect width="24.0" height="1.0" x="72.0" y="36.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="96.0" y="36.0" fill="#44ff22"></rect><rect width="24.0" height="1.0" x="72.0" y="57.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="72.0" y="36.0" fill="#44ff22"></rect><rect width="24.0" height="1.0" x="96.0" y="36.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="120.0" y="36.0" fill="#44ff22"></rect><rect width="24.0" height="1.0" x="96.0" y="57.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="96.0" y="36.0" fill="#44ff22"></rect><rect width="24.0" height="1.0" x="120.0" y="36.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="144.0" y="36.0" fill="#44ff22"></rect><rect width="24.0" height="1.0" x="120.0" y="57.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="120.0" y="36.0" fill="#44ff22"></rect><rect width="24.0" height="1.0" x="144.0" y="36.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="168.0" y="36.0" fill="#44ff22"></rect><rect width="24.0" height="1.0" x="144.0" y="57.0" fill="#44ff22"></rect><rect width="1.0" height="21.0" x="144.0" y="36.0" fill="#44ff22"></rect><g transform="matrix(0.6,0.0,0.0,0.6,28.0,92.0)"><g id="title"><rect width="14.0" height="14.0" x="70.0" y="229.0" fill="#393"></rect><text x="89.0" y="242.0" fill="white">logo irq line </text></g></g><g transform="matrix(0.6,0.0,0.0,0.6,64.0,92.0)"><g id="title"><rect width="14.0" height="14.0" x="160.0" y="229.0" fill="#933"></rect><text x="179.0" y="242.0" fill="white">board irq line</text></g></g></g></svg></p>
+<p>That’s 11 sprites in total. As the C64 hardware only supports 8 sprites, we need to multiplex hardware sprites with raster interrupts:</p>
+<ol type="1">
+<li>Program sprites 0-3 for the BINTRIS logo at the top of the frame, before the raster beam reaches the logo.</li>
+<li>Once the raster beam’s past the logo, program sprites 0-6 to be used for the current score (3 sprites), falling bit (1 sprite), and the collapse noise animation (3 sprites).</li>
+</ol>
+<p>Note that not all these sprites are always enabled: the noise animation sprites are enabled only when rows are collapsing, the falling bit is turned off during the noise animation, and if the current score is, say, less than 10, we need only one sprite for the score digits.</p>
+<p>I did skip over some details, though. The biggest omission is the BINTRIS logo level up warp effect. It looks something like this:</p>
+<div class="screenshot">
+<p><img src="../images/bintris/logowarp.gif" title="BINTRIS logo warp gif" class="img-pixelated" width="300" height="80" /></p>
+</div>
+<p>This effect manipulates the logo sprite X locations on each scanline to achieve the line-by-line distortion effect. It might not look like much in this .gif capture, but as far as timing sensitive code goes, this is by far the trickiest routine in the game. There will be a blog about this effect later in the series.</p>
+<p>The game board is rendered using text mode characters. The charset contains an 8x8 filled rectangle which is used to clear the board area on game start or on level up. Per-frame rendering only sets the color of each such block.</p>
+<p>Board state is represented by two arrays: <code>setbit</code> and <code>bits</code> (16 bytes each). The <code>setbit</code> array encodes which cells contain a block (one bit per column, one byte per row). The <code>bits</code> array containts the actual bit values. The code to render the board is pretty simple with these two arrays:</p>
+<pre><code>piececol:
+    .byte DARK_GRAY, BLACK, DARK_GRAY, WHITE
+
+.macro drawboard(colorbuf) {
+    .const tsetbits = $62
+    .const tbits = $63
+    // Note unrolling by 16 is simply due to lazyness, it's not
+    // necessary for performance.
+    .for (var y = 0; y &lt; 16; y++) {
+        lda setbit+y
+        sta tsetbits
+        lda bits+y
+        sta tbits
+        ldy bitwidth     // current board bitwidth
+xloop:
+        lda tbits
+        and #1
+        lsr tsetbits
+        rol
+        tax
+        lda piececol, x
+        lsr tbits
+        sta colorbuf+[(y+1)*40], y
+        dey
+        bne xloop
+    }
+}</code></pre>
+<p>That’s roughly 31 clock cycles per block. In the <a href="http://nurpax.com/bintris">BINTRIS web version</a> each block is a bunch of SVG <code>&lt;rect&gt;</code> elements wrapped in a <code>&lt;g&gt;</code> element wrapped in a <code>React.PureComponent</code>. I’m pretty sure the cost to render a block in the web version is at least a couple of orders of magnitude higher. That’s not React’s fault of course, I should totally get the blame for abusing React for gamedev like this.</p>
+<h3 id="next-in-series">Next in series</h3>
+<p>The next post will discuss how the main BINTRIS game screen is rendered.</p>
+
+<p>All posts in this series:</p>
+
+<ul>
+    <li><a href="../posts/2018-05-19-bintris-on-c64-part-1.html">BINTRIS on C64 (part 1)</a></li>
+    <li><a href="../posts/2018-05-21-bintris-on-c64-part-2.html">BINTRIS on C64 has been released!
+(part 2)</a></li>
+    <li><a href="../posts/2018-05-27-bintris-on-c64-part-3.html">BINTRIS on C64: mixing bitmap and text modes (part 3)</a></li>
+<!--    <li><a href="/posts/2018-05-30-bintris-on-c64-part-4.html">BINTRIS on C64: game screen rendering (part 4)</a></li>-->
+</ul>
+
+</article>
+
+
+        </div>
+        <div id="footer">
+          <p>Like what you saw here?  Suggestions, improvements?</p>
+          <p>Get in touch: jjhellst@gmail.com or <a href="https://twitter.com/nurpax">@nurpax</a></p>
+        </div>
+    </div>
+
+
+    </body>
+</html>

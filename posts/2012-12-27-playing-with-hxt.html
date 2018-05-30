@@ -8,7 +8,7 @@
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
-
+        
         <script src="../js/jquery.min.js" type="text/javascript"></script>
         <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
 
@@ -47,28 +47,28 @@
 <p>I decided to do a bit of data mining on Garmin GPS files to figure out how RunKeeper interprets it differently. Garmin’s tools can export GPS data as both GPX and <a href="http://en.wikipedia.org/wiki/Training_Center_XML">TCX</a>. The latter format is developed by Garmin and quite likely the closest match to the their native format. Both GPX and TCX are XML.</p>
 <p>I didn’t get very far with actual GPS track analysis but I did write a TCX file reader in Haskell using the <a href="http://hackage.haskell.org/package/hxt">Haskell XML Toolbox (hxt)</a> library. As there seems to be a bit of a lack of Haskell XML parsing examples on the Internet, I decided to post my TCX reader here as an example of parsing Real World XML data in Haskell.</p>
 <p>Here’s a short sample of what a TCX file looks like (some elements have been omitted and xmlns URLs truncated for brevity):</p>
-<div class="sourceCode"><pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span>
-<span class="co">&lt;!-- Some elements omitted for brevity --&gt;</span>
-<span class="kw">&lt;TrainingCenterDatabase</span>
-<span class="ot">  xsi:schemaLocation=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/...d&quot;</span>
-<span class="ot">  xmlns:ns5=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/ActivityGoals/v1&quot;</span>
-<span class="ot">  xmlns:ns3=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/ActivityExtension/v2&quot;</span>
-<span class="ot">  xmlns:ns2=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/UserProfile/v2&quot;</span>
-<span class="ot">  xmlns=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2&quot;</span>
-<span class="ot">  xmlns:xsi=</span><span class="st">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span><span class="ot"> xmlns:ns4=</span><span class="st">&quot;...&quot;</span><span class="kw">&gt;</span>
-  <span class="kw">&lt;Activities&gt;</span>
-    <span class="kw">&lt;Activity</span><span class="ot"> Sport=</span><span class="st">&quot;Biking&quot;</span><span class="kw">&gt;</span>
-      <span class="kw">&lt;Id&gt;</span>2012-12-22T13:47:50.000Z<span class="kw">&lt;/Id&gt;</span>
-      <span class="kw">&lt;Lap</span><span class="ot"> StartTime=</span><span class="st">&quot;2012-12-22T13:47:50.000Z&quot;</span><span class="kw">&gt;</span>
-        <span class="kw">&lt;DistanceMeters&gt;</span>1000.0<span class="kw">&lt;/DistanceMeters&gt;</span>
-        <span class="kw">&lt;Track&gt;</span>
-          <span class="kw">&lt;Trackpoint&gt;</span>
-            <span class="kw">&lt;Time&gt;</span>2012-12-22T13:47:49.000Z<span class="kw">&lt;/Time&gt;</span>
-            <span class="kw">&lt;AltitudeMeters&gt;</span>-2.799999952316284<span class="kw">&lt;/AltitudeMeters&gt;</span>
-            <span class="kw">&lt;DistanceMeters&gt;</span>0.0<span class="kw">&lt;/DistanceMeters&gt;</span>
-            <span class="kw">&lt;HeartRateBpm&gt;</span>
-              <span class="kw">&lt;Value&gt;</span>134<span class="kw">&lt;/Value&gt;</span>
-            <span class="kw">&lt;/HeartRateBpm&gt;</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">&lt;?xml</span> version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;<span class="kw">?&gt;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co">&lt;!-- Some elements omitted for brevity --&gt;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">&lt;TrainingCenterDatabase</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="ot">  xsi:schemaLocation=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/...d&quot;</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="ot">  xmlns:ns5=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/ActivityGoals/v1&quot;</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="ot">  xmlns:ns3=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/ActivityExtension/v2&quot;</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="ot">  xmlns:ns2=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/UserProfile/v2&quot;</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="ot">  xmlns=</span><span class="st">&quot;http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2&quot;</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="ot">  xmlns:xsi=</span><span class="st">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span><span class="ot"> xmlns:ns4=</span><span class="st">&quot;...&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">  <span class="kw">&lt;Activities&gt;</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">    <span class="kw">&lt;Activity</span><span class="ot"> Sport=</span><span class="st">&quot;Biking&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">      <span class="kw">&lt;Id&gt;</span>2012-12-22T13:47:50.000Z<span class="kw">&lt;/Id&gt;</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">      <span class="kw">&lt;Lap</span><span class="ot"> StartTime=</span><span class="st">&quot;2012-12-22T13:47:50.000Z&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">        <span class="kw">&lt;DistanceMeters&gt;</span>1000.0<span class="kw">&lt;/DistanceMeters&gt;</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">        <span class="kw">&lt;Track&gt;</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16">          <span class="kw">&lt;Trackpoint&gt;</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">            <span class="kw">&lt;Time&gt;</span>2012-12-22T13:47:49.000Z<span class="kw">&lt;/Time&gt;</span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18">            <span class="kw">&lt;AltitudeMeters&gt;</span>-2.799999952316284<span class="kw">&lt;/AltitudeMeters&gt;</span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19">            <span class="kw">&lt;DistanceMeters&gt;</span>0.0<span class="kw">&lt;/DistanceMeters&gt;</span></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20">            <span class="kw">&lt;HeartRateBpm&gt;</span></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21">              <span class="kw">&lt;Value&gt;</span>134<span class="kw">&lt;/Value&gt;</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22">            <span class="kw">&lt;/HeartRateBpm&gt;</span></a></code></pre></div>
 <p>The Haskell code for TCX file reading can be found below (also up on <a href="https://github.com/nurpax/hs-tcx">github</a> with a .cabal file). Here’s an outline of what it does:</p>
 <ul>
 <li>The input XML document is read from a file called <code>test-act.tcx</code></li>
@@ -76,78 +76,78 @@
 <li>The resulting Haskell objects (<code>Activity</code>, <code>Lap</code> and <code>Trackpoint</code>) are traversed and output to stdout</li>
 </ul>
 <p>Note: As is probably obvious, this code is not meant to be comprehensive library for accessing TCX data – it’s really just an example of how to get started with HXT and TCX.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span>
-
-<span class="kw">import </span><span class="dt">Text.XML.HXT.Core</span>
-<span class="kw">import </span><span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)
-<span class="kw">import </span><span class="dt">System.Locale</span> (defaultTimeLocale)
-
-<span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]
-  <span class="kw">deriving</span> (<span class="dt">Show</span>)
-
-<span class="kw">data</span> <span class="dt">Lap</span> <span class="fu">=</span> <span class="dt">Lap</span> {
-<span class="ot">    lapDistance ::</span> <span class="dt">Float</span>
-  ,<span class="ot"> lapTrackpoints ::</span> [<span class="dt">Trackpoint</span>]
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
-
-<span class="kw">data</span> <span class="dt">Trackpoint</span> <span class="fu">=</span> <span class="dt">Trackpoint</span> {
-<span class="ot">    tpTime ::</span> <span class="dt">UTCTime</span>
-  ,<span class="ot"> tpBpm ::</span> <span class="dt">String</span>
-  } <span class="kw">deriving</span> (<span class="dt">Show</span>)
-
-<span class="ot">atTag ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">XmlTree</span>
-atTag tag <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName tag)
-
-<span class="ot">text ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">String</span>
-text <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span> getText
-
-<span class="co">-- Note: the hardcoded .000 part is kludge but for my inputs this was</span>
-<span class="co">-- an easy way to get timestamps to parse.</span>
-<span class="ot">readt ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">UTCTime</span>
-readt <span class="fu">=</span> readTime defaultTimeLocale <span class="st">&quot;%FT%T.000%Z&quot;</span>
-
-<span class="ot">getTrackpoint ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Trackpoint</span>
-getTrackpoint <span class="fu">=</span> atTag <span class="st">&quot;Trackpoint&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    time <span class="ot">&lt;-</span> text <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Time&quot;</span> <span class="fu">-&lt;</span> x
-    bpm <span class="ot">&lt;-</span> text <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Value&quot;</span> <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;HeartRateBpm&quot;</span> <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Trackpoint</span> (readt time) bpm
-
-<span class="ot">getLap ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Lap</span>
-getLap <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;Lap&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    pts <span class="ot">&lt;-</span> listA getTrackpoint <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Track&quot;</span> <span class="fu">-&lt;</span> x
-    dist <span class="ot">&lt;-</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;DistanceMeters&quot;</span> <span class="fu">&gt;&gt;&gt;</span> text <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (read dist) pts
-
-<span class="ot">getActivity ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Activity</span>
-getActivity <span class="fu">=</span> atTag <span class="st">&quot;Activity&quot;</span> <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    laps <span class="ot">&lt;-</span> listA getLap <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> <span class="dt">Activity</span> laps
-
-<span class="ot">getActivities ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> [<span class="dt">Activity</span>]
-getActivities <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;TrainingCenterDatabase&quot;</span> <span class="fu">/&gt;</span> hasName <span class="st">&quot;Activities&quot;</span>) <span class="fu">&gt;&gt;&gt;</span>
-  proc x <span class="ot">-&gt;</span> <span class="kw">do</span>
-    activities <span class="ot">&lt;-</span> listA getActivity <span class="fu">-&lt;</span> x
-    returnA <span class="fu">-&lt;</span> activities
-
-<span class="ot">main ::</span> <span class="dt">IO</span> ()
-main <span class="fu">=</span> <span class="kw">do</span>
-  activities <span class="ot">&lt;-</span> runX (readDocument [withValidate no] <span class="st">&quot;test-act.tcx&quot;</span> <span class="fu">&gt;&gt;&gt;</span> getActivities)
-  mapM_ printActivity (head activities)
-  <span class="kw">where</span>
-    printActivity (<span class="dt">Activity</span> laps) <span class="fu">=</span> <span class="kw">do</span>
-      putStrLn <span class="st">&quot;Activity:&quot;</span>
-      mapM_ printLaps laps
-
-    printLaps (<span class="dt">Lap</span> distance trackpts) <span class="fu">=</span> <span class="kw">do</span>
-      putStrLn <span class="st">&quot;  Lap:&quot;</span>
-      putStrLn (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> show distance)
-      mapM_ printTrackpoint trackpts
-
-    printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span>
-      putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">{-# LANGUAGE Arrows, NoMonomorphismRestriction #-}</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">import</span> <span class="dt">Text.XML.HXT.Core</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="kw">import</span> <span class="dt">Data.Time</span> (<span class="dt">UTCTime</span>, readTime)</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="kw">import</span> <span class="dt">System.Locale</span> (defaultTimeLocale)</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="kw">data</span> <span class="dt">Activity</span> <span class="fu">=</span> <span class="dt">Activity</span> [<span class="dt">Lap</span>]</a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">  <span class="kw">deriving</span> (<span class="dt">Show</span>)</a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="kw">data</span> <span class="dt">Lap</span> <span class="fu">=</span> <span class="dt">Lap</span> {</a>
+<a class="sourceLine" id="cb2-11" data-line-number="11"><span class="ot">    lapDistance ::</span> <span class="dt">Float</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">  ,<span class="ot"> lapTrackpoints ::</span> [<span class="dt">Trackpoint</span>]</a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">  } <span class="kw">deriving</span> (<span class="dt">Show</span>)</a>
+<a class="sourceLine" id="cb2-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb2-15" data-line-number="15"><span class="kw">data</span> <span class="dt">Trackpoint</span> <span class="fu">=</span> <span class="dt">Trackpoint</span> {</a>
+<a class="sourceLine" id="cb2-16" data-line-number="16"><span class="ot">    tpTime ::</span> <span class="dt">UTCTime</span></a>
+<a class="sourceLine" id="cb2-17" data-line-number="17">  ,<span class="ot"> tpBpm ::</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb2-18" data-line-number="18">  } <span class="kw">deriving</span> (<span class="dt">Show</span>)</a>
+<a class="sourceLine" id="cb2-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="ot">atTag ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">XmlTree</span></a>
+<a class="sourceLine" id="cb2-21" data-line-number="21">atTag tag <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName tag)</a>
+<a class="sourceLine" id="cb2-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb2-23" data-line-number="23"><span class="ot">text ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">String</span></a>
+<a class="sourceLine" id="cb2-24" data-line-number="24">text <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span> getText</a>
+<a class="sourceLine" id="cb2-25" data-line-number="25"></a>
+<a class="sourceLine" id="cb2-26" data-line-number="26"><span class="co">-- Note: the hardcoded .000 part is kludge but for my inputs this was</span></a>
+<a class="sourceLine" id="cb2-27" data-line-number="27"><span class="co">-- an easy way to get timestamps to parse.</span></a>
+<a class="sourceLine" id="cb2-28" data-line-number="28"><span class="ot">readt ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">UTCTime</span></a>
+<a class="sourceLine" id="cb2-29" data-line-number="29">readt <span class="fu">=</span> readTime defaultTimeLocale <span class="st">&quot;%FT%T.000%Z&quot;</span></a>
+<a class="sourceLine" id="cb2-30" data-line-number="30"></a>
+<a class="sourceLine" id="cb2-31" data-line-number="31"><span class="ot">getTrackpoint ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Trackpoint</span></a>
+<a class="sourceLine" id="cb2-32" data-line-number="32">getTrackpoint <span class="fu">=</span> atTag <span class="st">&quot;Trackpoint&quot;</span> <span class="fu">&gt;&gt;&gt;</span></a>
+<a class="sourceLine" id="cb2-33" data-line-number="33">  proc x <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-34" data-line-number="34">    time <span class="ot">&lt;-</span> text <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Time&quot;</span> <span class="fu">-&lt;</span> x</a>
+<a class="sourceLine" id="cb2-35" data-line-number="35">    bpm <span class="ot">&lt;-</span> text <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Value&quot;</span> <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;HeartRateBpm&quot;</span> <span class="fu">-&lt;</span> x</a>
+<a class="sourceLine" id="cb2-36" data-line-number="36">    returnA <span class="fu">-&lt;</span> <span class="dt">Trackpoint</span> (readt time) bpm</a>
+<a class="sourceLine" id="cb2-37" data-line-number="37"></a>
+<a class="sourceLine" id="cb2-38" data-line-number="38"><span class="ot">getLap ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Lap</span></a>
+<a class="sourceLine" id="cb2-39" data-line-number="39">getLap <span class="fu">=</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;Lap&quot;</span> <span class="fu">&gt;&gt;&gt;</span></a>
+<a class="sourceLine" id="cb2-40" data-line-number="40">  proc x <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-41" data-line-number="41">    pts <span class="ot">&lt;-</span> listA getTrackpoint <span class="fu">&lt;&lt;&lt;</span> atTag <span class="st">&quot;Track&quot;</span> <span class="fu">-&lt;</span> x</a>
+<a class="sourceLine" id="cb2-42" data-line-number="42">    dist <span class="ot">&lt;-</span> getChildren <span class="fu">&gt;&gt;&gt;</span> isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;DistanceMeters&quot;</span> <span class="fu">&gt;&gt;&gt;</span> text <span class="fu">-&lt;</span> x</a>
+<a class="sourceLine" id="cb2-43" data-line-number="43">    returnA <span class="fu">-&lt;</span> <span class="dt">Lap</span> (read dist) pts</a>
+<a class="sourceLine" id="cb2-44" data-line-number="44"></a>
+<a class="sourceLine" id="cb2-45" data-line-number="45"><span class="ot">getActivity ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> <span class="dt">Activity</span></a>
+<a class="sourceLine" id="cb2-46" data-line-number="46">getActivity <span class="fu">=</span> atTag <span class="st">&quot;Activity&quot;</span> <span class="fu">&gt;&gt;&gt;</span></a>
+<a class="sourceLine" id="cb2-47" data-line-number="47">  proc x <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-48" data-line-number="48">    laps <span class="ot">&lt;-</span> listA getLap <span class="fu">-&lt;</span> x</a>
+<a class="sourceLine" id="cb2-49" data-line-number="49">    returnA <span class="fu">-&lt;</span> <span class="dt">Activity</span> laps</a>
+<a class="sourceLine" id="cb2-50" data-line-number="50"></a>
+<a class="sourceLine" id="cb2-51" data-line-number="51"><span class="ot">getActivities ::</span> <span class="dt">ArrowXml</span> a <span class="ot">=&gt;</span> a <span class="dt">XmlTree</span> [<span class="dt">Activity</span>]</a>
+<a class="sourceLine" id="cb2-52" data-line-number="52">getActivities <span class="fu">=</span> deep (isElem <span class="fu">&gt;&gt;&gt;</span> hasName <span class="st">&quot;TrainingCenterDatabase&quot;</span> <span class="fu">/&gt;</span> hasName <span class="st">&quot;Activities&quot;</span>) <span class="fu">&gt;&gt;&gt;</span></a>
+<a class="sourceLine" id="cb2-53" data-line-number="53">  proc x <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-54" data-line-number="54">    activities <span class="ot">&lt;-</span> listA getActivity <span class="fu">-&lt;</span> x</a>
+<a class="sourceLine" id="cb2-55" data-line-number="55">    returnA <span class="fu">-&lt;</span> activities</a>
+<a class="sourceLine" id="cb2-56" data-line-number="56"></a>
+<a class="sourceLine" id="cb2-57" data-line-number="57"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
+<a class="sourceLine" id="cb2-58" data-line-number="58">main <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-59" data-line-number="59">  activities <span class="ot">&lt;-</span> runX (readDocument [withValidate no] <span class="st">&quot;test-act.tcx&quot;</span> <span class="fu">&gt;&gt;&gt;</span> getActivities)</a>
+<a class="sourceLine" id="cb2-60" data-line-number="60">  mapM_ printActivity (head activities)</a>
+<a class="sourceLine" id="cb2-61" data-line-number="61">  <span class="kw">where</span></a>
+<a class="sourceLine" id="cb2-62" data-line-number="62">    printActivity (<span class="dt">Activity</span> laps) <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-63" data-line-number="63">      putStrLn <span class="st">&quot;Activity:&quot;</span></a>
+<a class="sourceLine" id="cb2-64" data-line-number="64">      mapM_ printLaps laps</a>
+<a class="sourceLine" id="cb2-65" data-line-number="65"></a>
+<a class="sourceLine" id="cb2-66" data-line-number="66">    printLaps (<span class="dt">Lap</span> distance trackpts) <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-67" data-line-number="67">      putStrLn <span class="st">&quot;  Lap:&quot;</span></a>
+<a class="sourceLine" id="cb2-68" data-line-number="68">      putStrLn (<span class="st">&quot;    Distance: &quot;</span> <span class="fu">++</span> show distance)</a>
+<a class="sourceLine" id="cb2-69" data-line-number="69">      mapM_ printTrackpoint trackpts</a>
+<a class="sourceLine" id="cb2-70" data-line-number="70"></a>
+<a class="sourceLine" id="cb2-71" data-line-number="71">    printTrackpoint (<span class="dt">Trackpoint</span> time bpm) <span class="fu">=</span></a>
+<a class="sourceLine" id="cb2-72" data-line-number="72">      putStrLn (<span class="st">&quot;    time: &quot;</span> <span class="fu">++</span> show time <span class="fu">++</span> <span class="st">&quot; bpm: &quot;</span> <span class="fu">++</span> show bpm)</a></code></pre></div>
 
 
 </article>

@@ -8,7 +8,7 @@
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
-
+        
         <script src="../js/jquery.min.js" type="text/javascript"></script>
         <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
 
@@ -92,32 +92,32 @@
 <li><a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Snap/Snaplet/SqliteJwt.hs">src/Snaplet/SqliteJwt.hs</a> – A Snap middleware that implements user accounts, password hashing and salting using BCrypt, and JWT for sessionless authentication.</li>
 </ul>
 <p>The request handler for todo items looks like so:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">handleRestTodos ::</span> <span class="dt">H</span> ()
-handleRestTodos <span class="fu">=</span> (method <span class="dt">GET</span> listTodos) <span class="fu">&lt;|&gt;</span> (method <span class="dt">POST</span> saveTodo)
-  <span class="kw">where</span>
-<span class="ot">    listTodos ::</span> <span class="dt">H</span> ()
-    listTodos <span class="fu">=</span> replyJson query
-      <span class="kw">where</span>
-        query (<span class="dt">J.User</span> uid _) <span class="fu">=</span> withTop db <span class="fu">$</span> Db.listTodos (<span class="dt">Db.UserId</span> uid)
-
-    saveTodo <span class="fu">=</span> <span class="kw">do</span>
-      ps <span class="ot">&lt;-</span> reqJSON
-      replyJson (query ps)
-      <span class="kw">where</span>
-        query ps (<span class="dt">J.User</span> uid _) <span class="fu">=</span>
-          <span class="co">-- If the input todo id is Nothing, create a new todo.  Otherwise update</span>
-          <span class="co">-- an existing one.</span>
-          <span class="kw">case</span> ptId ps <span class="kw">of</span>
-            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="kw">do</span>
-              withTop db <span class="fu">$</span> Db.newTodo (<span class="dt">Db.UserId</span> uid) (ptText ps)
-            <span class="dt">Just</span> tid <span class="ot">-&gt;</span> <span class="kw">do</span>
-              <span class="kw">let</span> newTodo <span class="fu">=</span> <span class="dt">Db.Todo</span> tid (ptSavedOn ps) (ptCompleted ps) (ptText ps)
-              withTop db <span class="fu">$</span> Db.saveTodo (<span class="dt">Db.UserId</span> uid) newTodo
-
-<span class="ot">    replyJson ::</span> <span class="dt">ToJSON</span> a <span class="ot">=&gt;</span> (<span class="dt">J.User</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">J.SqliteJwt</span> a) <span class="ot">-&gt;</span> <span class="dt">H</span> ()
-    replyJson action <span class="fu">=</span> <span class="kw">do</span>
-      res <span class="ot">&lt;-</span> with jwt <span class="fu">$</span> J.requireAuth action
-      writeJSON res</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ot">handleRestTodos ::</span> <span class="dt">H</span> ()</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">handleRestTodos <span class="fu">=</span> (method <span class="dt">GET</span> listTodos) <span class="fu">&lt;|&gt;</span> (method <span class="dt">POST</span> saveTodo)</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="ot">    listTodos ::</span> <span class="dt">H</span> ()</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    listTodos <span class="fu">=</span> replyJson query</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">      <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">        query (<span class="dt">J.User</span> uid _) <span class="fu">=</span> withTop db <span class="fu">$</span> Db.listTodos (<span class="dt">Db.UserId</span> uid)</a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">    saveTodo <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">      ps <span class="ot">&lt;-</span> reqJSON</a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">      replyJson (query ps)</a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">      <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">        query ps (<span class="dt">J.User</span> uid _) <span class="fu">=</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">          <span class="co">-- If the input todo id is Nothing, create a new todo.  Otherwise update</span></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">          <span class="co">-- an existing one.</span></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">          <span class="kw">case</span> ptId ps <span class="kw">of</span></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">              withTop db <span class="fu">$</span> Db.newTodo (<span class="dt">Db.UserId</span> uid) (ptText ps)</a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">            <span class="dt">Just</span> tid <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">              <span class="kw">let</span> newTodo <span class="fu">=</span> <span class="dt">Db.Todo</span> tid (ptSavedOn ps) (ptCompleted ps) (ptText ps)</a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">              withTop db <span class="fu">$</span> Db.saveTodo (<span class="dt">Db.UserId</span> uid) newTodo</a>
+<a class="sourceLine" id="cb3-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb3-23" data-line-number="23"><span class="ot">    replyJson ::</span> <span class="dt">ToJSON</span> a <span class="ot">=&gt;</span> (<span class="dt">J.User</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">J.SqliteJwt</span> a) <span class="ot">-&gt;</span> <span class="dt">H</span> ()</a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">    replyJson action <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">      res <span class="ot">&lt;-</span> with jwt <span class="fu">$</span> J.requireAuth action</a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">      writeJSON res</a></code></pre></div>
 <p>Query parameters for the <code>saveTodo</code> POST requests are passed in as JSON and parsed with the <a href="https://hackage.haskell.org/package/aeson">aeson</a> JSON parser. Static type checking enforces that invalid request parameters don’t get past the JSON parser.</p>
 <p>Server-side authentication is implemented in the <a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Snap/Snaplet/SqliteJwt.hs">SqliteJwt</a> module. It exports the <code>requireAuth</code> function which is used above to wrap request handlers. A wrapped handler will either be passed down the currently authenticated user or the request is terminated if JWT authentication failed.</p>
 <h2 id="future-work">Future work</h2>

@@ -8,7 +8,7 @@
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
-
+        
         <script src="../js/jquery.min.js" type="text/javascript"></script>
         <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
 
@@ -47,13 +47,13 @@
 <p>Example project can be found <a href="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab">here</a>.</p>
 <h3 id="step-1-create-c-and-cmake-files">Step 1: Create C++ and CMake files</h3>
 <p>Create a C++ source file:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
-
-<span class="dt">int</span> main()
-{
-    printf(<span class="st">&quot;Hello, world!</span><span class="sc">\n</span><span class="st">&quot;</span>);
-    <span class="cf">return</span> <span class="dv">0</span>;
-}</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="dt">int</span> main()</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">{</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">    printf(<span class="st">&quot;Hello, world!</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">    <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">}</a></code></pre></div>
 <p>Create a CMakeLists.txt to build your C++ file:</p>
 <pre><code>cmake_minimum_required (VERSION 2.6)
 project (example)
@@ -61,29 +61,29 @@ set (CMAKE_CXX_FLAGS &quot;${CMAKE_CXX_FLAGS} -std=c++11&quot;)
 add_executable(example main.cpp)</code></pre>
 <h3 id="step-2">Step 2:</h3>
 <p>Use CMake to generate your makefiles. We put these temporaries under a <code>./build</code> directory.</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">mkdir</span> build
-<span class="bu">cd</span> build
-<span class="fu">cmake</span> ..</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="fu">mkdir</span> build</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="bu">cd</span> build</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="fu">cmake</span> ..</a></code></pre></div>
 <p>If you now run <code>make</code> in the <code>./build</code> directory, your project should build.</p>
 <h3 id="step-3-create-your-st3-project">Step 3: Create your ST3 project</h3>
 <p>Create a <code>example.sublime-project</code> file for your project.</p>
 <p>Edit the project file and add a build system (see “build_systems”):</p>
-<div class="sourceCode"><pre class="sourceCode json"><code class="sourceCode json"><span class="fu">{</span>
-    <span class="dt">&quot;folders&quot;</span><span class="fu">:</span>
-    <span class="ot">[</span>
-        <span class="fu">{</span>
-            <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;.&quot;</span>
-        <span class="fu">}</span>
-    <span class="ot">]</span><span class="fu">,</span>
-    <span class="dt">&quot;build_systems&quot;</span><span class="fu">:</span>
-    <span class="ot">[</span>
-        <span class="fu">{</span>
-            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;cmake&quot;</span><span class="fu">,</span>
-            <span class="dt">&quot;shell_cmd&quot;</span><span class="fu">:</span> <span class="st">&quot;make -C build&quot;</span><span class="fu">,</span>
-            <span class="dt">&quot;file_regex&quot;</span><span class="fu">:</span> <span class="st">&quot;/([^/:]+):(</span><span class="ch">\\</span><span class="st">d+):(</span><span class="ch">\\</span><span class="st">d+): &quot;</span>
-        <span class="fu">}</span>
-    <span class="ot">]</span>
-<span class="fu">}</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="fu">{</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="dt">&quot;folders&quot;</span><span class="fu">:</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">    <span class="ot">[</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">        <span class="fu">{</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">            <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;.&quot;</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">        <span class="fu">}</span></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">    <span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">    <span class="dt">&quot;build_systems&quot;</span><span class="fu">:</span></a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">    <span class="ot">[</span></a>
+<a class="sourceLine" id="cb4-10" data-line-number="10">        <span class="fu">{</span></a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;cmake&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">            <span class="dt">&quot;shell_cmd&quot;</span><span class="fu">:</span> <span class="st">&quot;make -C build&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">            <span class="dt">&quot;file_regex&quot;</span><span class="fu">:</span> <span class="st">&quot;/([^/:]+):(</span><span class="ch">\\</span><span class="st">d+):(</span><span class="ch">\\</span><span class="st">d+): &quot;</span></a>
+<a class="sourceLine" id="cb4-14" data-line-number="14">        <span class="fu">}</span></a>
+<a class="sourceLine" id="cb4-15" data-line-number="15">    <span class="ot">]</span></a>
+<a class="sourceLine" id="cb4-16" data-line-number="16"><span class="fu">}</span></a></code></pre></div>
 <p>This will add a “cmake” build system into ST3 when you open this project file. The convention used is to put the CMake generated makefiles under ./build, and thus the build command uses <code>make -C build</code> instead of just <code>make</code>.</p>
 <h3 id="step-4-build-from-within-st3">Step 4: Build from within ST3</h3>
 <p>Load the example project into ST3.</p>

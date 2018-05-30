@@ -8,7 +8,7 @@
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
-
+        
         <script src="../js/jquery.min.js" type="text/javascript"></script>
         <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
 
@@ -65,18 +65,18 @@
 </ul>
 <h3 id="what-was-benchmarked">What was benchmarked</h3>
 <p>The high-level operation of the benchmark is:</p>
-<ol style="list-style-type: decimal">
+<ol type="1">
 <li>Setup: Initialize a table <code>testdata</code> with 10000 rows of data</li>
 <li>Measure the time it takes to query the first column of all these rows.</li>
 </ol>
 <p>The schema consists of a single <code>testdata</code> table, defined as:</p>
-<div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">CREATE</span> <span class="kw">TABLE</span> testdata (<span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, str TEXT, t <span class="dt">TIMESTAMP</span>)</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">CREATE</span> <span class="kw">TABLE</span> testdata (<span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, str TEXT, t <span class="dt">TIMESTAMP</span>)</a></code></pre></div>
 <p>See <a href="https://github.com/nurpax/db-bench/tree/master/db-util">db-bench/db-util</a> for more details.</p>
 <p>The sqlite-simple query being measured is defined as:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">selectInts ::</span> <span class="dt">S.Connection</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
-selectInts conn <span class="fu">=</span> <span class="kw">do</span>
-  rows <span class="ot">&lt;-</span> S.query_ conn <span class="st">&quot;SELECT id FROM testdata&quot;</span><span class="ot"> ::</span> <span class="dt">IO</span> [(<span class="dt">S.Only</span> <span class="dt">Int</span>)]
-  checksum <span class="fu">$</span> foldl' (\acc (<span class="dt">S.Only</span> v) <span class="ot">-&gt;</span> v <span class="fu">+</span> acc) <span class="dv">0</span> rows</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">selectInts ::</span> <span class="dt">S.Connection</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">selectInts conn <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">  rows <span class="ot">&lt;-</span> S.query_ conn <span class="st">&quot;SELECT id FROM testdata&quot;</span><span class="ot"> ::</span> <span class="dt">IO</span> [(<span class="dt">S.Only</span> <span class="dt">Int</span>)]</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">  checksum <span class="fu">$</span> foldl' (\acc (<span class="dt">S.Only</span> v) <span class="ot">-&gt;</span> v <span class="fu">+</span> acc) <span class="dv">0</span> rows</a></code></pre></div>
 <p>Basically, it SELECTs all the rows from the <code>testdata</code> table and converts the result into a Haskell list of <code>Int</code>s and, as a sanity check, sums the resulting integers together.</p>
 <p>Several variants of this function are benchmarked. The main variants for SQLite are:</p>
 <ul>
@@ -109,16 +109,16 @@ selectInts conn <span class="fu">=</span> <span class="kw">do</span>
 <p>At this point I ran out of low hanging fruit in sqlite-simple and started to look elsewhere for optimizations. A low-level direct-sqlite benchmark was clocking around 2.43M rows/s which seemed a little low when a C implementation of the same was processing rows at almost 6.9M rows/s. Even a Python reimplementation of my benchmark case was faster at 2.5M rows/s. To highlight how large the performance delta between C and direct-sqlite were, it’s helpful to turn the comparison into absolute clock cycles. On my 3.2GHz machine, 6.9M rows/s means SQLite spends roughly 460 clock cycles per row.</p>
 <p>Similarly, at 2.43M rows/s on direct-sqlite, each row cost roughly 1300 clock cycles out of which 460 was spent in the native SQLite library. Somehow roughly 840 clock cycles per row were spent in Haskell SQLite bindings. The overhead of just calling into SQLite from Haskell was higher than the actual cost of computing the result set inside SQLite! Yet, there wasn’t much going on in the wrapper library.</p>
 <p>Consider the innerloop of the direct-sqlite benchmark:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">sumRowsColumnInt64 ::</span> <span class="dt">DS.Statement</span> <span class="ot">-&gt;</span> <span class="dt">Int64</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int64</span>
-sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <span class="kw">do</span>
-  r <span class="ot">&lt;-</span> DS.step stmt
-  <span class="kw">case</span> r <span class="kw">of</span>
-    <span class="dt">DS.Row</span> <span class="ot">-&gt;</span>
-      <span class="kw">do</span>
-        i <span class="ot">&lt;-</span> DS.columnInt64 stmt <span class="dv">0</span>
-        sumRowsColumnInt64 stmt (acc <span class="fu">+</span> i)
-    <span class="dt">DS.Done</span> <span class="ot">-&gt;</span>
-      return acc</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ot">sumRowsColumnInt64 ::</span> <span class="dt">DS.Statement</span> <span class="ot">-&gt;</span> <span class="dt">Int64</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int64</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">  r <span class="ot">&lt;-</span> DS.step stmt</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">  <span class="kw">case</span> r <span class="kw">of</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    <span class="dt">DS.Row</span> <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">      <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">        i <span class="ot">&lt;-</span> DS.columnInt64 stmt <span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">        sumRowsColumnInt64 stmt (acc <span class="fu">+</span> i)</a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">    <span class="dt">DS.Done</span> <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">      return acc</a></code></pre></div>
 <p>The direct-sqlite calls <code>DS.step</code> and <code>DS.columnInt64</code> map quite directly to their native SQLite counterparts <code><a href="http://www.sqlite.org/c3ref/step.html">sqlite3_step</a></code> and <code><a href="http://www.sqlite.org/c3ref/column_blob.html">sqlite3_column_int</a></code>. Thus the expectation is that their cost should be roughly the same as in the C version of this benchmark.</p>
 <p>No matter how bad a compiler you might have, there’s no way the simple Haskell code around <code>sqlite3_step</code> and <code>sqlite3_column_int</code> would add up to 840 clocks per row.</p>
 <p>Turns out FFI call overhead dominated this benchmark. It was possible to reduce this overhead by using the <code>unsafe</code> FFI calling convention for some of the SQLite column accessors. This change was made in direct-sqlite <a href="https://github.com/IreneKnapp/direct-sqlite/pull/20">pull request #20</a>. As the name <code>unsafe</code> implies, it’s not OK to simply mark all FFI functions as unsafe – please refer to the pull request discussion for details. The tl;dr of the FFI discussion was that it’s OK to mark result data accessors like <code>sqlite3_column_int64</code> and <code>sqlite3_column_count</code> as <code>unsafe</code> but that any functions doing the actual query heavy lifting like <code>sqlite3_step</code> should be kept safe.</p>

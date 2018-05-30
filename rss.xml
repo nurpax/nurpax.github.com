@@ -23,6 +23,10 @@
 <pre><code>convert -loop 0 -delay 300 image1.png image2.png image3.png result.gif</code></pre>
 <p>Resize an image with point-sampling while NOT preserving aspect-ratio (ImageMagick forces original aspect ratio without warning):</p>
 <pre><code>convert input.png -sample 640x200! output.png</code></pre>
+<p>Crop the input image and then make a .gif (<code>+repage</code> is required to actually crop the output image dimensions too):</p>
+<pre><code># 104x30 is the size of the crop rectangle
+# +62+22 is an offset to the top/left corner of the crop area
+convert -crop 104x30+62+22 +repage -loop 0 -delay 300 image?.png result.gif</code></pre>
 <h2 id="video-files">Video files</h2>
 <p>View video file format details:</p>
 <pre><code>ffprobe &lt;videofile&gt;</code></pre>
@@ -48,7 +52,9 @@
 <p><?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
     "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 716 539"><style>#rasterbeam {
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 716 539"><style>text { font-family: "arial";}
+
+#rasterbeam {
   animation-name: rasterline;
   animation-duration: 4s;
   animation-iteration-count: infinite;
@@ -106,7 +112,6 @@
   100% { opacity:0; }
 }
 
-#title { font-family: "arial";}
 </style><g><image width="716.0" height="539.0" xlink:href="/images/bintris/titlescreen_for_blog.png" /><rect width="748.75" height="2.0" x="-16.875" y="56.0" fill="#008d46" /><rect width="748.75" height="2.0" x="-16.875" y="442.0" fill="#cf4600" /><rect width="748.75" height="2.0" x="-16.875" y="450.0" fill="#0046cf" /><rect width="748.75" height="2.0" x="-16.875" y="0.0" id="rasterbeam" fill="#ffffff" opacity="0.7" /></g><g><g id="title"><rect width="14.0" height="14.0" x="148.0" y="508.0" fill="#008d46" /><text x="167.0" y="521.0" fill="white">bitmap mode</text><rect width="130.0" height="23.0" x="145.0" y="504.0" fill="#fff" id="hilite1" /></g><g id="title"><rect width="14.0" height="14.0" x="298.0" y="508.0" fill="#cf4600" /><text x="317.0" y="521.0" fill="white">text mode</text><rect width="130.0" height="23.0" x="295.0" y="504.0" fill="#fff" id="hilite2" /></g><g id="title"><rect width="14.0" height="14.0" x="433.0" y="508.0" fill="#0046cf" /><text x="452.0" y="521.0" fill="white">raster bar</text><rect width="130.0" height="23.0" x="430.0" y="504.0" fill="#fff" id="hilite3" /></g></g></svg></p>
 <p>In summary:</p>
 <ul>
@@ -226,10 +231,7 @@ end:
     <published>2018-05-21T00:00:00Z</published>
     <updated>2018-05-21T00:00:00Z</updated>
     <summary type="html"><![CDATA[<div class="screenshotMax">
-<div class="figure">
-<img src="/images/bintris_titlescreen.png" title="BINTRIS" />
-
-</div>
+<p><img src="/images/bintris_titlescreen.png" title="BINTRIS" /></p>
 </div>
 <p>The Commodore 64 version of <a href="http://nurpax.com/bintris">BINTRIS</a> has been released!</p>
 <p>Download the latest BINTRIS disk image: <a href="/files/bintris-2018-05-22.d64">bintris-2018-05-22.d64</a></p>
@@ -241,10 +243,7 @@ end:
 </div>
 <p>Here’s the game objective in a nutshell:</p>
 <div class="screenshotMax">
-<div class="figure">
-<img src="/images/bintris_how_to_play2.png" title="BINTRIS HOWTO PLAY" />
-
-</div>
+<p><img src="/images/bintris_how_to_play2.png" title="BINTRIS HOWTO PLAY" /></p>
 </div>
 <h2 id="next-in-series">Next in series</h2>
 <p>The next post will discuss how the title screen mixes multicolor bitmap mode (the BINTRIS image) and text mode (the scroller).</p>]]></summary>
@@ -354,13 +353,13 @@ Bug:
 <p>Example project can be found <a href="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab">here</a>.</p>
 <h2 id="step-1-create-c-and-cmake-files">Step 1: Create C++ and CMake files</h2>
 <p>Create a C++ source file:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
-
-<span class="dt">int</span> main()
-{
-    printf(<span class="st">&quot;Hello, world!</span><span class="sc">\n</span><span class="st">&quot;</span>);
-    <span class="cf">return</span> <span class="dv">0</span>;
-}</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="dt">int</span> main()</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">{</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">    printf(<span class="st">&quot;Hello, world!</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">    <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">}</a></code></pre></div>
 <p>Create a CMakeLists.txt to build your C++ file:</p>
 <pre><code>cmake_minimum_required (VERSION 2.6)
 project (example)
@@ -368,29 +367,29 @@ set (CMAKE_CXX_FLAGS &quot;${CMAKE_CXX_FLAGS} -std=c++11&quot;)
 add_executable(example main.cpp)</code></pre>
 <h2 id="step-2">Step 2:</h2>
 <p>Use CMake to generate your makefiles. We put these temporaries under a <code>./build</code> directory.</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">mkdir</span> build
-<span class="bu">cd</span> build
-<span class="fu">cmake</span> ..</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="fu">mkdir</span> build</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="bu">cd</span> build</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="fu">cmake</span> ..</a></code></pre></div>
 <p>If you now run <code>make</code> in the <code>./build</code> directory, your project should build.</p>
 <h2 id="step-3-create-your-st3-project">Step 3: Create your ST3 project</h2>
 <p>Create a <code>example.sublime-project</code> file for your project.</p>
 <p>Edit the project file and add a build system (see “build_systems”):</p>
-<div class="sourceCode"><pre class="sourceCode json"><code class="sourceCode json"><span class="fu">{</span>
-    <span class="dt">&quot;folders&quot;</span><span class="fu">:</span>
-    <span class="ot">[</span>
-        <span class="fu">{</span>
-            <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;.&quot;</span>
-        <span class="fu">}</span>
-    <span class="ot">]</span><span class="fu">,</span>
-    <span class="dt">&quot;build_systems&quot;</span><span class="fu">:</span>
-    <span class="ot">[</span>
-        <span class="fu">{</span>
-            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;cmake&quot;</span><span class="fu">,</span>
-            <span class="dt">&quot;shell_cmd&quot;</span><span class="fu">:</span> <span class="st">&quot;make -C build&quot;</span><span class="fu">,</span>
-            <span class="dt">&quot;file_regex&quot;</span><span class="fu">:</span> <span class="st">&quot;/([^/:]+):(</span><span class="ch">\\</span><span class="st">d+):(</span><span class="ch">\\</span><span class="st">d+): &quot;</span>
-        <span class="fu">}</span>
-    <span class="ot">]</span>
-<span class="fu">}</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="fu">{</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="dt">&quot;folders&quot;</span><span class="fu">:</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">    <span class="ot">[</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">        <span class="fu">{</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">            <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;.&quot;</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">        <span class="fu">}</span></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">    <span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">    <span class="dt">&quot;build_systems&quot;</span><span class="fu">:</span></a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">    <span class="ot">[</span></a>
+<a class="sourceLine" id="cb4-10" data-line-number="10">        <span class="fu">{</span></a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;cmake&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">            <span class="dt">&quot;shell_cmd&quot;</span><span class="fu">:</span> <span class="st">&quot;make -C build&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">            <span class="dt">&quot;file_regex&quot;</span><span class="fu">:</span> <span class="st">&quot;/([^/:]+):(</span><span class="ch">\\</span><span class="st">d+):(</span><span class="ch">\\</span><span class="st">d+): &quot;</span></a>
+<a class="sourceLine" id="cb4-14" data-line-number="14">        <span class="fu">}</span></a>
+<a class="sourceLine" id="cb4-15" data-line-number="15">    <span class="ot">]</span></a>
+<a class="sourceLine" id="cb4-16" data-line-number="16"><span class="fu">}</span></a></code></pre></div>
 <p>This will add a “cmake” build system into ST3 when you open this project file. The convention used is to put the CMake generated makefiles under ./build, and thus the build command uses <code>make -C build</code> instead of just <code>make</code>.</p>
 <h2 id="step-4-build-from-within-st3">Step 4: Build from within ST3</h2>
 <p>Load the example project into ST3.</p>
@@ -456,32 +455,32 @@ add_executable(example main.cpp)</code></pre>
 <li><a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Snap/Snaplet/SqliteJwt.hs">src/Snaplet/SqliteJwt.hs</a> – A Snap middleware that implements user accounts, password hashing and salting using BCrypt, and JWT for sessionless authentication.</li>
 </ul>
 <p>The request handler for todo items looks like so:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">handleRestTodos ::</span> <span class="dt">H</span> ()
-handleRestTodos <span class="fu">=</span> (method <span class="dt">GET</span> listTodos) <span class="fu">&lt;|&gt;</span> (method <span class="dt">POST</span> saveTodo)
-  <span class="kw">where</span>
-<span class="ot">    listTodos ::</span> <span class="dt">H</span> ()
-    listTodos <span class="fu">=</span> replyJson query
-      <span class="kw">where</span>
-        query (<span class="dt">J.User</span> uid _) <span class="fu">=</span> withTop db <span class="fu">$</span> Db.listTodos (<span class="dt">Db.UserId</span> uid)
-
-    saveTodo <span class="fu">=</span> <span class="kw">do</span>
-      ps <span class="ot">&lt;-</span> reqJSON
-      replyJson (query ps)
-      <span class="kw">where</span>
-        query ps (<span class="dt">J.User</span> uid _) <span class="fu">=</span>
-          <span class="co">-- If the input todo id is Nothing, create a new todo.  Otherwise update</span>
-          <span class="co">-- an existing one.</span>
-          <span class="kw">case</span> ptId ps <span class="kw">of</span>
-            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="kw">do</span>
-              withTop db <span class="fu">$</span> Db.newTodo (<span class="dt">Db.UserId</span> uid) (ptText ps)
-            <span class="dt">Just</span> tid <span class="ot">-&gt;</span> <span class="kw">do</span>
-              <span class="kw">let</span> newTodo <span class="fu">=</span> <span class="dt">Db.Todo</span> tid (ptSavedOn ps) (ptCompleted ps) (ptText ps)
-              withTop db <span class="fu">$</span> Db.saveTodo (<span class="dt">Db.UserId</span> uid) newTodo
-
-<span class="ot">    replyJson ::</span> <span class="dt">ToJSON</span> a <span class="ot">=&gt;</span> (<span class="dt">J.User</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">J.SqliteJwt</span> a) <span class="ot">-&gt;</span> <span class="dt">H</span> ()
-    replyJson action <span class="fu">=</span> <span class="kw">do</span>
-      res <span class="ot">&lt;-</span> with jwt <span class="fu">$</span> J.requireAuth action
-      writeJSON res</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ot">handleRestTodos ::</span> <span class="dt">H</span> ()</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">handleRestTodos <span class="fu">=</span> (method <span class="dt">GET</span> listTodos) <span class="fu">&lt;|&gt;</span> (method <span class="dt">POST</span> saveTodo)</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="ot">    listTodos ::</span> <span class="dt">H</span> ()</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    listTodos <span class="fu">=</span> replyJson query</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">      <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">        query (<span class="dt">J.User</span> uid _) <span class="fu">=</span> withTop db <span class="fu">$</span> Db.listTodos (<span class="dt">Db.UserId</span> uid)</a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">    saveTodo <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">      ps <span class="ot">&lt;-</span> reqJSON</a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">      replyJson (query ps)</a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">      <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">        query ps (<span class="dt">J.User</span> uid _) <span class="fu">=</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">          <span class="co">-- If the input todo id is Nothing, create a new todo.  Otherwise update</span></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">          <span class="co">-- an existing one.</span></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">          <span class="kw">case</span> ptId ps <span class="kw">of</span></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">              withTop db <span class="fu">$</span> Db.newTodo (<span class="dt">Db.UserId</span> uid) (ptText ps)</a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">            <span class="dt">Just</span> tid <span class="ot">-&gt;</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">              <span class="kw">let</span> newTodo <span class="fu">=</span> <span class="dt">Db.Todo</span> tid (ptSavedOn ps) (ptCompleted ps) (ptText ps)</a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">              withTop db <span class="fu">$</span> Db.saveTodo (<span class="dt">Db.UserId</span> uid) newTodo</a>
+<a class="sourceLine" id="cb3-22" data-line-number="22"></a>
+<a class="sourceLine" id="cb3-23" data-line-number="23"><span class="ot">    replyJson ::</span> <span class="dt">ToJSON</span> a <span class="ot">=&gt;</span> (<span class="dt">J.User</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">J.SqliteJwt</span> a) <span class="ot">-&gt;</span> <span class="dt">H</span> ()</a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">    replyJson action <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">      res <span class="ot">&lt;-</span> with jwt <span class="fu">$</span> J.requireAuth action</a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">      writeJSON res</a></code></pre></div>
 <p>Query parameters for the <code>saveTodo</code> POST requests are passed in as JSON and parsed with the <a href="https://hackage.haskell.org/package/aeson">aeson</a> JSON parser. Static type checking enforces that invalid request parameters don’t get past the JSON parser.</p>
 <p>Server-side authentication is implemented in the <a href="https://github.com/nurpax/snap-reactjs-todo/blob/blog-0.1/src/Snap/Snaplet/SqliteJwt.hs">SqliteJwt</a> module. It exports the <code>requireAuth</code> function which is used above to wrap request handlers. A wrapped handler will either be passed down the currently authenticated user or the request is terminated if JWT authentication failed.</p>
 <h1 id="future-work">Future work</h1>
@@ -499,15 +498,15 @@ handleRestTodos <span class="fu">=</span> (method <span class="dt">GET</span> li
 <p>The problem occurs when stepping through a program in <code>gud-mode</code> with <code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source buffers into the dedicated middle-left source window. Instead, source buffers are (randomly?) assigned on top of other GDB buffers like the GDB comint window. The layout problem gets even worse with multiple Emacs frames. Here are my repro steps with a diagram of what happens and how I’d like Emacs to behave instead.</p>
 <p>Here are the steps to reproduce the problem on Emacs 24.3.1.</p>
 <p>Bind <code>gud-next</code> and <code>gud-step</code> to <code>[f7]</code> and <code>[f8]</code>:</p>
-<div class="sourceCode"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span class="co">;; This goes into your .emacs</span>
-(add-hook &#39;gud-mode-hook
-          &#39;(<span class="kw">lambda</span> ()
-             (global-set-key (kbd <span class="st">&quot;&lt;f7&gt;&quot;</span>) &#39;gud-next)
-             (global-set-key (kbd <span class="st">&quot;&lt;f8&gt;&quot;</span>) &#39;gud-step)))</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">;; This goes into your .emacs</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">(add-hook &#39;gud-mode-hook</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">          &#39;(<span class="kw">lambda</span> ()</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">             (global-set-key (kbd <span class="st">&quot;&lt;f7&gt;&quot;</span>) &#39;gud-next)</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">             (global-set-key (kbd <span class="st">&quot;&lt;f8&gt;&quot;</span>) &#39;gud-step)))</a></code></pre></div>
 <p>Build my example program:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj
-<span class="bu">cd</span> emacs-gdb-proj
-<span class="fu">make</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="fu">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="bu">cd</span> emacs-gdb-proj</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="fu">make</span></a></code></pre></div>
 <p>Start Emacs and enter GDB:</p>
 <pre><code>emacs &amp;
 M-x gdb
@@ -522,14 +521,14 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-size="20" font-family="Helvetica" fill="rgb(131,148,150)">*gud-test*</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./main.c</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
 </svg>
 <p>The contents of <code>main.c</code> look like this:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
-
-<span class="dt">int</span> main() 
-{
-    foo();
-    foo();
-    foo();
-}</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="dt">int</span> main() </a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">{</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">    foo();</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">    foo();</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">    foo();</a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">}</a></code></pre></div>
 <p>If you step into the <code>foo()</code> function with <code>[f8]</code>, you’re taken into the <code>b.c</code> source file, which opens as expected into left-middle source window.</p>
 <p>However, if instead of directly stepping into <code>foo()</code> you open another source file in the source window, say, <code>C-x C-f</code>’ing the <code>Makefile</code> from the test project and hit <code>[f8]</code> again, BOOM, the <code>b.c</code> buffer opens in the comint <code>*gud-test*</code> window and not in the source window! The window layout now looks like this:</p>
 <svg width="600" height="400">
@@ -537,7 +536,7 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./b.c</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./Makefile</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)" /> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
 </svg>
 <p>Another way to trigger the same:</p>
-<ol style="list-style-type: decimal">
+<ol type="1">
 <li>Start <code>gud-mode</code> + <code>gdb-many-windows</code> as above.</li>
 <li>Step into <code>foo()</code>.</li>
 <li>Open the <code>Makefile</code> into the source window.</li>
@@ -608,60 +607,60 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <p>Any tests that modify or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence or have its authentication cookies passed into it. I went for the latter approach as it allows logging in once and running multiple tests with the same cookies.</p>
 <p>I define top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, followed by running a list of sub-tests with cookies acquired from the login process. The sequencing is explicitly declared by using <code>test-framework</code>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
 <p>Here’s the definition of <code>loginUserTests</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span>
-<span class="co">-- from the login process.</span>
-<span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span>
-loginUserTests tests <span class="fu">=</span> <span class="kw">do</span>
-  r <span class="ot">&lt;-</span> post (mkUrl <span class="st">&quot;/rest/login&quot;</span>) [<span class="st">&quot;login&quot;</span> <span class="fu">:=</span> login, <span class="st">&quot;password&quot;</span> <span class="fu">:=</span> passwd]
-  <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> cookies <span class="fu">.~</span> (r <span class="fu">^.</span> responseCookieJar)
-  return
-    <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span>
-    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co">-- from the login process.</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">loginUserTests tests <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">  r <span class="ot">&lt;-</span> post (mkUrl <span class="st">&quot;/rest/login&quot;</span>) [<span class="st">&quot;login&quot;</span> <span class="fu">:=</span> login, <span class="st">&quot;password&quot;</span> <span class="fu">:=</span> passwd]</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">  <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> cookies <span class="fu">.~</span> (r <span class="fu">^.</span> responseCookieJar)</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">  return</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">    <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</a></code></pre></div>
 <p>It performs a HTTP POST on <code>/rest/login</code> with the test user’s login credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes them to sub-tests so that they can run authenticated.</p>
 <p>Here’s how <code>loginUserTests</code> gets used:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Test case that tests that we&#39;re successfully logged in</span>
-<span class="co">-- Options must contain the necessary login cookies.</span>
-<span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
-testLoggedInOk opts <span class="fu">=</span> <span class="kw">do</span>
-  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)
-  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _Bool)
-
-<span class="ot">main ::</span> <span class="dt">IO</span> ()
-main <span class="fu">=</span>
-  defaultMain
-  [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
-  , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]
-  ]</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">-- Test case that tests that we&#39;re successfully logged in</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co">-- Options must contain the necessary login cookies.</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">testLoggedInOk opts <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _Bool)</a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">main <span class="fu">=</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">  defaultMain</a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">  [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">  , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">  ]</a></code></pre></div>
 <p>Function <code>testLoggedInOk</code> tests that it can HTTP GET <code>/rest/app</code> successfully. It also tests that the returned JSON object contains a field <code>loggedIn</code> with value <code>true</code>.</p>
 <h2 id="negative-testing">Negative testing</h2>
 <p>One shouldn’t forget about negative testing, so let’s develop a test for checking that entry points correctly respond with an error 403 on unauthenticated access:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- GET requests against &#39;url&#39; and expect to get error 403 back</span>
-<span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
-testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span>
-  E.try (getWith opts url) <span class="fu">&gt;&gt;=</span> check
-  <span class="kw">where</span>
-    check (<span class="dt">Left</span> (<span class="dt">HT.StatusCodeException</span> s _ _))
-      <span class="fu">|</span> s <span class="fu">^.</span> statusCode <span class="fu">==</span> <span class="dv">403</span> <span class="fu">=</span> assertBool <span class="st">&quot;error ok&quot;</span> <span class="dt">True</span>
-      <span class="fu">|</span> otherwise              <span class="fu">=</span> assertBool <span class="st">&quot;unexpected status code&quot;</span> <span class="dt">False</span>
-    check (<span class="dt">Left</span> _)  <span class="fu">=</span> assertBool <span class="st">&quot;unexpected exception caught&quot;</span> <span class="dt">False</span>
-    check (<span class="dt">Right</span> r) <span class="fu">=</span> assertBool <span class="st">&quot;req should&#39;ve failed&quot;</span> <span class="dt">False</span>
-
-<span class="ot">main ::</span> <span class="dt">IO</span> ()
-main <span class="fu">=</span>
-  defaultMain [testGroup <span class="st">&quot;Require auth fail&quot;</span> requireAuthFail]
-  <span class="kw">where</span>
-    requireAuthFail <span class="fu">=</span>
-      map (\u <span class="ot">-&gt;</span> testCase u (testLoggedInFail (mkUrl u) defaults)) authReqd
-    <span class="co">-- REST entry points which require user to be logged in</span>
-    authReqd <span class="fu">=</span> [ <span class="st">&quot;/rest/app&quot;</span>
-               , <span class="st">&quot;/rest/weights&quot;</span>
-               , <span class="st">&quot;/rest/notes&quot;</span>
-               , <span class="st">&quot;/rest/exercise&quot;</span>
-               , <span class="st">&quot;/rest/workout/exercise&quot;</span>
-               , <span class="st">&quot;/rest/workout&quot;</span>
-               , <span class="st">&quot;/rest/workout&quot;</span>
-               , <span class="st">&quot;/rest/stats/workout&quot;</span>
-               ]</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co">-- GET requests against &#39;url&#39; and expect to get error 403 back</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">  E.try (getWith opts url) <span class="fu">&gt;&gt;=</span> check</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">  <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">    check (<span class="dt">Left</span> (<span class="dt">HT.StatusCodeException</span> s _ _))</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">      <span class="fu">|</span> s <span class="fu">^.</span> statusCode <span class="fu">==</span> <span class="dv">403</span> <span class="fu">=</span> assertBool <span class="st">&quot;error ok&quot;</span> <span class="dt">True</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">      <span class="fu">|</span> otherwise              <span class="fu">=</span> assertBool <span class="st">&quot;unexpected status code&quot;</span> <span class="dt">False</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">    check (<span class="dt">Left</span> _)  <span class="fu">=</span> assertBool <span class="st">&quot;unexpected exception caught&quot;</span> <span class="dt">False</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">    check (<span class="dt">Right</span> r) <span class="fu">=</span> assertBool <span class="st">&quot;req should&#39;ve failed&quot;</span> <span class="dt">False</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">main <span class="fu">=</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">  defaultMain [testGroup <span class="st">&quot;Require auth fail&quot;</span> requireAuthFail]</a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">  <span class="kw">where</span></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">    requireAuthFail <span class="fu">=</span></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">      map (\u <span class="ot">-&gt;</span> testCase u (testLoggedInFail (mkUrl u) defaults)) authReqd</a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">    <span class="co">-- REST entry points which require user to be logged in</span></a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">    authReqd <span class="fu">=</span> [ <span class="st">&quot;/rest/app&quot;</span></a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">               , <span class="st">&quot;/rest/weights&quot;</span></a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">               , <span class="st">&quot;/rest/notes&quot;</span></a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">               , <span class="st">&quot;/rest/exercise&quot;</span></a>
+<a class="sourceLine" id="cb3-23" data-line-number="23">               , <span class="st">&quot;/rest/workout/exercise&quot;</span></a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">               , <span class="st">&quot;/rest/workout&quot;</span></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">               , <span class="st">&quot;/rest/workout&quot;</span></a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">               , <span class="st">&quot;/rest/stats/workout&quot;</span></a>
+<a class="sourceLine" id="cb3-27" data-line-number="27">               ]</a></code></pre></div>
 <h2 id="creating-objects">Creating objects</h2>
 <p>Here we will test two entry points: one for creating a new exercise like “Chin-ups” and one for listing existing exercises. Creation is a HTTP POST to <code>/rest/exercise</code> and listing exercises is HTTP GET <code>/rest/exercise</code>.</p>
 <p>A successful POST to <code>/rest/exercise</code> will create a new object on the server and return the object to the client as JSON. Here’s what that repsonse might look like:</p>
@@ -673,20 +672,20 @@ main <span class="fu">=</span>
 ]</code></pre>
 <p>To test creating exercise objects, we’ll create an exercise, verify that its returned properties match what we gave on creation, and finally retrieve the complete exercise list and check that the object is listed.</p>
 <p>Here’s the code for the above test strategy. The <a href="http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html">Aeson Lens API</a> is particularly handy for this type of ad hoc JSON value inspection!</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>
-testAddExercise opts <span class="fu">=</span> <span class="kw">do</span>
-  <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span>
-      ty   <span class="fu">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span>
-  r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="fu">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="fu">:=</span> ty]
-  <span class="co">-- Verify that the newly created object matches creation params</span>
-  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _String
-  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _String
-  <span class="co">-- Verify that the object ended up in the global list of exercises</span>
-  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer
-  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)
-  assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)
-  <span class="kw">where</span>
-    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">testAddExercise opts <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">  <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">      ty   <span class="fu">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span></a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">  r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="fu">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="fu">:=</span> ty]</a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">  <span class="co">-- Verify that the newly created object matches creation params</span></a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _String</a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _String</a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">  <span class="co">-- Verify that the object ended up in the global list of exercises</span></a>
+<a class="sourceLine" id="cb6-10" data-line-number="10">  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)</a>
+<a class="sourceLine" id="cb6-12" data-line-number="12">  assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)</a>
+<a class="sourceLine" id="cb6-13" data-line-number="13">  <span class="kw">where</span></a>
+<a class="sourceLine" id="cb6-14" data-line-number="14">    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</a></code></pre></div>
 <h2 id="conclusion">Conclusion</h2>
 <p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
 <p>You can find the full source code to these tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
@@ -730,9 +729,9 @@ Main.hs:118:8:
 <p>Even though I had blown away my <code>.cabal</code> and previous HP installation directories from under my <code>$HOME</code>, I still had managed to leave in a <code>.ghc</code> directory. Nuking that fixed the last problem.</p>
 <h2 id="final-installation-steps">Final Installation Steps</h2>
 <p>For my future reference, here are the high-level steps I took to install the latest released Haskell Platform:</p>
-<ol style="list-style-type: decimal">
+<ol type="1">
 <li>Prerequisites: some version of GHC installed. In my case GHC 7.4.1 from Debian. Various other packages are needed for HP, these are easy to google so not listing them here.</li>
-<li>Download GHC 7.6.3 source release, standard <code>./configure &amp;&amp; make &amp;&amp;    make install</code> installation</li>
+<li>Download GHC 7.6.3 source release, standard <code>./configure &amp;&amp; make &amp;&amp; make install</code> installation</li>
 <li>Check that <code>ghc --version</code> is 7.6.3. If it’s not, your PATH points to the previous GHC version.
 <ul>
 <li>Not sure if it’s recommended to remove the previous GHC installation at this point. Will I get into trouble with conflicting GHC versions if I don’t remove it here?</li>
