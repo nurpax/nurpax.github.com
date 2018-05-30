@@ -8,8 +8,76 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2018-05-28T00:00:00Z</updated>
+    <updated>2018-05-30T00:00:00Z</updated>
     <entry>
+    <title>BINTRIS C64 game screen rendering (series part 4)</title>
+    <link href="http://nurpax.github.com/posts/2018-05-30-bintris-on-c64-part-4.html" />
+    <id>http://nurpax.github.com/posts/2018-05-30-bintris-on-c64-part-4.html</id>
+    <published>2018-05-30T00:00:00Z</published>
+    <updated>2018-05-30T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>(Looking for the BINTRIS C64 disk image? Find it <a href="/posts/2018-05-21-bintris-on-c64-part-2.html">here</a>.)</p>
+<p>Let’s take a look at how the actual BINTRIS game screen is rendered. This is the first thing I implemented for this projet (after maybe 25 years of C64 dev hiatus) and in hindsight I think it could’ve been simpler with less sprites and more charset manipulation.</p>
+<p>The graphic elements of this screen are:</p>
+<ul>
+<li>The BINTRIS logo at the top (4 multicolor sprites)</li>
+<li>Currently falling bit (one single color sprite)</li>
+<li>Current score (3 multicolor sprites, one sprite per number, max 3 digits)</li>
+<li>The collapse noise animation (3 multicolor sprites)</li>
+<li>The game board rendered in text mode (one character per bit)</li>
+<li>Decimal targets (standard text)</li>
+</ul>
+<p>Here’s how it looks like (with red &amp; green rectangles highlighting sprite locations):</p>
+<p><?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+    "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 384 272"><style>text { font-family: "arial";}
+
+.pointsample { image-rendering: pixelated; }</style><g><image width="384.0" height="272.0" class="pointsample" xlink:href="/images/bintris/gamescreen-collapse.gif" /><rect width="1120.0" height="1.0" x="-8.0" y="26.0" fill="#393" /><rect width="1120.0" height="1.0" x="-8.0" y="62.0" fill="#933" /><rect width="24.0" height="1.0" x="72.0" y="110.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="96.0" y="110.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="131.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="72.0" y="110.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="158.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="96.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="179.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="72.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="96.0" y="158.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="120.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="96.0" y="179.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="96.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="120.0" y="158.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="144.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="120.0" y="179.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="120.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="158.0" y="68.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="182.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="158.0" y="89.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="158.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="182.0" y="68.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="206.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="182.0" y="89.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="182.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="206.0" y="68.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="230.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="206.0" y="89.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="206.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="96.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="72.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="72.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="96.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="120.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="96.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="96.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="120.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="144.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="120.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="120.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="144.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="168.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="144.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="144.0" y="36.0" fill="#44ff22" /><g transform="matrix(0.6,0.0,0.0,0.6,28.0,92.0)"><g id="title"><rect width="14.0" height="14.0" x="70.0" y="229.0" fill="#393" /><text x="89.0" y="242.0" fill="white">logo irq line </text></g></g><g transform="matrix(0.6,0.0,0.0,0.6,64.0,92.0)"><g id="title"><rect width="14.0" height="14.0" x="160.0" y="229.0" fill="#933" /><text x="179.0" y="242.0" fill="white">board irq line</text></g></g></g></svg></p>
+<p>That’s 11 sprites in total. As the C64 hardware only supports 8 sprites, we need to multiplex hardware sprites with raster interrupts:</p>
+<ol type="1">
+<li>Program sprites 0-3 for the BINTRIS logo at the top of the frame, before the raster beam reaches the logo.</li>
+<li>Once the raster beam’s past the logo, program sprites 0-6 to be used for the current score (3 sprites), falling bit (1 sprite), and the collapse noise animation (3 sprites).</li>
+</ol>
+<p>Note that not all these sprites are always enabled: the noise animation sprites are enabled only when rows are collapsing, the falling bit is turned off during the noise animation, and if the current score is, say, less than 10, we need only one sprite for the score digits.</p>
+<p>I did skip over some details, though. The biggest omission is the BINTRIS logo level up warp effect. It looks something like this:</p>
+<div class="screenshot">
+<p><img src="/images/bintris/logowarp.gif" title="BINTRIS logo warp gif" class="img-pixelated" width="300" height="80" /></p>
+</div>
+<p>This effect manipulates the logo sprite X locations on each scanline to achieve the line-by-line distortion effect. It might not look like much in this .gif capture, but as far as timing sensitive code goes, this is by far the trickiest routine in the game. There will be a blog about this effect later in the series.</p>
+<p>The game board is rendered using text mode characters. The charset contains an 8x8 filled rectangle which is used to clear the board area on game start or on level up. Per-frame rendering only sets the color of each such block.</p>
+<p>Board state is represented by two arrays: <code>setbit</code> and <code>bits</code> (16 bytes each). The <code>setbit</code> array encodes which cells contain a block (one bit per column, one byte per row). The <code>bits</code> array containts the actual bit values. The code to render the board is pretty simple with these two arrays:</p>
+<pre><code>piececol:
+    .byte DARK_GRAY, BLACK, DARK_GRAY, WHITE
+
+.macro drawboard(colorbuf) {
+    .const tsetbits = $62
+    .const tbits = $63
+    // Note unrolling by 16 is simply due to lazyness, it&#39;s not
+    // necessary for performance.
+    .for (var y = 0; y &lt; 16; y++) {
+        lda setbit+y
+        sta tsetbits
+        lda bits+y
+        sta tbits
+        ldy bitwidth     // current board bitwidth
+xloop:
+        lda tbits
+        and #1
+        lsr tsetbits
+        rol
+        tax
+        lda piececol, x
+        lsr tbits
+        sta colorbuf+[(y+1)*40], y
+        dey
+        bne xloop
+    }
+}</code></pre>
+<p>That’s roughly 31 clock cycles per block. In the <a href="http://nurpax.com/bintris">BINTRIS web version</a> each block is a bunch of SVG <code>&lt;rect&gt;</code> elements wrapped in a <code>&lt;g&gt;</code> element wrapped in a <code>React.PureComponent</code>. I’m pretty sure the cost to render a block in the web version is at least a couple of orders of magnitude higher. That’s not React’s fault of course, I should totally get the blame for abusing React for gamedev like this.</p>
+<h2 id="next-in-series">Next in series</h2>
+<p>The next post will discuss vertical scrolling with flexible line distance (FLD) and will also go into details on how the BINTRIS logo warp was done.</p>]]></summary>
+</entry>
+<entry>
     <title>Handy command-line incantations</title>
     <link href="http://nurpax.github.com/posts/2018-05-28-handy-command-line-incantations.html" />
     <id>http://nurpax.github.com/posts/2018-05-28-handy-command-line-incantations.html</id>
@@ -690,59 +758,6 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
 <p>You can find the full source code to these tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
 <p>Thanks for reading!</p>]]></summary>
-</entry>
-<entry>
-    <title>Installing Haskell Platform on Debian testing</title>
-    <link href="http://nurpax.github.com/posts/2014-02-20-haskell-platform-installation.html" />
-    <id>http://nurpax.github.com/posts/2014-02-20-haskell-platform-installation.html</id>
-    <published>2014-02-20T00:00:00Z</published>
-    <updated>2014-02-20T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>I usually hit some snags when installing Haskell Platform (HP) on either Ubuntu or Debian. I thought this time I would get lucky, and get it installed without trouble.</p>
-<h2 id="first-attempt">First Attempt</h2>
-<p>In anticipation of a great success, I first blew away all my local installs of HP and GHC, followed by direct <code>haskell-platform</code> package installation:</p>
-<pre><code>apt-get install haskell-platform</code></pre>
-<p>D’oh, Debian testing’s HP is at 2012.2.0.0. Too old, I want a later version.</p>
-<p>HP 2013.2.0.0 requires GHC 7.6.3, so let’s install that. I follow the links on <a href="http://www.haskell.org/platform/linux.html">Haskell Platform for Linux</a> and find the GHC 7.6.3 binary release. Trying to install it according to its installation steps..</p>
-<p>Hmm, a problem with <code>libgmp.so.3</code>:</p>
-<pre><code>~/t/ghc-7.6.3$ ./configure 
-checking for path to top of build tree... utils/ghc-pwd/dist-install/build/tmp/ghc-pwd: 
-error while loading shared libraries: libgmp.so.3: cannot open shared object file: 
-No such file or directory</code></pre>
-<p>I try installing <code>libgmp.so.3</code>:</p>
-<pre><code>apt-get install libgmp-dev</code></pre>
-<p>Oh, it’s already at a newer version, i.e., at <code>libgmp.so.10</code>.</p>
-<p>Googling.. Oh, symlink to fake that I have libgmp.so.3. Sounds dodgy. Well, I’ll install GHC from source instead.</p>
-<p>So I download the GHC 7.6.3 source package, build it and install it. At this point you need to have <em>some</em> older version of GHC still installed. So I use GHC 7.4.1 from the Debian testing package.</p>
-<p>With all this done, installing Haskell Platform from source is easy if you managed to correctly install all the prerequisites.</p>
-<p>Then I try to update my <code>cabal-install</code>, so I do:</p>
-<pre><code>cabal update
-cabal install cabal-install</code></pre>
-<p>Whoops:</p>
-<pre><code>Building cabal-install-1.18.0.2...
-Preprocessing executable &#39;cabal&#39; for cabal-install-1.18.0.2...
-
-Main.hs:118:8:
-    Could not find module `Distribution.Version&#39;
-    There are files missing in the `Cabal-1.18.1.1&#39; package,
-    try running &#39;ghc-pkg check&#39;.
-    Use -v to see a list of the files searched for.</code></pre>
-<p>Even though I had blown away my <code>.cabal</code> and previous HP installation directories from under my <code>$HOME</code>, I still had managed to leave in a <code>.ghc</code> directory. Nuking that fixed the last problem.</p>
-<h2 id="final-installation-steps">Final Installation Steps</h2>
-<p>For my future reference, here are the high-level steps I took to install the latest released Haskell Platform:</p>
-<ol type="1">
-<li>Prerequisites: some version of GHC installed. In my case GHC 7.4.1 from Debian. Various other packages are needed for HP, these are easy to google so not listing them here.</li>
-<li>Download GHC 7.6.3 source release, standard <code>./configure &amp;&amp; make &amp;&amp; make install</code> installation</li>
-<li>Check that <code>ghc --version</code> is 7.6.3. If it’s not, your PATH points to the previous GHC version.
-<ul>
-<li>Not sure if it’s recommended to remove the previous GHC installation at this point. Will I get into trouble with conflicting GHC versions if I don’t remove it here?</li>
-<li>Removed GHC 7.4.1 with <code>apt-get remove ghc</code> and <code>hash -r</code> to let bash know <code>ghc</code> is at a new location now.</li>
-</ul></li>
-<li>Download the Haskell Platform 2013.2.0.0 source tarball from <a href="http://www.haskell.org/platform/linux.html">haskell.org/platform/linux.html</a>
-<ul>
-<li>Install as per instructions while being careful to choose a global package database installation as opposed to a user local package db. Otherwise you may face issues like <a href="https://github.com/haskell/cabal/issues/1695">cabal-install #1695</a>.</li>
-</ul></li>
-</ol>
-<p>Phew, now it’s all done.</p>]]></summary>
 </entry>
 
 </feed>
