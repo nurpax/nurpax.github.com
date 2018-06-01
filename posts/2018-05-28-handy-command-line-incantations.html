@@ -60,6 +60,8 @@ convert -crop 104x30+62+22 +repage -loop 0 -delay 300 image?.png result.gif</cod
 <pre><code>ffprobe &lt;videofile&gt;</code></pre>
 <p>Convert a VICE video capture .avi (in DivX format) to MP4:</p>
 <pre><code>ffmpeg -i screencap.avi -c:v libx264 -crf 19 -preset slow -c:a libvo_aacenc -b:a 192k -ac 2 out.mp4</code></pre>
+<p>Convert a series of image files into an MP4:</p>
+<pre><code>ffmpeg -r 25 -i 'frame_%04d.png' -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4</code></pre>
 
 
 </article>
