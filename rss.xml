@@ -8,8 +8,96 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2018-05-30T00:00:00Z</updated>
+    <updated>2018-06-07T00:00:00Z</updated>
     <entry>
+    <title>Break down of a C64 demo effect</title>
+    <link href="http://nurpax.github.com/posts/2018-06-07-c64-filled-sinewave.html" />
+    <id>http://nurpax.github.com/posts/2018-06-07-c64-filled-sinewave.html</id>
+    <published>2018-06-07T00:00:00Z</published>
+    <updated>2018-06-07T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>So I recently made this little sinewave demo effect on the Commodore 64:</p>
+<p><img class="img-pixelated img-medium-wide" src="/images/c64/sine/sinewave-gifanim-2018-05-31.gif" /></p>
+<p>This generated a lot of lively discussion on <a href="https://twitter.com/nurpax/status/1002288831511580672">twitter</a> and <a href="https://www.reddit.com/r/c64/comments/8o9aoh/some_charset_hacking_from_last_week/">/r/c64</a>. A bunch of people were curious as to how it works and I promised to explain it on my blog.</p>
+<p>The main idea is to use character mode with a custom character set. I sample y-coordinate every 8 pixels to produce a list of line segments <span class="math inline">[(0, <em>y</em><sub>0</sub>), (8, <em>y</em><sub>1</sub>), (16, <em>y</em><sub>2</sub>), ..., (320, <em>y</em><sub>40</sub>)]</span>. In the below animation, you can see these line segments along with blue rectangles that signify which 8x8 character blocks intersect the line segments.</p>
+<p><img class="sine-column-1" src="/images/c64/sine/sinewave-block-cover.gif"/></p>
+<p>The goal then is to fill all the pixels below a line segment with light blue and everything above it with dark blue.</p>
+<p>Here’s how you might code this up in Python:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co"># Compute sine wave by stepping every 8th pixel</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">ypos <span class="op">=</span> [sinewave(phase, x) <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">+</span> <span class="dv">8</span>, <span class="dv">8</span>)]</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">clear_screen(BLUE)</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co"># Loop through each line segment</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">//</span> <span class="dv">8</span>):</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">    x0 <span class="op">=</span> x <span class="op">*</span> <span class="dv">8</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">    x1 <span class="op">=</span> x <span class="op">*</span> <span class="dv">8</span> <span class="op">+</span> <span class="dv">8</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">    y0 <span class="op">=</span> ypos[x]</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">    y1 <span class="op">=</span> ypos[x <span class="op">+</span> <span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">    <span class="co"># Fill everything below the (x0,y0)-(x1,y1) line segment</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">    <span class="co"># with LIGHT_BLUE</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">    fill_polygon([(x0, y0), (x1, y1), (x1, <span class="dv">200</span>), (x0, <span class="dv">200</span>)], LIGHT_BLUE)</a></code></pre></div>
+<p>Unfortunately using a polygon fill routine in C64 bitmap mode would be pretty slow. To make this run fast, I precompute the different ways a line segment can intersect 8x8 character blocks using an edge function rasterizer written in Python. Here’s an image that shows some combinations of a line hitting 3 vertically stacked 8x8 blocks:</p>
+<p><img class="img-pixelated img-smallest" src="/images/c64/sine/sinewave-fill-closeup.gif"/></p>
+<p>Here’s Python code for the block rasterizer:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"> <span class="co"># one bit of subpixel precision</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"> subpix <span class="op">=</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="kw">def</span> mk8x8(yoffs, a, b, c):</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">    arr <span class="op">=</span> [<span class="dv">0</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span> <span class="op">*</span> <span class="dv">8</span>)]</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span>):</a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">        yy <span class="op">=</span> (y <span class="op">+</span> yoffs) <span class="op">*</span> subpix</a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">        <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span>):</a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">            xx <span class="op">=</span> x <span class="op">*</span> subpix</a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">            <span class="cf">if</span> a <span class="op">*</span> xx <span class="op">+</span> b <span class="op">*</span> yy <span class="op">+</span> c <span class="op">&gt;=</span> <span class="fl">0.0</span>:</a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">                arr[x <span class="op">+</span> y <span class="op">*</span> <span class="dv">8</span>] <span class="op">=</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">    <span class="cf">return</span> arr</a>
+<a class="sourceLine" id="cb2-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="kw">def</span> construct_fill_table():</a>
+<a class="sourceLine" id="cb2-15" data-line-number="15">    x0 <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-16" data-line-number="16">    x1 <span class="op">=</span> <span class="dv">8</span> <span class="op">*</span> subpix</a>
+<a class="sourceLine" id="cb2-17" data-line-number="17">    fill_tbl <span class="op">=</span> [<span class="va">None</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span> <span class="op">*</span> subpix)]</a>
+<a class="sourceLine" id="cb2-18" data-line-number="18">    <span class="cf">for</span> y0 <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span> <span class="op">*</span> subpix):</a>
+<a class="sourceLine" id="cb2-19" data-line-number="19">        fill_tbl[y0] <span class="op">=</span> [<span class="va">None</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span> <span class="op">*</span> subpix)]</a>
+<a class="sourceLine" id="cb2-20" data-line-number="20">        <span class="cf">for</span> yi1 <span class="kw">in</span> <span class="bu">range</span>(<span class="op">-</span><span class="dv">4</span> <span class="op">*</span> subpix, <span class="dv">4</span> <span class="op">*</span> subpix):</a>
+<a class="sourceLine" id="cb2-21" data-line-number="21">            y1 <span class="op">=</span> y0 <span class="op">+</span> yi1</a>
+<a class="sourceLine" id="cb2-22" data-line-number="22">            a <span class="op">=</span> <span class="op">-</span>(y1 <span class="op">-</span> y0)</a>
+<a class="sourceLine" id="cb2-23" data-line-number="23">            b <span class="op">=</span> (x1 <span class="op">-</span> x0)</a>
+<a class="sourceLine" id="cb2-24" data-line-number="24">            c <span class="op">=</span> <span class="op">-</span>(a <span class="op">*</span> x0 <span class="op">+</span> b <span class="op">*</span> y0)</a>
+<a class="sourceLine" id="cb2-25" data-line-number="25">            chr_a <span class="op">=</span> mk8x8(<span class="op">-</span><span class="dv">8</span>, a, b, c)</a>
+<a class="sourceLine" id="cb2-26" data-line-number="26">            chr_b <span class="op">=</span> mk8x8(<span class="dv">0</span>, a, b, c)</a>
+<a class="sourceLine" id="cb2-27" data-line-number="27">            chr_c <span class="op">=</span> mk8x8(<span class="dv">8</span>, a, b, c)</a>
+<a class="sourceLine" id="cb2-28" data-line-number="28">            fill_tbl[y0][yi1 <span class="op">+</span> <span class="dv">4</span> <span class="op">*</span> subpix] <span class="op">=</span> [chr_a, chr_b, chr_c]</a>
+<a class="sourceLine" id="cb2-29" data-line-number="29">    <span class="cf">return</span> fill_tbl</a></code></pre></div>
+<p>A Python renderer using the table generated <code>construct_fill_table()</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">def</span> draw_fills(ypos):</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    <span class="cf">for</span> xi <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">//</span> <span class="dv">8</span>):</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">        x <span class="op">=</span> xi <span class="op">*</span> <span class="dv">8</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">        y0 <span class="op">=</span> <span class="bu">int</span>((ypos[xi] <span class="op">*</span> subpix))</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">        y1 <span class="op">=</span> <span class="bu">int</span>((ypos[xi <span class="op">+</span> <span class="dv">1</span>] <span class="op">*</span> subpix))</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">        yy0 <span class="op">=</span> y0 <span class="op">&amp;</span> <span class="op">~</span>(<span class="dv">8</span> <span class="op">*</span> subpix <span class="op">-</span> <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">        yy1 <span class="op">=</span> y1 <span class="op">&amp;</span> <span class="op">~</span>(<span class="dv">8</span> <span class="op">*</span> subpix <span class="op">-</span> <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">        y0 <span class="op">-=</span> yy0</a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">        y1 <span class="op">-=</span> yy0</a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">        chrs <span class="op">=</span> fill_tbl[y0][y1 <span class="op">-</span> y0 <span class="op">+</span> <span class="dv">4</span> <span class="op">*</span> subpix]</a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">        blit_8x8(x, yy0 <span class="op">/</span> subpix <span class="op">-</span> <span class="dv">8</span>, chrs[<span class="dv">0</span>])</a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">        blit_8x8(x, yy0 <span class="op">/</span> subpix, chrs[<span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">        blit_8x8(x, yy0 <span class="op">/</span> subpix <span class="op">+</span> <span class="dv">8</span>, chrs[<span class="dv">2</span>])</a></code></pre></div>
+<p>Note that in the above code, each entry in the <code>fill_tbl</code> 2d-array is a list 3 character bitmaps. A character bitmap is a 64 entry list of zeros and ones. To make use of this on the C64, you need to turn this data into two separate arrays: the actual character set and an array indexed by <span class="math inline"><em>y</em>0</span>, <span class="math inline"><em>y</em>1</span> that returns a list of 3 character indices.</p>
+<p>Here’s how these two tables look like. First the charset:</p>
+<p><img class="img-pixelated img-small" src="/images/c64/sine/charset-16x16.png" /></p>
+<p>..and the character index table (<code>$20</code> is the space character, ie., an empty block, <code>$a0</code> is a fully filled 8x8 block):</p>
+<pre><code>y0y1tbl:
+    .byte $00, $a0, $a0, $a0
+    .byte $02, $0e, $a0, $a0
+    .byte $0f, $10, $a0, $a0
+    .byte $1b, $24, $a0, $a0
+... 252 more entries ...</code></pre>
+<p>If you’d run the C64 equivalent of the above Python routine on the default charset, you’d see something like this:</p>
+<p><img class="img-pixelated img-medium-wide" src="/images/c64/sine/sinewave-sans-charset.gif" /></p>
+<p>Since I have full control over the sine animation, I choose animation parameters that make the line segments behave “nicely”. Niceness is defined as follows: let <span class="math inline">(<em>x</em>0, <em>y</em>0)</span> and <span class="math inline">(<em>x</em>0 + 8, <em>y</em>1)</span> be the end points of a line segment. The segment behaves “nicely” if it satisfies the following condition: <span class="math inline">|<em>y</em>0 − <em>y</em>1| &lt; <em>c</em></span> (where <span class="math inline"><em>c</em></span> is some small number, in my case 8). This is required in order to keep the <code>fill_tbl</code> at a reasonable size and to limit the number of unique 8x8 characters (since the hardware character set is only 256 entries).</p>
+<p>That’s about all there is to it, I guess.</p>]]></summary>
+</entry>
+<entry>
     <title>BINTRIS C64 game screen rendering (series part 4)</title>
     <link href="http://nurpax.github.com/posts/2018-05-30-bintris-on-c64-part-4.html" />
     <id>http://nurpax.github.com/posts/2018-05-30-bintris-on-c64-part-4.html</id>
@@ -615,151 +703,6 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <p>Again, the source file opens on top of the upper-left comint window.</p>
 <p>I did find some related Stackoverflow posts. <a href="http://stackoverflow.com/questions/3473134/emacs-23-1-1-with-gdb-forcing-source-windows">This post</a> contains a <code>defadvice</code> trick that seems to work for the latter reproduction steps, but it didn’t make a difference in the former case. <a href="http://stackoverflow.com/questions/24386672/use-gdb-within-emacs-always-show-the-source-code.">Another post</a> discusses a related problem but concludes that there’s no problem if you just use <code>gdb-many-windows</code>.</p>
 <p>I hope to resolve this soon and update this post with a solution.</p>]]></summary>
-</entry>
-<entry>
-    <title>REST API testing in Haskell with wreq and test-framework</title>
-    <link href="http://nurpax.github.com/posts/2014-05-03-rest-testing-with-wreq.html" />
-    <id>http://nurpax.github.com/posts/2014-05-03-rest-testing-with-wreq.html</id>
-    <published>2014-05-04T00:00:00Z</published>
-    <updated>2014-05-04T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
-<p>This blog post is about my experiences rewriting Node.js/JavaScript-based REST unit tests in Haskell using <a href="http://hackage.haskell.org/package/wreq">wreq</a> and <a href="https://batterseapower.github.io/test-framework/">test-framework</a>. I hope the test cases presented in this post are useful practical examples of using <code>test-framework</code> for IO-heavy testing.</p>
-<p>The tests discussed in this post are for my <a href="https://github.com/nurpax/hswtrack">Hswtrack</a> project. Hswtrack is a web application for exercise tracking. The application server is built with <a href="http://snapframework.com/">Snap</a> and the UI in JavaScript with JQuery and <a href="http://handlebarsjs.com/">Handlebars.js</a>.</p>
-<p>Here’s a summary of what type of REST entry points will be tested in this post:</p>
-<table>
-<thead>
-<tr class="header">
-<th>Entry point</th>
-<th>Verb</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>/rest/login</code></td>
-<td>POST</td>
-<td>Login with <code>login</code> and <code>password</code> parameters.</td>
-</tr>
-<tr class="even">
-<td><code>/rest/new_user</code></td>
-<td>POST</td>
-<td>Create a user with <code>login</code> and <code>password</code> parameters.</td>
-</tr>
-<tr class="odd">
-<td><code>/rest/app</code></td>
-<td>GET</td>
-<td>Get logged in user login name and status.</td>
-</tr>
-<tr class="even">
-<td><code>/rest/exercise</code></td>
-<td>GET</td>
-<td>List existing exercises.</td>
-</tr>
-<tr class="odd">
-<td><code>/rest/exercise</code></td>
-<td>POST</td>
-<td>Create a new exercise with <code>name</code> and <code>type</code> parameters.</td>
-</tr>
-</tbody>
-</table>
-<p>Most entry point require a prior successful login. The response body is encoded as JSON. When called unauthenticated, the server returns an HTTP 403 error code.</p>
-<p>As the server talks to the client in JSON, I initially thought JavaScript + NodeJS would be a nice combo for developing these tests. I first tried <a href="http://frisbyjs.com/">Frisby</a> which looked simple and had good looking documentation. Unfortunately it turned out to be cumbersome for the types of tests I wanted to write. I also tried writing my own test framework with Q promises but that came out like <a href="https://twitter.com/SlexAxton/status/455568049181958144">Tea party code</a> too. (You can view the source for my JavaScript tests <a href="https://github.com/nurpax/hswtrack/blob/0e820183ce28a6e62056c0dda7c99d5109ad3e68/test/rest/tests/workout.js">here</a>.)</p>
-<p>Feeling dissatisfied about the state of my tests, I decided to rewrite my unit tests in Haskell.</p>
-<h2 id="types-of-tests">Types of tests</h2>
-<p>I wanted to develop the following types of tests:</p>
-<ul>
-<li>Test that user creation works</li>
-<li>Test that login works</li>
-<li>Test that REST entry points deny access if not logged in</li>
-<li>Test object creation, update and deletion when logged in</li>
-<li>Test that attempts to modify or delete other users’ data are rejected</li>
-</ul>
-<p>Any tests that modify or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence or have its authentication cookies passed into it. I went for the latter approach as it allows logging in once and running multiple tests with the same cookies.</p>
-<p>I define top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, followed by running a list of sub-tests with cookies acquired from the login process. The sequencing is explicitly declared by using <code>test-framework</code>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
-<p>Here’s the definition of <code>loginUserTests</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co">-- from the login process.</span></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">loginUserTests tests <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">  r <span class="ot">&lt;-</span> post (mkUrl <span class="st">&quot;/rest/login&quot;</span>) [<span class="st">&quot;login&quot;</span> <span class="fu">:=</span> login, <span class="st">&quot;password&quot;</span> <span class="fu">:=</span> passwd]</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">  <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> cookies <span class="fu">.~</span> (r <span class="fu">^.</span> responseCookieJar)</a>
-<a class="sourceLine" id="cb1-7" data-line-number="7">  return</a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">    <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span></a>
-<a class="sourceLine" id="cb1-9" data-line-number="9">    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</a></code></pre></div>
-<p>It performs a HTTP POST on <code>/rest/login</code> with the test user’s login credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes them to sub-tests so that they can run authenticated.</p>
-<p>Here’s how <code>loginUserTests</code> gets used:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">-- Test case that tests that we&#39;re successfully logged in</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co">-- Options must contain the necessary login cookies.</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">testLoggedInOk opts <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _Bool)</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">main <span class="fu">=</span></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">  defaultMain</a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">  [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">  , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">  ]</a></code></pre></div>
-<p>Function <code>testLoggedInOk</code> tests that it can HTTP GET <code>/rest/app</code> successfully. It also tests that the returned JSON object contains a field <code>loggedIn</code> with value <code>true</code>.</p>
-<h2 id="negative-testing">Negative testing</h2>
-<p>One shouldn’t forget about negative testing, so let’s develop a test for checking that entry points correctly respond with an error 403 on unauthenticated access:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co">-- GET requests against &#39;url&#39; and expect to get error 403 back</span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  E.try (getWith opts url) <span class="fu">&gt;&gt;=</span> check</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">    check (<span class="dt">Left</span> (<span class="dt">HT.StatusCodeException</span> s _ _))</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">      <span class="fu">|</span> s <span class="fu">^.</span> statusCode <span class="fu">==</span> <span class="dv">403</span> <span class="fu">=</span> assertBool <span class="st">&quot;error ok&quot;</span> <span class="dt">True</span></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">      <span class="fu">|</span> otherwise              <span class="fu">=</span> assertBool <span class="st">&quot;unexpected status code&quot;</span> <span class="dt">False</span></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">    check (<span class="dt">Left</span> _)  <span class="fu">=</span> assertBool <span class="st">&quot;unexpected exception caught&quot;</span> <span class="dt">False</span></a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">    check (<span class="dt">Right</span> r) <span class="fu">=</span> assertBool <span class="st">&quot;req should&#39;ve failed&quot;</span> <span class="dt">False</span></a>
-<a class="sourceLine" id="cb3-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb3-12" data-line-number="12"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb3-13" data-line-number="13">main <span class="fu">=</span></a>
-<a class="sourceLine" id="cb3-14" data-line-number="14">  defaultMain [testGroup <span class="st">&quot;Require auth fail&quot;</span> requireAuthFail]</a>
-<a class="sourceLine" id="cb3-15" data-line-number="15">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb3-16" data-line-number="16">    requireAuthFail <span class="fu">=</span></a>
-<a class="sourceLine" id="cb3-17" data-line-number="17">      map (\u <span class="ot">-&gt;</span> testCase u (testLoggedInFail (mkUrl u) defaults)) authReqd</a>
-<a class="sourceLine" id="cb3-18" data-line-number="18">    <span class="co">-- REST entry points which require user to be logged in</span></a>
-<a class="sourceLine" id="cb3-19" data-line-number="19">    authReqd <span class="fu">=</span> [ <span class="st">&quot;/rest/app&quot;</span></a>
-<a class="sourceLine" id="cb3-20" data-line-number="20">               , <span class="st">&quot;/rest/weights&quot;</span></a>
-<a class="sourceLine" id="cb3-21" data-line-number="21">               , <span class="st">&quot;/rest/notes&quot;</span></a>
-<a class="sourceLine" id="cb3-22" data-line-number="22">               , <span class="st">&quot;/rest/exercise&quot;</span></a>
-<a class="sourceLine" id="cb3-23" data-line-number="23">               , <span class="st">&quot;/rest/workout/exercise&quot;</span></a>
-<a class="sourceLine" id="cb3-24" data-line-number="24">               , <span class="st">&quot;/rest/workout&quot;</span></a>
-<a class="sourceLine" id="cb3-25" data-line-number="25">               , <span class="st">&quot;/rest/workout&quot;</span></a>
-<a class="sourceLine" id="cb3-26" data-line-number="26">               , <span class="st">&quot;/rest/stats/workout&quot;</span></a>
-<a class="sourceLine" id="cb3-27" data-line-number="27">               ]</a></code></pre></div>
-<h2 id="creating-objects">Creating objects</h2>
-<p>Here we will test two entry points: one for creating a new exercise like “Chin-ups” and one for listing existing exercises. Creation is a HTTP POST to <code>/rest/exercise</code> and listing exercises is HTTP GET <code>/rest/exercise</code>.</p>
-<p>A successful POST to <code>/rest/exercise</code> will create a new object on the server and return the object to the client as JSON. Here’s what that repsonse might look like:</p>
-<pre><code>{ &quot;id&quot;:2, &quot;name&quot;: &quot;Chin-ups&quot;, &quot;type&quot;:&quot;BW&quot; }</code></pre>
-<p>A successful GET of <code>/rest/exercise</code> will retrieve the full list of available exercises. It looks something like this:</p>
-<pre><code>[
-  { &quot;id&quot;:1, &quot;name&quot;: &quot;Push-ups&quot;, &quot;type&quot;:&quot;BW&quot; },
-  { &quot;id&quot;:2, &quot;name&quot;: &quot;Chin-ups&quot;, &quot;type&quot;:&quot;BW&quot; }
-]</code></pre>
-<p>To test creating exercise objects, we’ll create an exercise, verify that its returned properties match what we gave on creation, and finally retrieve the complete exercise list and check that the object is listed.</p>
-<p>Here’s the code for the above test strategy. The <a href="http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html">Aeson Lens API</a> is particularly handy for this type of ad hoc JSON value inspection!</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">testAddExercise opts <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb6-3" data-line-number="3">  <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span></a>
-<a class="sourceLine" id="cb6-4" data-line-number="4">      ty   <span class="fu">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span></a>
-<a class="sourceLine" id="cb6-5" data-line-number="5">  r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="fu">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="fu">:=</span> ty]</a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">  <span class="co">-- Verify that the newly created object matches creation params</span></a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _String</a>
-<a class="sourceLine" id="cb6-8" data-line-number="8">  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _String</a>
-<a class="sourceLine" id="cb6-9" data-line-number="9">  <span class="co">-- Verify that the object ended up in the global list of exercises</span></a>
-<a class="sourceLine" id="cb6-10" data-line-number="10">  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</a>
-<a class="sourceLine" id="cb6-11" data-line-number="11">  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)</a>
-<a class="sourceLine" id="cb6-12" data-line-number="12">  assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)</a>
-<a class="sourceLine" id="cb6-13" data-line-number="13">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb6-14" data-line-number="14">    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</a></code></pre></div>
-<h2 id="conclusion">Conclusion</h2>
-<p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
-<p>You can find the full source code to these tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
-<p>Thanks for reading!</p>]]></summary>
 </entry>
 
 </feed>
