@@ -49,7 +49,7 @@
 <p><img class="img-pixelated img-medium-wide" src="../images/c64/sine/sinewave-gifanim-2018-05-31.gif" /></p>
 <p>This generated a lot of lively discussion on <a href="https://twitter.com/nurpax/status/1002288831511580672">twitter</a> and <a href="https://www.reddit.com/r/c64/comments/8o9aoh/some_charset_hacking_from_last_week/">/r/c64</a>. A bunch of people were curious as to how it works and I promised to explain it on my blog.</p>
 <p>The main idea is to use character mode with a custom character set. I sample y-coordinate every 8 pixels to produce a list of line segments <span class="math inline">[(0, <em>y</em><sub>0</sub>), (8, <em>y</em><sub>1</sub>), (16, <em>y</em><sub>2</sub>), ..., (320, <em>y</em><sub>40</sub>)]</span>. In the below animation, you can see these line segments along with blue rectangles that signify which 8x8 character blocks intersect the line segments.</p>
-<p><img class="sine-column-1" src="../images/c64/sine/sinewave-block-cover.gif" /></p>
+<p><img class="img-medium-wide" src="../images/c64/sine/sinewave-block-cover.gif" /></p>
 <p>The goal then is to fill all the pixels below a line segment with light blue and everything above it with dark blue.</p>
 <p>Here’s how you might code this up in Python:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"></a>
