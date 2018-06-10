@@ -70,7 +70,7 @@
 <p>Note that not all these sprites are always enabled: the noise animation sprites are enabled only when rows are collapsing, the falling bit is turned off during the noise animation, and if the current score is, say, less than 10, we need only one sprite for the score digits.</p>
 <p>I did skip over some details, though. The biggest omission is the BINTRIS logo level up warp effect. It looks something like this:</p>
 <div class="screenshot">
-<p><img src="../images/bintris/logowarp.gif" title="BINTRIS logo warp gif" class="img-pixelated" width="300" height="80" /></p>
+<img src="../images/bintris/logowarp.gif" title="BINTRIS logo warp gif" class="img-pixelated" width="300" height="80" />
 </div>
 <p>This effect manipulates the logo sprite X locations on each scanline to achieve the line-by-line distortion effect. It might not look like much in this .gif capture, but as far as timing sensitive code goes, this is by far the trickiest routine in the game. There will be a blog about this effect later in the series.</p>
 <p>The game board is rendered using text mode characters. The charset contains an 8x8 filled rectangle which is used to clear the board area on game start or on level up. Per-frame rendering only sets the color of each such block.</p>

@@ -53,7 +53,7 @@
 <a class="sourceLine" id="cb1-5" data-line-number="5"><span class="co"># browse to http://localhost:8000</span></a></code></pre></div>
 <p>You should see something like this:</p>
 <div class="screenshot white-bg">
-<p><img src="../images/angular-todo1.png" title="AngularJS ToDo app with Haskell" /></p>
+<img src="../images/angular-todo1.png" title="AngularJS ToDo app with Haskell" />
 </div>
 <p>I will not go into much detail about AngularJS usage here – you should read more about it on their <a href="http://angularjs.org/">homepage</a>. This post will focus on what’s needed in order to build an AngularJS app with a Haskell backend.</p>
 <p>In an AngularJS app, a major part of the application is JavaScript and runs in the the browser. These applications are usually backed by a central server. In our case, the backend is written in Haskell. This server takes care of user management, authentication and persistence. The frontend talks to the backend via a REST API. The REST API communicates things like adding or listing to-do items.</p>
@@ -135,7 +135,7 @@
 <h3 id="debugging-json-responses">Debugging JSON responses</h3>
 <p>A good way to debug your REST APIs is to use Chrome’s Developer Tools. Open the Developer console and click on the Network tab. When you load a page, you can see what requests are being made and you can inspect what JSON gets sent by clicking on the individual <code>/api/todo</code> requests. Here’s an example of what traffic gets generated when complete a to-do:</p>
 <div class="screenshot white-bg">
-<p><img src="../images/angular-todo2-check.png" title="Chrome dev tool view" /></p>
+<img src="../images/angular-todo2-check.png" title="Chrome dev tool view" />
 </div>
 <p>This is the result of a <code>todo.$save()</code> AJAX call.</p>
 <h3 id="what-next">What next?</h3>
