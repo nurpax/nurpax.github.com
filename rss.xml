@@ -144,17 +144,17 @@ NOP                 (2 cycles)</code></pre>
 <p>If you’re interested in playing with the sprite warp, I pushed its <a href="https://github.com/nurpax/c64-samples/tree/master/sprite_warp">standalone source code up on github</a>. Here’s how it looks like:</p>
 <p><img class="img-medium-wide" src="/images/bintris/sprite-wobble-standalone.png"/></p>
 <script type="text/javascript">
-let diagram, fld
+var diagram, fld;
 
 $(function () {
-    diagram = new diagrams.TimingDiagram('cycle-timing-container')
-    diagram.mount()
+    diagram = new diagrams.TimingDiagram('cycle-timing-container');
+    diagram.mount();
 
-    fld = new diagrams.FldDiagram('fld-container')
-    fld.mount()
+    fld = new diagrams.FldDiagram('fld-container');
+    fld.mount();
 
-    warpCrop = new diagrams.LogoWarpCrop('logo-wobble-closeup-container')
-    warpCrop.mount()
+    warpCrop = new diagrams.LogoWarpCrop('logo-wobble-closeup-container');
+    warpCrop.mount();
 })
 </script>
 <h2 id="next-in-series">Next in series</h2>
