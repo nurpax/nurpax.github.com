@@ -201,7 +201,7 @@ button:active {
 <p><span class="math inline"><em>n</em><em>u</em><em>m</em>_<em>c</em><em>y</em><em>c</em><em>l</em><em>e</em><em>s</em> = 23 − (3 + 2 * <em>n</em><em>u</em><em>m</em>_<em>s</em><em>p</em><em>r</em><em>i</em><em>t</em><em>e</em><em>s</em>)</span></p>
 <p><em>(NB: This is a bit simplified, see <a href="http://www.antimon.org/dl/c64/code/missing.txt">Missing Cycles</a> for details.)</em></p>
 <p>Let’s say you have enabled sprites 0-3 and they all hit a bad line. Now you have only 12 cycles to spare on your fancy raster routine (or in practice, more like 10 cycles.)</p>
-<p>Ten cycles is not a much. For example, say you want to load and store some values. Here’s all you can run during a single bad line:</p>
+<p>Ten cycles is not all that much. For example, say you want to load and store some values. Here’s all you can run during a single bad line:</p>
 <pre><code>LDA abs_addr        (4 cycles)
 STA abs_addr        (4 cycles)
 NOP                 (2 cycles)</code></pre>
