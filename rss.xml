@@ -340,7 +340,9 @@ convert -crop 104x30+62+22 +repage -loop 0 -delay 300 image?.png result.gif</cod
 <p>Convert a VICE video capture .avi (in DivX format) to MP4:</p>
 <pre><code>ffmpeg -i screencap.avi -c:v libx264 -crf 19 -preset slow -c:a libvo_aacenc -b:a 192k -ac 2 out.mp4</code></pre>
 <p>Convert a series of image files into an MP4:</p>
-<pre><code>ffmpeg -r 25 -i &#39;frame_%04d.png&#39; -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4</code></pre>]]></summary>
+<pre><code>ffmpeg -r 25 -i &#39;frame_%04d.png&#39; -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4</code></pre>
+<p>Convert a MOV file into an MP4 (e.g., for uploading Quicktime screencaps to Twitter):</p>
+<pre><code>ffmpeg -i movie.mov -vcodec copy -acodec copy out.mp4</code></pre>]]></summary>
 </entry>
 <entry>
     <title>BINTRIS C64 title screen implementation (series part 3)</title>
