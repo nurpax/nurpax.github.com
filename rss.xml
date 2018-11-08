@@ -8,8 +8,263 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2018-08-23T00:00:00Z</updated>
+    <updated>2018-11-08T00:00:00Z</updated>
     <entry>
+    <title>C64jasm - a new take on C64 macro assembling</title>
+    <link href="http://nurpax.github.com/posts/2018-11-08-c64jasm.html" />
+    <id>http://nurpax.github.com/posts/2018-11-08-c64jasm.html</id>
+    <published>2018-11-08T00:00:00Z</published>
+    <updated>2018-11-08T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>For the past couple of months I’ve worked on the C64 <a href="https://csdb.dk/release/?id=171134">VISIO 2018 invitation intro</a> (YouTube capture at the bottom of this post). I upped the difficulty level a bit by first designing and implementing a new 6502 macro assembler called <a href="https://github.com/nurpax/c64jasm">c64jasm</a>, and then using that to develop my demo. While I haven’t had the time to polish the assembler to, say, KickAssembler level, my tool turned out to be a real joy to work with. This post highlights some of its features that I believe make it somewhat unique in its small niche.</p>
+<p>These were my initial design choices for c64jasm:</p>
+<ul>
+<li>Written in TypeScript &amp; running on Node. Easy multi-platform environment with easy to install dependencies.</li>
+<li>Ability to extend the assembler’s functionality by calling into user-defined JavaScript modules directly from the .asm source.</li>
+<li>A sufficiently powerful pseudo language (macros, conditionals, for-loops, etc) but build on the JavaScript extension mechanism for more complex pseudo ops like LUT creation and file format parsing.</li>
+<li>Node-style “watch” support: automatically recompile if any source files change. Design it for efficiency.</li>
+<li>VSCode integration (for on-the-fly compilation and error reporting within the IDE, launch output binary in VICE.)</li>
+</ul>
+<p>The choice of TypeScript was very deliberate. I’ve been meaning to learn the language for quite some time, and developing a macro assembler in it was a good way to learn &amp; evaluate TypeScript. TypeScript turned out to be a great language: supports functional programming style well (and so well-suited for developing compilers) and has a simple but powerful static typing system.</p>
+<p>The assembler extension mechanism is the main feature that differentiates c64jasm from traditional 6502 macro assemblers and I’ll spend the rest of this blog talking about this mechanism.</p>
+<p>This blog post assumes that you’re at least somewhat familiar with macro assemblers and that you know a bit of JavaScript.</p>
+<h2 id="why-do-i-need-to-extend-my-assembler">Why do I need to extend my assembler?</h2>
+<p>So why does one need to extend the assembler in the first place? I have my assembly, macros and other pseudo directives, isn’t this enough? Well, you need all of these too. But some things like loading graphics files, generating lookup tables, etc. can be better expressed in a real programming language. Quite commonly a demo project is built using a build script that processes LUTs, graphics, and other assets into hex listings to be included in the main assembly source.</p>
+<h2 id="extending-functionality">Extending functionality</h2>
+<p>Traditionally, extending the functionality of an application or a tool means that you’d first need to learn the app’s extension API, figure out how to build your extension (say .DLLs or a Java .jar file), install it (and maybe debug your PATH or CLASSPATH when it fails to load), and once all done, the feature becomes available in your tool and you use it to develop your content.</p>
+<p>The approach I took in c64jasm is that assembler extensions are just a bunch of source files in your project’s source directory. Extensions shouldn’t require a separate build or installation step and the overhead of creating a new one for any specific purpose should be minimal. Ideally the extensions should be runnable stand-alone without the assembler and that you should be able to debug and test them using standard debugging tools.</p>
+<p>Before we get deeper into c64jasm assembler plugins, let’s review some of the c64jasm pseudo directives.</p>
+<h2 id="c64jasm-pseudo-ops">C64jasm pseudo ops</h2>
+<p>If you’ve used something like KickAssembler, ACME or 64tass, these should look pretty familiar.</p>
+<p>Declaring pseudo variables: You can declare pseudo variables using <code>!let</code>. This is basically the same as KickAssembler’s <code>.const</code>/<code>.var</code> (many other assemblers commonly have this as <code>EQU</code>.)</p>
+<pre><code>; declaring variables
+!let after_bounce_frames = 64
+!let sprite_writer_path_tablen = 128
+
+; assigning a new value to a previously declared variable
+after_bounce_frames = 33
+
+; using the variables in immediates
+    sec
+    sbc #sprite_writer_path_tablen
+    cmp #after_bounce_frames
+    bcs do_wrap
+    jmp no_wrap
+do_wrap:
+    jmp wrap</code></pre>
+<p>Macros:</p>
+<pre><code>some_mem_loc: !byte 0
+
+; declare a macro to write an immediate value to memory
+!macro mov8imm(d, imm) {
+    lda #imm
+    sta d+0
+}
+; expand the macro
++mov8imm(some_mem_loc, #$80)
+
+; this will emit the following code:
+;
+;    lda #$80
+;    sta some_mem_loc</code></pre>
+<p>Symbols declared within a macro are local to that macro. You can also declare macros within macros.</p>
+<p>If/elif/else:</p>
+<pre><code>!let double_y = 1
+!if (double_y) {            
+    ldy #yy*6+1         ; code from this path
+    sta (zpdst_even),y  ; will be emitted
+    sta (zpdst_odd),y
+    txa
+    dey
+    sta (zpdst_even),y
+    sta (zpdst_odd),y
+} else {
+    ldy #yy*3+1
+    sta (zpdst_even),y
+    txa
+    dey
+    sta (zpdst_even),y
+}</code></pre>
+<p>For-loops:</p>
+<pre><code>; emit 8 nops
+!for i in range(0, 8) {
+    nop
+}</code></pre>
+<p>As opposed to a C-style “declare loop variable, check condition, increment” for loops, c64jasm’s <code>for</code> is similar to Python’s for-statement. You use a function called <code>range()</code> that returns a list of integers and the for-loop just iterates over the elements of this list, assigning the current list element to the bound loop variable <code>i</code>. E.g., these two are conceptually the same:</p>
+<pre><code>; emit four NOPs
+!for i in range(4) {
+    nop
+}
+
+!for i in [0,1,2,3] {
+    nop
+}</code></pre>
+<p>The “emit byte” pseudo <code>!byte</code> supports emitting a list of bytes when passed an integer list. The following two lines are equivalent:</p>
+<pre><code>!byte range(4)
+!byte 0, 1, 2, 3</code></pre>
+<h2 id="c64jasm-extensions">C64jasm extensions</h2>
+<p>So with the basic c64jasm pseudo ops explained, let’s continue to c64jasm extensions. A c64jasm extension is just a JavaScript .js module. To use such a .js module in your assembly source, you bind it to a name with <code>!use &quot;path/to/plugin.js&quot;</code>. This name becomes a function that you can call in your assembly source file.</p>
+<p>Let’s illustrate this with some code to generate a sine lookup table. First the plugin code:</p>
+<pre><code># sintab.js
+module.exports = ({}, len, scale) =&gt; {
+    const res = Array(len.lit).fill(0).map((v,i) =&gt; Math.sin(i/len.lit * Math.PI * 2.0) * scale.lit);
+    return res;
+}</code></pre>
+<p>Here’s how you’d use the above in your .asm source file:</p>
+<pre><code>; Bind sintab.js default export to a pseudo function &#39;mkSintab&#39;
+!use &quot;./sintab&quot; as mkSintab
+
+!let sin1scale = 26
+sintab1:
+!for s in mkSintab(256, sin1scale) {
+    !byte s
+}</code></pre>
+<p>As <code>!byte</code> and <code>!word</code> accept a list as an argument, the above can be written simply as:</p>
+<pre><code>sintab1: !byte mkSintab(256, sin1scale)</code></pre>
+<p>The nice thing about this approach is that I can keep the assembler implementation simple. The assembler doesn’t need a large standard library of math and other utility functions as this functionality can be easily expressed as tiny JavaScript modules.</p>
+<p>Sure, generating a sine table would be pretty easy without an extension too (and this is totally supported by c64jasm):</p>
+<pre><code>sintab1:
+   !for s in range(0, 256) {
+       !byte sin(s/256*2*PI)*scl
+   }</code></pre>
+<p>Where I find the JavaScript extension mechanism really shines is importing assets (sprites from .spd, .sid, etc.). Here’s how I compile SpritePad .spd files into my demo binary:</p>
+<pre><code># spd.js
+module.exports = ({readFileSync, resolveRelative}, filename) =&gt; {
+    const buf = readFileSync(resolveRelative(filename.lit));
+    const numSprites = buf.readUInt8(4)+1;
+    const data = [];
+    for (let i = 0; i &lt; numSprites; i++) {
+        const offs = i*64+9;
+        const bytes = [];
+        for (let j = 0; j &lt; 64; j++) {
+            bytes.push(buf.readUInt8(offs + j));
+        }
+        data.push(bytes);
+    }
+    return {
+        numSprites,
+        enableMask: (1&lt;&lt;numSprites)-1,
+        bg: buf.readUInt8(6),
+        multicol1: buf.readUInt8(7),
+        multicol2: buf.readUInt8(8),
+        data
+    };
+}</code></pre>
+<p>Using the above in an .asm file:</p>
+<pre><code>!use &quot;./spd&quot;
+
+; Load &#39;hirmu.spd&#39; and store the returned JavaScript object in a
+; variable called &#39;hirmu_sprite&#39;
+!let hirmu_sprite = spd(&quot;../sprites/hirmu.spd&quot;)</code></pre>
+<p>At this point, no code or bytes were yet emittted. The .spd file contents are now in a pseudo variable called <code>hirmu_sprite</code>. This is just a JavaScript object with fields like <code>numSprites</code>, <code>enableMask</code>, <code>data</code> that can be accessed from .asm with the dot operator (e.g., <code>sprite_data.numSprites</code>.)</p>
+<p>With this, I can expand the sprite data into the output binary. Or I can use to emit code to setup sprite registers (enable bits, individual and multi color values, etc).</p>
+<p>Emitting actual sprite data for all the sprites contained within the .spd file:</p>
+<pre><code>hirmu_sprite_data:
+    ; loop over all the sprites in hirmu_sprite.data
+    !for sdata in hirmu_sprite.data {
+        !byte sdata  ; expand 64 bytes of sprite data (one sprite)
+    }
+
+    ; or equivalently:
+    ; !for sidx in range(hirmu_sprite.numSprites) {
+    ;    !byte hirmu_sprite.data[sidx]  ; expand 64 bytes of sprite data (one sprite)
+    ; }
+</code></pre>
+<p>I also define a macro that expands machine code to write sprite registers based on the .spd file contents:</p>
+<pre><code>!macro set_sprite(s, ptr, xScale, yScale) {
+    !if (xScale == 2) {
+        lda #s.enableMask
+    } else {
+        lda #0
+    }
+    sta $d01d  ; XSCALE register
+
+    !if (yScale == 2) {
+        lda #s.enableMask
+    } else {
+        lda #0
+    }
+    sta $d017  ; YSCALE register
+
+    ; set sprite pointers and individual sprite colors for
+    ; all sprites
+    !for sprite_idx in range(0, s.numSprites) {
+        ; load the individual color from sprite data
+        lda #s.data[sprite_idx][63]
+        ; indiv sprite color
+        sta $d027 + sprite_idx    
+        lda #ptr/64 + sprite_idx
+        sta $7f8 + sprite_idx
+    }
+
+    ; enable multicolor for the same sprites, set multicolor values
+    lda #s.multicol1
+    sta $d025
+    lda #s.multicol2
+    sta $d026
+
+    ; enable all the sprites that were loaded from the .spd
+    lda #s.enableMask
+    sta $d01c       ; multicolor enable
+    sta $d015       ; sprite enable
+}
+
+set_hirmu_sprite: {
+    +set_sprite(hirmu_sprite, hirmu_sprite_data, 2, 2)
+    rts
+}</code></pre>
+<p>I use the same pattern for all the different asset types used in my demo. Here’s how I pull the SID tune into the binary:</p>
+<pre><code># sid.js
+function readWord(buf, offs) {
+    return buf.readUInt8(offs) + (buf.readUInt8(offs+1) &lt;&lt; 8);
+}
+
+// Read a big-endian word
+function readWordBE(buf, offs) {
+    return (buf.readUInt8(offs)&lt;&lt;8) + buf.readUInt8(offs+1);
+}
+
+module.exports = ({readFileSync, resolveRelative}, filename) =&gt; {
+    const buf = readFileSync(resolveRelative(filename.lit));
+    const version = readWordBE(buf, 4);
+    const dataOffset = readWordBE(buf, 6);
+    const startAddress = readWord(buf, dataOffset);
+    const init = readWordBE(buf, 0x0a);
+    const play = readWordBE(buf, 0x0c);
+    const numSongs = readWord(buf, 0x0e);
+    const res = {
+        startAddress,
+        data: [...buf.slice(dataOffset+2)],
+        init: startAddress,
+        play: startAddress + 3
+    }
+    return res;
+}</code></pre>
+<p>Using the loaded SID tune from the .asm source:</p>
+<pre><code>!use &quot;./sid&quot; as sid
+!let music = sid(&quot;sid/tune.sid&quot;)
+
+demo_start: {
+    lda #0
+    jsr music.init
+    ...
+    jsr music.play      ; usually called from an IRQ
+}
+
+* = music.startAddress  ; usually music.startAddress == $1000
+music:
+!byte music.data</code></pre>
+<p>All of these content plugins are just normal .js files that can be run from the command line with <code>node</code>. This enables you to use standard tools like VSCode to debug them as stand-alone JavaScript modules. I prefer this code to be part of the project source tree rather than buried somewhere within c64jasm’s standard libraries.</p>
+<h2 id="epilogue">Epilogue</h2>
+<p>OK, that’s about it for now on c64jasm plugins. I will probably write another blog later about using c64jasm in VSCode (with quick re-compile-on-save and launch .prg in VICE.) I <a href="https://twitter.com/nurpax/status/1049757222547451906">tweeted</a> about it a while ago, you can check out the video if you’re curious about this.</p>
+<p>Oh by the way, <a href="https://github.com/nurpax/c64jasm">c64jasm</a> is available on GitHub and is already quite usable. However, it’s still very much work-in-progress. If you’re into this type of stuff and feeling adventurous, feel free to give it a try. Otherwise, stick with the more established C64 assemblers. :)</p>
+<h2 id="visio-2018-invitation-demo-capture">VISIO 2018 invitation demo capture</h2>
+<div class="youtube">
+<iframe class="video" src="https://www.youtube.com/embed/Jr5DqTcFpf4?rel=0&amp;controls=1&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+</iframe>
+</div>]]></summary>
+</entry>
+<entry>
     <title>C64 VICE monitor commands</title>
     <link href="http://nurpax.github.com/posts/2018-08-23-vice-monitor-tricks.html" />
     <id>http://nurpax.github.com/posts/2018-08-23-vice-monitor-tricks.html</id>
@@ -665,63 +920,6 @@ Bug:
 <li><p>RN stylesheet documentation recommends using <code>StyleSheet.create()</code> instead of inline styles. I’m now using inline styles everywhere. There may be a performance benefit to using <code>StyleSheet.create()</code>. In my case though, each individual star needs its own stylesheet as a star’s absolute position must be set using a stylesheet.</p></li>
 </ul>
 <p>Thoughts? Questions? Let’s discuss on <a href="https://www.reddit.com/r/reactjs/comments/83yrad/60_fps_3d_starfield_in_react_native/">Reddit</a>.</p>]]></summary>
-</entry>
-<entry>
-    <title>CMake builds from within Sublime Text 3</title>
-    <link href="http://nurpax.github.com/posts/2017-01-06-cmake-sublime-text-3.html" />
-    <id>http://nurpax.github.com/posts/2017-01-06-cmake-sublime-text-3.html</id>
-    <published>2017-01-06T00:00:00Z</published>
-    <updated>2017-01-06T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>How to setup a C++11 project with CMake and make it buildable from within a Sublime Text 3 project.</p>
-<p>Example project can be found <a href="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab">here</a>.</p>
-<h2 id="step-1-create-c-and-cmake-files">Step 1: Create C++ and CMake files</h2>
-<p>Create a C++ source file:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="dt">int</span> main()</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">{</a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">    printf(<span class="st">&quot;Hello, world!</span><span class="sc">\n</span><span class="st">&quot;</span>);</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">    <span class="cf">return</span> <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb1-7" data-line-number="7">}</a></code></pre></div>
-<p>Create a CMakeLists.txt to build your C++ file:</p>
-<pre><code>cmake_minimum_required (VERSION 2.6)
-project (example)
-set (CMAKE_CXX_FLAGS &quot;${CMAKE_CXX_FLAGS} -std=c++11&quot;)
-add_executable(example main.cpp)</code></pre>
-<h2 id="step-2">Step 2:</h2>
-<p>Use CMake to generate your makefiles. We put these temporaries under a <code>./build</code> directory.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="fu">mkdir</span> build</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="bu">cd</span> build</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="fu">cmake</span> ..</a></code></pre></div>
-<p>If you now run <code>make</code> in the <code>./build</code> directory, your project should build.</p>
-<h2 id="step-3-create-your-st3-project">Step 3: Create your ST3 project</h2>
-<p>Create a <code>example.sublime-project</code> file for your project.</p>
-<p>Edit the project file and add a build system (see “build_systems”):</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="dt">&quot;folders&quot;</span><span class="fu">:</span></a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">    <span class="ot">[</span></a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">            <span class="dt">&quot;path&quot;</span><span class="fu">:</span> <span class="st">&quot;.&quot;</span></a>
-<a class="sourceLine" id="cb4-6" data-line-number="6">        <span class="fu">}</span></a>
-<a class="sourceLine" id="cb4-7" data-line-number="7">    <span class="ot">]</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb4-8" data-line-number="8">    <span class="dt">&quot;build_systems&quot;</span><span class="fu">:</span></a>
-<a class="sourceLine" id="cb4-9" data-line-number="9">    <span class="ot">[</span></a>
-<a class="sourceLine" id="cb4-10" data-line-number="10">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb4-11" data-line-number="11">            <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;cmake&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb4-12" data-line-number="12">            <span class="dt">&quot;shell_cmd&quot;</span><span class="fu">:</span> <span class="st">&quot;make -C build&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb4-13" data-line-number="13">            <span class="dt">&quot;file_regex&quot;</span><span class="fu">:</span> <span class="st">&quot;/([^/:]+):(</span><span class="ch">\\</span><span class="st">d+):(</span><span class="ch">\\</span><span class="st">d+): &quot;</span></a>
-<a class="sourceLine" id="cb4-14" data-line-number="14">        <span class="fu">}</span></a>
-<a class="sourceLine" id="cb4-15" data-line-number="15">    <span class="ot">]</span></a>
-<a class="sourceLine" id="cb4-16" data-line-number="16"><span class="fu">}</span></a></code></pre></div>
-<p>This will add a “cmake” build system into ST3 when you open this project file. The convention used is to put the CMake generated makefiles under ./build, and thus the build command uses <code>make -C build</code> instead of just <code>make</code>.</p>
-<h2 id="step-4-build-from-within-st3">Step 4: Build from within ST3</h2>
-<p>Load the example project into ST3.</p>
-<p>You should be able to choose <code>cmake</code> as your current build system from ST3 Tools/Build System menu.</p>
-<p>If you now hit Ctrl-Shift-B (or ⌘ + ⇧ + V), your project should build and you should see the build output in bottom console window.</p>
-<p>If you encountered build errors, you can go to next/prev error with F4 and Shift-F4.</p>
-<h2 id="full-source-code">Full source code</h2>
-<p><a href="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab">Project gist</a>, embedded below.</p>
-<script src="https://gist.github.com/nurpax/1927b189bccdac1fbf6389a47c8a7fab.js"></script>]]></summary>
 </entry>
 
 </feed>
