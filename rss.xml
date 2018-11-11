@@ -151,7 +151,7 @@
 <a class="sourceLine" id="cb11-21" data-line-number="21">    <span class="op">};</span></a>
 <a class="sourceLine" id="cb11-22" data-line-number="22"><span class="op">}</span></a></code></pre></div>
 <p>Using the above in an .asm file:</p>
-<pre><code>!use &quot;./spd&quot;
+<pre><code>!use &quot;./spd&quot; as spd
 
 ; Load &#39;hirmu.spd&#39; and store the returned JavaScript object in a
 ; variable called &#39;hirmu_sprite&#39;
