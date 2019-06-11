@@ -6,7 +6,9 @@
         <meta name="viewport" content="width=device-width">
         <title>nurpax - C64jasm - a new take on C64 macro assembling</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
+
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
         
         <script src="../js/jquery.min.js" type="text/javascript"></script>
@@ -99,7 +101,7 @@
 <p>Symbols declared within a macro are local to that macro. You can also declare macros within macros.</p>
 <p>If/elif/else:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb3-1" data-line-number="1">!let double_y = <span class="dv">1</span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">!<span class="pp">if</span> (double_y) {            </a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">!<span class="pp">if</span> (double_y) {</a>
 <a class="sourceLine" id="cb3-3" data-line-number="3">    ldy #yy*<span class="dv">6</span>+<span class="dv">1</span>         <span class="co">; code from this path</span></a>
 <a class="sourceLine" id="cb3-4" data-line-number="4">    sta (zpdst_even),y  <span class="co">; will be emitted</span></a>
 <a class="sourceLine" id="cb3-5" data-line-number="5">    sta (zpdst_odd),y</a>
@@ -136,7 +138,7 @@
 <p>Let’s illustrate this with some code to generate a sine lookup table. First the plugin code:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode js"><code class="sourceCode javascript"><a class="sourceLine" id="cb7-1" data-line-number="1"># <span class="va">sintab</span>.<span class="at">js</span></a>
 <a class="sourceLine" id="cb7-2" data-line-number="2"><span class="va">module</span>.<span class="at">exports</span> <span class="op">=</span> (<span class="op">{},</span> len<span class="op">,</span> scale) <span class="op">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb7-3" data-line-number="3">    <span class="kw">const</span> res <span class="op">=</span> <span class="at">Array</span>(<span class="va">len</span>.<span class="at">lit</span>).<span class="at">fill</span>(<span class="dv">0</span>).<span class="at">map</span>((v<span class="op">,</span>i) <span class="op">=&gt;</span> <span class="va">Math</span>.<span class="at">sin</span>(i/<span class="va">len</span>.<span class="at">lit</span> <span class="op">*</span> <span class="va">Math</span>.<span class="at">PI</span> <span class="op">*</span> <span class="fl">2.0</span>) <span class="op">*</span> <span class="va">scale</span>.<span class="at">lit</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">    <span class="kw">const</span> res <span class="op">=</span> <span class="at">Array</span>(len).<span class="at">fill</span>(<span class="dv">0</span>).<span class="at">map</span>((v<span class="op">,</span>i) <span class="op">=&gt;</span> <span class="va">Math</span>.<span class="at">sin</span>(i/len <span class="op">*</span> <span class="va">Math</span>.<span class="at">PI</span> <span class="op">*</span> <span class="fl">2.0</span>) <span class="op">*</span> scale)<span class="op">;</span></a>
 <a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="cf">return</span> res<span class="op">;</span></a>
 <a class="sourceLine" id="cb7-5" data-line-number="5"><span class="op">}</span></a></code></pre></div>
 <p>Here’s how you’d use the above in your .asm source file:</p>
@@ -159,7 +161,7 @@
 <p>Where I find the JavaScript extension mechanism really shines is importing assets (sprites from .spd, .sid, etc.). Here’s how I compile SpritePad .spd files into my demo binary:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode js"><code class="sourceCode javascript"><a class="sourceLine" id="cb11-1" data-line-number="1"># <span class="va">spd</span>.<span class="at">js</span></a>
 <a class="sourceLine" id="cb11-2" data-line-number="2"><span class="va">module</span>.<span class="at">exports</span> <span class="op">=</span> (<span class="op">{</span>readFileSync<span class="op">,</span> resolveRelative<span class="op">},</span> filename) <span class="op">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb11-3" data-line-number="3">    <span class="kw">const</span> buf <span class="op">=</span> <span class="at">readFileSync</span>(<span class="at">resolveRelative</span>(<span class="va">filename</span>.<span class="at">lit</span>))<span class="op">;</span></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3">    <span class="kw">const</span> buf <span class="op">=</span> <span class="at">readFileSync</span>(<span class="at">resolveRelative</span>(filename))<span class="op">;</span></a>
 <a class="sourceLine" id="cb11-4" data-line-number="4">    <span class="kw">const</span> numSprites <span class="op">=</span> <span class="va">buf</span>.<span class="at">readUInt8</span>(<span class="dv">4</span>)<span class="op">+</span><span class="dv">1</span><span class="op">;</span></a>
 <a class="sourceLine" id="cb11-5" data-line-number="5">    <span class="kw">const</span> data <span class="op">=</span> []<span class="op">;</span></a>
 <a class="sourceLine" id="cb11-6" data-line-number="6">    <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> numSprites<span class="op">;</span> i<span class="op">++</span>) <span class="op">{</span></a>
@@ -220,7 +222,7 @@
 <a class="sourceLine" id="cb14-19" data-line-number="19">        <span class="co">; load the individual color from sprite data</span></a>
 <a class="sourceLine" id="cb14-20" data-line-number="20">        lda #s.<span class="bu">data</span>[sprite_idx][<span class="dv">63</span>]</a>
 <a class="sourceLine" id="cb14-21" data-line-number="21">        <span class="co">; indiv sprite color</span></a>
-<a class="sourceLine" id="cb14-22" data-line-number="22">        sta <span class="dv">$</span>d027 + sprite_idx    </a>
+<a class="sourceLine" id="cb14-22" data-line-number="22">        sta <span class="dv">$</span>d027 + sprite_idx</a>
 <a class="sourceLine" id="cb14-23" data-line-number="23">        lda #ptr/<span class="dv">64</span> + sprite_idx</a>
 <a class="sourceLine" id="cb14-24" data-line-number="24">        sta<span class="bn"> $7f8 </span>+ sprite_idx</a>
 <a class="sourceLine" id="cb14-25" data-line-number="25">    }</a>
@@ -253,7 +255,7 @@
 <a class="sourceLine" id="cb15-9" data-line-number="9"><span class="op">}</span></a>
 <a class="sourceLine" id="cb15-10" data-line-number="10"></a>
 <a class="sourceLine" id="cb15-11" data-line-number="11"><span class="va">module</span>.<span class="at">exports</span> <span class="op">=</span> (<span class="op">{</span>readFileSync<span class="op">,</span> resolveRelative<span class="op">},</span> filename) <span class="op">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb15-12" data-line-number="12">    <span class="kw">const</span> buf <span class="op">=</span> <span class="at">readFileSync</span>(<span class="at">resolveRelative</span>(<span class="va">filename</span>.<span class="at">lit</span>))<span class="op">;</span></a>
+<a class="sourceLine" id="cb15-12" data-line-number="12">    <span class="kw">const</span> buf <span class="op">=</span> <span class="at">readFileSync</span>(<span class="at">resolveRelative</span>(filename))<span class="op">;</span></a>
 <a class="sourceLine" id="cb15-13" data-line-number="13">    <span class="kw">const</span> version <span class="op">=</span> <span class="at">readWordBE</span>(buf<span class="op">,</span> <span class="dv">4</span>)<span class="op">;</span></a>
 <a class="sourceLine" id="cb15-14" data-line-number="14">    <span class="kw">const</span> dataOffset <span class="op">=</span> <span class="at">readWordBE</span>(buf<span class="op">,</span> <span class="dv">6</span>)<span class="op">;</span></a>
 <a class="sourceLine" id="cb15-15" data-line-number="15">    <span class="kw">const</span> startAddress <span class="op">=</span> <span class="at">readWord</span>(buf<span class="op">,</span> dataOffset)<span class="op">;</span></a>
