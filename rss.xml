@@ -508,16 +508,31 @@ module.exports = ({readFileSync, resolveRelative}, filename) =&gt; {
 </div>]]></summary>
 </entry>
 <entry>
-    <title>C64 VICE monitor commands</title>
+    <title>C64 tool tricks (VICE and others)</title>
     <link href="http://nurpax.github.com/posts/2018-08-23-vice-monitor-tricks.html" />
     <id>http://nurpax.github.com/posts/2018-08-23-vice-monitor-tricks.html</id>
     <published>2018-08-23T00:00:00Z</published>
     <updated>2018-08-23T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>A collection of random VICE monitor commands.</p>
+    <summary type="html"><![CDATA[<p>A collection of random C64 tool tricks.</p>
+<h1 id="vice">VICE</h1>
 <h2 id="capturing-the-rom-charset">Capturing the ROM charset</h2>
 <p>Make ROM visible to the monitor and save data from <code>$d000</code> onwards:</p>
 <pre><code>bank rom
-bs &quot;data.bin&quot; 0 $d000 $d7fff</code></pre>]]></summary>
+bs &quot;data.bin&quot; 0 $d000 $d7fff</code></pre>
+<h1 id="using-exomizer-to-crunch-executables">Using exomizer to crunch executables</h1>
+<h2 id="installation">Installation</h2>
+<ol type="1">
+<li>Download and extract <a href="https://bitbucket.org/magli143/exomizer/wiki/downloads/exomizer-3.0.2.zip">exomizer</a></li>
+<li>Build it by</li>
+</ol>
+<pre><code>mkdir exomizer
+cd exomizer
+make -C src</code></pre>
+<p>The command line tools will reside under the <code>src</code> directory.</p>
+<h2 id="packing-a-.prg-file">Packing a .prg file</h2>
+<p>To pack a .prg that uses the BASIC upstart sequence (SYS something), use:</p>
+<pre><code>exomizer sfx sys input.prg -o output.prg -x3</code></pre>
+<p>The <code>-x3</code> adds a border flashing decrunching effect. Drop that switch if you don’t want it.</p>]]></summary>
 </entry>
 <entry>
     <title>BINTRIS C64: Bad lines and flexible line distance (series part 5)</title>

@@ -4,10 +4,10 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="viewport" content="width=device-width">
-        <title>nurpax - C64 VICE monitor commands</title>
+        <title>nurpax - C64 tool tricks (VICE and others)</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
 
-        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax2.css" />
 
         <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
         
@@ -42,15 +42,30 @@
         <div id="content">
 <article>
 
-<h1>C64 VICE monitor commands</h1>
+<h1>C64 tool tricks (VICE and others)</h1>
 
 <p class="post-author">Janne Hellsten on August 23, 2018</p>
 
-<p>A collection of random VICE monitor commands.</p>
+<p>A collection of random C64 tool tricks.</p>
+<h2 id="vice">VICE</h2>
 <h3 id="capturing-the-rom-charset">Capturing the ROM charset</h3>
 <p>Make ROM visible to the monitor and save data from <code>$d000</code> onwards:</p>
 <pre><code>bank rom
 bs &quot;data.bin&quot; 0 $d000 $d7fff</code></pre>
+<h2 id="using-exomizer-to-crunch-executables">Using exomizer to crunch executables</h2>
+<h3 id="installation">Installation</h3>
+<ol type="1">
+<li>Download and extract <a href="https://bitbucket.org/magli143/exomizer/wiki/downloads/exomizer-3.0.2.zip">exomizer</a></li>
+<li>Build it by</li>
+</ol>
+<pre><code>mkdir exomizer
+cd exomizer
+make -C src</code></pre>
+<p>The command line tools will reside under the <code>src</code> directory.</p>
+<h3 id="packing-a-.prg-file">Packing a .prg file</h3>
+<p>To pack a .prg that uses the BASIC upstart sequence (SYS something), use:</p>
+<pre><code>exomizer sfx sys input.prg -o output.prg -x3</code></pre>
+<p>The <code>-x3</code> adds a border flashing decrunching effect. Drop that switch if you don’t want it.</p>
 
 
 </article>
