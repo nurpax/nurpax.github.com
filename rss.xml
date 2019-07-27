@@ -8,8 +8,145 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2019-06-06T00:00:00Z</updated>
+    <updated>2019-07-27T00:00:00Z</updated>
     <entry>
+    <title>C64jasm object literals</title>
+    <link href="http://nurpax.github.com/posts/2019-07-27-c64jasm-object-literals.html" />
+    <id>http://nurpax.github.com/posts/2019-07-27-c64jasm-object-literals.html</id>
+    <published>2019-07-27T00:00:00Z</published>
+    <updated>2019-07-27T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>The latest <a href="https://nurpax.github.io/c64jasm/">c64jasm</a> v0.6.0 added support for JavaScript style object literals. This turned out to be surprisingly useful! This post will go over this feature and some c64jasm tricks that this feature enables.</p>
+<p>This post assumes you’re already familiar with the c64jasm assembler (see: <a href="https://nurpax.github.io/c64jasm/">c64jasm manual</a>).</p>
+<h2 id="object-literals">Object literals</h2>
+<p>An object in JavaScript and c64jasm is just a dict that maps keys to values. For example, in JavaScript:</p>
+<pre><code>const options = {
+    filename: &quot;main.asm&quot;,
+    indent: 4
+};</code></pre>
+<p>The equivalent in c64jasm syntax would be:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb2-1" data-line-number="1">!let options = {</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="fu">    filename:</span> <span class="st">&quot;main.asm&quot;</span>,</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="fu">    indent:</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">}</a></code></pre></div>
+<h2 id="how-is-this-useful-in-assembler">How is this useful in assembler?</h2>
+<p>Turns out object literals can be quite useful for a few things:</p>
+<ul>
+<li>Named parameters for macro calls</li>
+<li>Keeping track of zeropage addresses</li>
+<li>Implicitly parametrize macro expansion</li>
+</ul>
+<p><strong>Named parameters</strong>: C64jasm supports only positional arguments in macro calls. However, just like in JavaScript, objects are a great substitute for named parameters:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb3-1" data-line-number="1">!<span class="pp">macro</span> clear_screen_named(args) {</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    lda #args.clearByte</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">    ldx #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="bu">loop</span>:</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    !let screen = args.screen</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">    sta screen, x</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">    sta screen +<span class="bn"> $100, </span>x</a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">    sta screen +<span class="bn"> $200, </span>x</a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">    sta screen +<span class="bn"> $300, </span>x</a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">    inx</a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">    bne <span class="bu">loop</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">}</a>
+<a class="sourceLine" id="cb3-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">+clear_screen_named({ screen:<span class="bn"> $0400, </span>clearByte: <span class="dv">$</span>a0 })</a></code></pre></div>
+<p><strong>Zero-page addresses</strong>: If you’ve written any decent amounts of 6502 assembly, you may have ran into problems keeping track of what’s in the zeropage. Perhaps you first started out by just keeping all the addresses in your head or code comments:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb4-1" data-line-number="1">    lda #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    sta<span class="bn"> $20    </span><span class="co">; sprite index</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">    lda #<span class="dv">2</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">    sta<span class="bn"> $21    </span><span class="co">; num sprites</span></a></code></pre></div>
+<p>This is hard to read and easily breaks on modification. Instead, I tend to declare my zeropage allocation in variables:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb5-1" data-line-number="1">!let zp_sprite_idx =<span class="bn"> $20</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">!let zp_num_sprites =<span class="bn"> $21</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">    lda #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">    sta zp_sprite_idx</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">    lda #<span class="dv">2</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">    sta zp_num_sprites</a></code></pre></div>
+<p>You can express the above equivalently using an object literal:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb6-1" data-line-number="1">!let zp = {</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="fu">    sprite_idx:</span><span class="bn"> $20,</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="fu">    num_sprites:</span><span class="bn"> $21</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">}</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">    lda #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">    sta zp.sprite_idx</a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">    lda #<span class="dv">2</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">    sta zp.num_sprites</a></code></pre></div>
+<p>Turns out, the latter form combines well with macro expansion.</p>
+<h2 id="macros-and-zeropage-temporaries">Macros and zeropage temporaries</h2>
+<p>Consider the below <code>mul_imm</code> macro that multiplies a 16-bit value by 3. It needs 2 bytes of zeropage memory to hold a temporary value (<code>zp_tmp0</code>). It’s hardcoded to store the tempory in zeropage addresses <code>$20-$21</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb7-1" data-line-number="1">!<span class="pp">macro</span> add16(res, n1, n2) {</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">    <span class="bu">clc</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">    lda n1</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="bu">adc</span> n2</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">    sta res+<span class="dv">0</span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">    lda n1+<span class="dv">1</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">    <span class="bu">adc</span> n2+<span class="dv">1</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">    sta res+<span class="dv">1</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9">}</a>
+<a class="sourceLine" id="cb7-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11">!<span class="pp">macro</span> mul_imm(m, imm) {</a>
+<a class="sourceLine" id="cb7-12" data-line-number="12">    !let zp_tmp0 =<span class="bn"> $20</span></a>
+<a class="sourceLine" id="cb7-13" data-line-number="13">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
+<a class="sourceLine" id="cb7-14" data-line-number="14">        +add16(zp_tmp0, m, m)</a>
+<a class="sourceLine" id="cb7-15" data-line-number="15">        +add16(m, zp_tmp0, m)</a>
+<a class="sourceLine" id="cb7-16" data-line-number="16">    } <span class="pp">else</span> {</a>
+<a class="sourceLine" id="cb7-17" data-line-number="17">        !error <span class="st">&quot;only imm=3 is supported&quot;</span></a>
+<a class="sourceLine" id="cb7-18" data-line-number="18">    }</a>
+<a class="sourceLine" id="cb7-19" data-line-number="19">}</a>
+<a class="sourceLine" id="cb7-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb7-21" data-line-number="21"><span class="fu">func:</span> {</a>
+<a class="sourceLine" id="cb7-22" data-line-number="22">    +mul_imm(num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb7-23" data-line-number="23">}</a>
+<a class="sourceLine" id="cb7-24" data-line-number="24"><span class="fu">irq_func:</span> {</a>
+<a class="sourceLine" id="cb7-25" data-line-number="25">    +mul_imm(num1, <span class="dv">3</span>)  <span class="co">; Ouch! Clobbers $20-21!</span></a>
+<a class="sourceLine" id="cb7-26" data-line-number="26">}</a>
+<a class="sourceLine" id="cb7-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb7-28" data-line-number="28"><span class="fu">num1:</span> !<span class="dt">word</span> <span class="dv">27</span></a></code></pre></div>
+<p>What if the code calling this macro is also using zeropage <code>$20-$21</code>? The values in <code>$20-$21</code> will get clobbered by the macro. You also probably cannot use this macro in an IRQ as the IRQ might then clobber <code>$20-21</code> while your main code is running and using the same memory.</p>
+<p>We could of course pass in a 3rd parameter <code>zp_tmp0</code> that’d specify the temp zeropage location. But this is ugly even with one 16-bit zeropage temp and only gets worse in macros needing many temporaries.</p>
+<p>Let’s parametrize zeropage temp locations in <code>mul_imm</code> by adding a <code>zp</code> macro argument that holds the zeropage allocation:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb8-1" data-line-number="1">!<span class="pp">macro</span> mul_imm(zp, m, imm) {</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">        +add16(zp.tmp0, m, m)</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">        +add16(m, zp.tmp0, m)</a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">    }</a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">}</a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="fu">func:</span> {</a>
+<a class="sourceLine" id="cb8-9" data-line-number="9">    !let temps = { tmp0:<span class="bn"> $20 </span>}</a>
+<a class="sourceLine" id="cb8-10" data-line-number="10">    +mul_imm(temps, num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb8-11" data-line-number="11">}</a>
+<a class="sourceLine" id="cb8-12" data-line-number="12"><span class="fu">irq_func:</span> {</a>
+<a class="sourceLine" id="cb8-13" data-line-number="13">    !let temps = { tmp0:<span class="bn"> $40 </span>}</a>
+<a class="sourceLine" id="cb8-14" data-line-number="14">    +mul_imm(temps, num1, <span class="dv">3</span>)  <span class="co">; OK, no clobber</span></a>
+<a class="sourceLine" id="cb8-15" data-line-number="15">}</a></code></pre></div>
+<p>Better but still noisy.</p>
+<p>Now here’s the kicker: we can drop the <code>zp</code> argument from <code>mul_imm</code> declaration and rely on a convention that <code>zp</code> is passed implicitly in the enclosing scope at the macro call site.</p>
+<p>In code:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co">; no &#39;zp&#39; arg here, rely on it being in scope</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">!<span class="pp">macro</span> mul_imm(m, imm) {</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">        +add16(zp.tmp0, m, m)</a>
+<a class="sourceLine" id="cb9-5" data-line-number="5">        +add16(m, zp.tmp0, m)</a>
+<a class="sourceLine" id="cb9-6" data-line-number="6">    }</a>
+<a class="sourceLine" id="cb9-7" data-line-number="7">}</a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="co">; default zeropage temps</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10">!let zp = { tmp0:<span class="bn"> $20 </span>}</a>
+<a class="sourceLine" id="cb9-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb9-12" data-line-number="12"><span class="fu">func:</span> {</a>
+<a class="sourceLine" id="cb9-13" data-line-number="13">    <span class="co">; use default zp tmp0=$20</span></a>
+<a class="sourceLine" id="cb9-14" data-line-number="14">    +mul_imm(num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb9-15" data-line-number="15">}</a>
+<a class="sourceLine" id="cb9-16" data-line-number="16"><span class="fu">irq_func:</span> {</a>
+<a class="sourceLine" id="cb9-17" data-line-number="17">    <span class="co">; override zp with tmp0=$40 within irq_func</span></a>
+<a class="sourceLine" id="cb9-18" data-line-number="18">    !let zp = { tmp0:<span class="bn"> $40 </span>}</a>
+<a class="sourceLine" id="cb9-19" data-line-number="19">    +mul_imm(num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb9-20" data-line-number="20">}</a></code></pre></div>
+<h2 id="wrap-up">Wrap-up</h2>
+<p>This post walked through a couple of tricks that became possible in the latest c64jasm v0.6.0 release. If you’re feeling adventurous, read more <a href="https://nurpax.github.io/c64jasm/">here</a>. Or <a href="https://nurpax.github.io/c64jasm-browser/">try it in your browser</a>!</p>]]></summary>
+</entry>
+<entry>
     <title>Loading sprites, PETSCII and SID with C64jasm</title>
     <link href="http://nurpax.github.com/posts/2019-06-06-c64jasm-content-example.html" />
     <id>http://nurpax.github.com/posts/2019-06-06-c64jasm-content-example.html</id>
@@ -872,6 +1009,10 @@ convert -crop 104x30+62+22 +repage -loop 0 -delay 300 image?.png result.gif</cod
 ffmpeg -i screencap.avi -c:v libx264 -pix_fmt yuv420p -preset veryslow -crf 5 foo.mp4</code></pre>
 <p>Convert a series of image files into an MP4:</p>
 <pre><code>ffmpeg -r 25 -i &#39;frame_%04d.png&#39; -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4</code></pre>
+<p>Convert a MOV/MP4 into a series of image files:</p>
+<pre><code>ffmpeg -i input.mov output_%04d.png
+# with scaling to 320x240 resolution
+ffmpeg -i input.mov -vf scale=320:240 output_%04d.png</code></pre>
 <p>Convert a MOV file into an MP4 (e.g., for uploading Quicktime screencaps to Twitter):</p>
 <pre><code>ffmpeg -i movie.mov -vcodec copy -acodec copy out.mp4</code></pre>]]></summary>
 </entry>
@@ -1089,76 +1230,6 @@ end:
 </div>
 <h2 id="next-in-series">Next in series</h2>
 <p>The next post will discuss how the title screen mixes multicolor bitmap mode (the BINTRIS image) and text mode (the scroller).</p>]]></summary>
-</entry>
-<entry>
-    <title>BINTRIS on the C64 (series part 1)</title>
-    <link href="http://nurpax.github.com/posts/2018-05-19-bintris-on-c64-part-1.html" />
-    <id>http://nurpax.github.com/posts/2018-05-19-bintris-on-c64-part-1.html</id>
-    <published>2018-05-18T00:00:00Z</published>
-    <updated>2018-05-18T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
-<p>This is the first part of a blog series on making a small game called <a href="http://nurpax.com/bintris">BINTRIS</a> for the Commodore 64.</p>
-<p>Here are a some of the topics I plan to cover in the series:</p>
-<ul>
-<li>Tooling</li>
-<li>Sprite multiplexing</li>
-<li>Mixed text and bitmap mode display</li>
-<li>Vertical raster scroll and flexible line distance (FLD)</li>
-<li>A line-by-line sprite sine-wave animation</li>
-<li>SID sound effects</li>
-</ul>
-<p>As most of these are well-documented on the internet, my posts won’t be full-blown tutorials but rather examples of how to apply the above techniques in a game. I’ll start this series by covering tools.</p>
-<h2 id="bintris">BINTRIS</h2>
-<p>BINTRIS is a puzzle game that plays a little like Tetris but using binary numbers. Here’s a little gameplay video:</p>
-<div class="youtube">
-<iframe class="video" src="https://www.youtube.com/embed/RSAlFunPlYI?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-</iframe>
-</div>
-<p>The idea is that each row is a binary number (black is zero, white is one) and you need to build rows that match the numbers listed below the DECIMAL heading.</p>
-<p>Here’s a little teaser showcasing the readme.prg file from the bintris disk image:</p>
-<div class="youtube">
-<iframe class="video" src="https://www.youtube.com/embed/AYDKdRmlxFs?rel=0&amp;controls=0&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-</iframe>
-</div>
-<p>The game will be released any day now – I’ll update this post with a download link when it’s out. I’ll also post some more videos once I have the final version captured on real hardware.</p>
-<h2 id="how-to-develop-for-the-c64">How to develop for the C64</h2>
-<p>Probably the best choice for developing for the C64 is to use an emulator. I went with <a href="vice">VICE</a>.</p>
-<p>I used <a href="kickass">KickAssembler</a> for compiling my assembly code. Its macro support is some seriously good stuff – I wish I had something like this when I used to work on PC demos.</p>
-<p>For editing and compiling 6510 assembly source, I ended up going with the <a href="https://packagecontrol.io/packages/Kick%20Assembler%20(C64)">Sublime Text 3 and KickAssembler package</a>. This sets up your editor such that you can just press F7 and it will compile and run your code on VICE. It also supports building a debug version of your binary that allows setting breakpoints to break into the VICE monitor (read: debugger). The monitor can be remotely accessed with telnet from your host machine. Editing monitor commands on your host makes things like copy &amp; paste easier.</p>
-<p>I had some problems with the VICE emulator though. For example, sound is pretty buggy on my MacBook Pro and sometimes buggy even on Windows 10. I also couldn’t get video capture to work on Mac at all, and on Windows h.264 export crashes the emulator right away. I found <a href="http://www.hoxs64.net/default.aspx">hoxs64</a> to have more stable sound but it’s otherwise not as featureful as VICE. I also tried to build my own VICE binary on Windows but that got ugly real quick when I tried to deal with the MinGW build environment.</p>
-<p>Other tools used to develop BINTRIS:</p>
-<ul>
-<li><a href="multipaint">Multipaint</a> – for painting pixel graphics and sprites. (Although in the end, most sprites were done in Photoshop.)</li>
-<li><a href="petscii">PETSCII editor</a> – for PETSCII “art” used in the readme.prg.</li>
-<li><a href="https://github.com/nurpax/c64-sid-edit">SID sound editor</a> – I wrote this C64 sound editor to make it easier to tweak SID registers for my sound effects.</li>
-<li><a href="https://github.com/nurpax/c64-sid-edit/blob/master/GrabSounds.hs">VICE snapshot parser</a> – a Haskell program I wrote for parsing memory snapshots. I used this to save/load the SID editor sounds. Rather than implementing save/load into my C64 app, I grabbed the sound data directly from RAM.</li>
-<li><a href="https://sourceforge.net/projects/goattracker2/">GoatTracker</a> - for SID music.</li>
-<li>Python - a bunch of LUT generators using numpy and PIL.</li>
-</ul>
-<h2 id="c64-learning-resources">C64 learning resources</h2>
-<p>Here are some of my favorite C64 resources:</p>
-<ul>
-<li><a href="http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt">The MOS 6567/6569 video controller (VIC-II) and its application in the Commodore 64</a> – a pretty exchaustive document on the VIC-II graphics chip.</li>
-<li><a href="https://www.c64-wiki.com/wiki/Main_Page">c64-wiki</a> – I often use this for looking up assembly instructions (see e.g. <a href="https://www.c64-wiki.com/wiki/BPL">BPL</a>. I’m not a huge fan of some of the pages though. For example, the instruction reference pages would be better if they specified how an instruction works with pseudo code.</li>
-<li><a href="http://sta.c64.org/cbm64mem.html">C64 memory map</a> – this is a super helpful reference for C64 registers.</li>
-<li><a href="http://codebase64.org/doku.php">codebase64</a> – found a bunch of good examples here (but also many bugs!)</li>
-</ul>
-<p>The list is missing a good starter guide for 6510 assembly.</p>
-<h2 id="next-in-series">Next in series</h2>
-<p>The next blog in the series will showcase the game itself, hopefully with final version captured on real hardware.</p>
-<!--$snippet("includes/bintris-c64-series.html")$-->
-<!--
-Bug:
-
-<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">You can tell the release day is near when your game goes all wonky like this. <a href="https://twitter.com/hashtag/bintris?src=hash&amp;ref_src=twsrc%5Etfw">#bintris</a> <a href="https://twitter.com/hashtag/c64?src=hash&amp;ref_src=twsrc%5Etfw">#c64</a> <a href="https://t.co/Dr7orgnkSF">pic.twitter.com/Dr7orgnkSF</a></p>&mdash; Janne Hellsten (@nurpax) <a href="https://twitter.com/nurpax/status/993934121935228929?ref_src=twsrc%5Etfw">May 8, 2018</a></blockquote>
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
--->
-<!--
-<div class="youtube">
-<iframe class="video" src="https://www.youtube.com/embed/8UjTcipfRJc?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
--->
-<p>Thoughts? Questions? Let’s discuss on <a href="https://www.reddit.com/r/c64coding">/r/c64coding</a>.</p>]]></summary>
 </entry>
 
 </feed>

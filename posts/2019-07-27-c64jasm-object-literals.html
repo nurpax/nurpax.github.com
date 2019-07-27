@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width">
+        <title>nurpax - C64jasm object literals</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+
+        <link rel="stylesheet" type="text/css" href="../css/syntax2.css" />
+
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
+        
+        <script src="../js/jquery.min.js" type="text/javascript"></script>
+        <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
+        
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-37082285-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>&nbsp;</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+
+<h1>C64jasm object literals</h1>
+
+<p class="post-author">Janne Hellsten on July 27, 2019</p>
+
+<p>The latest <a href="https://nurpax.github.io/c64jasm/">c64jasm</a> v0.6.0 added support for JavaScript style object literals. This turned out to be surprisingly useful! This post will go over this feature and some c64jasm tricks that this feature enables.</p>
+<p>This post assumes you’re already familiar with the c64jasm assembler (see: <a href="https://nurpax.github.io/c64jasm/">c64jasm manual</a>).</p>
+<h3 id="object-literals">Object literals</h3>
+<p>An object in JavaScript and c64jasm is just a dict that maps keys to values. For example, in JavaScript:</p>
+<pre><code>const options = {
+    filename: &quot;main.asm&quot;,
+    indent: 4
+};</code></pre>
+<p>The equivalent in c64jasm syntax would be:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb2-1" data-line-number="1">!let options = {</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="fu">    filename:</span> <span class="st">&quot;main.asm&quot;</span>,</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="fu">    indent:</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">}</a></code></pre></div>
+<h3 id="how-is-this-useful-in-assembler">How is this useful in assembler?</h3>
+<p>Turns out object literals can be quite useful for a few things:</p>
+<ul>
+<li>Named parameters for macro calls</li>
+<li>Keeping track of zeropage addresses</li>
+<li>Implicitly parametrize macro expansion</li>
+</ul>
+<p><strong>Named parameters</strong>: C64jasm supports only positional arguments in macro calls. However, just like in JavaScript, objects are a great substitute for named parameters:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb3-1" data-line-number="1">!<span class="pp">macro</span> clear_screen_named(args) {</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    lda #args.clearByte</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">    ldx #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="bu">loop</span>:</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    !let screen = args.screen</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">    sta screen, x</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">    sta screen +<span class="bn"> $100, </span>x</a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">    sta screen +<span class="bn"> $200, </span>x</a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">    sta screen +<span class="bn"> $300, </span>x</a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">    inx</a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">    bne <span class="bu">loop</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">}</a>
+<a class="sourceLine" id="cb3-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">+clear_screen_named({ screen:<span class="bn"> $0400, </span>clearByte: <span class="dv">$</span>a0 })</a></code></pre></div>
+<p><strong>Zero-page addresses</strong>: If you’ve written any decent amounts of 6502 assembly, you may have ran into problems keeping track of what’s in the zeropage. Perhaps you first started out by just keeping all the addresses in your head or code comments:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb4-1" data-line-number="1">    lda #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    sta<span class="bn"> $20    </span><span class="co">; sprite index</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">    lda #<span class="dv">2</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">    sta<span class="bn"> $21    </span><span class="co">; num sprites</span></a></code></pre></div>
+<p>This is hard to read and easily breaks on modification. Instead, I tend to declare my zeropage allocation in variables:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb5-1" data-line-number="1">!let zp_sprite_idx =<span class="bn"> $20</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">!let zp_num_sprites =<span class="bn"> $21</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">    lda #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">    sta zp_sprite_idx</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">    lda #<span class="dv">2</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">    sta zp_num_sprites</a></code></pre></div>
+<p>You can express the above equivalently using an object literal:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb6-1" data-line-number="1">!let zp = {</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="fu">    sprite_idx:</span><span class="bn"> $20,</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="fu">    num_sprites:</span><span class="bn"> $21</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">}</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">    lda #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">    sta zp.sprite_idx</a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">    lda #<span class="dv">2</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">    sta zp.num_sprites</a></code></pre></div>
+<p>Turns out, the latter form combines well with macro expansion.</p>
+<h3 id="macros-and-zeropage-temporaries">Macros and zeropage temporaries</h3>
+<p>Consider the below <code>mul_imm</code> macro that multiplies a 16-bit value by 3. It needs 2 bytes of zeropage memory to hold a temporary value (<code>zp_tmp0</code>). It’s hardcoded to store the tempory in zeropage addresses <code>$20-$21</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb7-1" data-line-number="1">!<span class="pp">macro</span> add16(res, n1, n2) {</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">    <span class="bu">clc</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">    lda n1</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="bu">adc</span> n2</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">    sta res+<span class="dv">0</span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">    lda n1+<span class="dv">1</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">    <span class="bu">adc</span> n2+<span class="dv">1</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">    sta res+<span class="dv">1</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9">}</a>
+<a class="sourceLine" id="cb7-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11">!<span class="pp">macro</span> mul_imm(m, imm) {</a>
+<a class="sourceLine" id="cb7-12" data-line-number="12">    !let zp_tmp0 =<span class="bn"> $20</span></a>
+<a class="sourceLine" id="cb7-13" data-line-number="13">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
+<a class="sourceLine" id="cb7-14" data-line-number="14">        +add16(zp_tmp0, m, m)</a>
+<a class="sourceLine" id="cb7-15" data-line-number="15">        +add16(m, zp_tmp0, m)</a>
+<a class="sourceLine" id="cb7-16" data-line-number="16">    } <span class="pp">else</span> {</a>
+<a class="sourceLine" id="cb7-17" data-line-number="17">        !error <span class="st">&quot;only imm=3 is supported&quot;</span></a>
+<a class="sourceLine" id="cb7-18" data-line-number="18">    }</a>
+<a class="sourceLine" id="cb7-19" data-line-number="19">}</a>
+<a class="sourceLine" id="cb7-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb7-21" data-line-number="21"><span class="fu">func:</span> {</a>
+<a class="sourceLine" id="cb7-22" data-line-number="22">    +mul_imm(num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb7-23" data-line-number="23">}</a>
+<a class="sourceLine" id="cb7-24" data-line-number="24"><span class="fu">irq_func:</span> {</a>
+<a class="sourceLine" id="cb7-25" data-line-number="25">    +mul_imm(num1, <span class="dv">3</span>)  <span class="co">; Ouch! Clobbers $20-21!</span></a>
+<a class="sourceLine" id="cb7-26" data-line-number="26">}</a>
+<a class="sourceLine" id="cb7-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb7-28" data-line-number="28"><span class="fu">num1:</span> !<span class="dt">word</span> <span class="dv">27</span></a></code></pre></div>
+<p>What if the code calling this macro is also using zeropage <code>$20-$21</code>? The values in <code>$20-$21</code> will get clobbered by the macro. You also probably cannot use this macro in an IRQ as the IRQ might then clobber <code>$20-21</code> while your main code is running and using the same memory.</p>
+<p>We could of course pass in a 3rd parameter <code>zp_tmp0</code> that’d specify the temp zeropage location. But this is ugly even with one 16-bit zeropage temp and only gets worse in macros needing many temporaries.</p>
+<p>Let’s parametrize zeropage temp locations in <code>mul_imm</code> by adding a <code>zp</code> macro argument that holds the zeropage allocation:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb8-1" data-line-number="1">!<span class="pp">macro</span> mul_imm(zp, m, imm) {</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">        +add16(zp.tmp0, m, m)</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">        +add16(m, zp.tmp0, m)</a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">    }</a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">}</a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="fu">func:</span> {</a>
+<a class="sourceLine" id="cb8-9" data-line-number="9">    !let temps = { tmp0:<span class="bn"> $20 </span>}</a>
+<a class="sourceLine" id="cb8-10" data-line-number="10">    +mul_imm(temps, num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb8-11" data-line-number="11">}</a>
+<a class="sourceLine" id="cb8-12" data-line-number="12"><span class="fu">irq_func:</span> {</a>
+<a class="sourceLine" id="cb8-13" data-line-number="13">    !let temps = { tmp0:<span class="bn"> $40 </span>}</a>
+<a class="sourceLine" id="cb8-14" data-line-number="14">    +mul_imm(temps, num1, <span class="dv">3</span>)  <span class="co">; OK, no clobber</span></a>
+<a class="sourceLine" id="cb8-15" data-line-number="15">}</a></code></pre></div>
+<p>Better but still noisy.</p>
+<p>Now here’s the kicker: we can drop the <code>zp</code> argument from <code>mul_imm</code> declaration and rely on a convention that <code>zp</code> is passed implicitly in the enclosing scope at the macro call site.</p>
+<p>In code:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co">; no 'zp' arg here, rely on it being in scope</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">!<span class="pp">macro</span> mul_imm(m, imm) {</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">        +add16(zp.tmp0, m, m)</a>
+<a class="sourceLine" id="cb9-5" data-line-number="5">        +add16(m, zp.tmp0, m)</a>
+<a class="sourceLine" id="cb9-6" data-line-number="6">    }</a>
+<a class="sourceLine" id="cb9-7" data-line-number="7">}</a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="co">; default zeropage temps</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10">!let zp = { tmp0:<span class="bn"> $20 </span>}</a>
+<a class="sourceLine" id="cb9-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb9-12" data-line-number="12"><span class="fu">func:</span> {</a>
+<a class="sourceLine" id="cb9-13" data-line-number="13">    <span class="co">; use default zp tmp0=$20</span></a>
+<a class="sourceLine" id="cb9-14" data-line-number="14">    +mul_imm(num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb9-15" data-line-number="15">}</a>
+<a class="sourceLine" id="cb9-16" data-line-number="16"><span class="fu">irq_func:</span> {</a>
+<a class="sourceLine" id="cb9-17" data-line-number="17">    <span class="co">; override zp with tmp0=$40 within irq_func</span></a>
+<a class="sourceLine" id="cb9-18" data-line-number="18">    !let zp = { tmp0:<span class="bn"> $40 </span>}</a>
+<a class="sourceLine" id="cb9-19" data-line-number="19">    +mul_imm(num1, <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb9-20" data-line-number="20">}</a></code></pre></div>
+<h3 id="wrap-up">Wrap-up</h3>
+<p>This post walked through a couple of tricks that became possible in the latest c64jasm v0.6.0 release. If you’re feeling adventurous, read more <a href="https://nurpax.github.io/c64jasm/">here</a>. Or <a href="https://nurpax.github.io/c64jasm-browser/">try it in your browser</a>!</p>
+
+
+</article>
+
+
+        </div>
+        <div id="footer">
+          <p>Like what you saw here?  Suggestions, improvements?</p>
+          <p>Get in touch: jjhellst@gmail.com or <a href="https://twitter.com/nurpax">@nurpax</a></p>
+        </div>
+    </div>
+
+
+    </body>
+</html>
