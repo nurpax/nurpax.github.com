@@ -121,8 +121,8 @@
 <a class="sourceLine" id="cb8-14" data-line-number="14">    +mul_imm(temps, num1, <span class="dv">3</span>)  <span class="co">; OK, no clobber</span></a>
 <a class="sourceLine" id="cb8-15" data-line-number="15">}</a></code></pre></div>
 <p>Better but still noisy.</p>
-<p>Now here’s the kicker: we can drop the <code>zp</code> argument from <code>mul_imm</code> declaration and rely on a convention that <code>zp</code> is passed implicitly in the enclosing scope at the macro call site.</p>
-<p>In code:</p>
+<p><del>Now here’s the kicker: we can drop the <code>zp</code> argument from <code>mul_imm</code> declaration and rely on a convention that <code>zp</code> is passed implicitly in the enclosing scope at the macro call site.</del></p>
+<p><del>In code:</del></p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co">; no &#39;zp&#39; arg here, rely on it being in scope</span></a>
 <a class="sourceLine" id="cb9-2" data-line-number="2">!<span class="pp">macro</span> mul_imm(m, imm) {</a>
 <a class="sourceLine" id="cb9-3" data-line-number="3">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
@@ -143,6 +143,7 @@
 <a class="sourceLine" id="cb9-18" data-line-number="18">    !let zp = { tmp0:<span class="bn"> $40 </span>}</a>
 <a class="sourceLine" id="cb9-19" data-line-number="19">    +mul_imm(num1, <span class="dv">3</span>)</a>
 <a class="sourceLine" id="cb9-20" data-line-number="20">}</a></code></pre></div>
+<p><strong>Update 2019-08-09</strong>: Implicit parameters by the sort of “dynamic scoping” shown here does not work as of c64jasm 0.7.0. When a macro is expanded, any symbols in the macro will use bindings from where the macro was declared, not where it’s expanded. Use global variables instead. See <a href="https://gist.github.com/nurpax/5aeaba58e359c6d040a9e0f87fa68ab9">this gist</a> for an example on how to do this cleanly.</p>
 <h2 id="wrap-up">Wrap-up</h2>
 <p>This post walked through a couple of tricks that became possible in the latest c64jasm v0.6.0 release. If you’re feeling adventurous, read more <a href="https://nurpax.github.io/c64jasm/">here</a>. Or <a href="https://nurpax.github.io/c64jasm-browser/">try it in your browser</a>!</p>]]></summary>
 </entry>
