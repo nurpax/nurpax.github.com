@@ -437,7 +437,7 @@
 <a class="sourceLine" id="cb21-6" data-line-number="6">        dst += <span class="dv">40</span>; <span class="co">// go down a row</span></a>
 <a class="sourceLine" id="cb21-7" data-line-number="7">    }</a>
 <a class="sourceLine" id="cb21-8" data-line-number="8">}</a></code></pre></div>
-<p>This is translates to pretty compact assembly. The slope counter variants tended to be even smaller, though.</p>
+<p>This translates to pretty compact assembly. The slope counter variants tended to be even smaller, though.</p>
 <h2 id="winner-entry">Winner entry</h2>
 <p>This is the <a href="https://github.com/fsphil/tinyx/blob/master/x34/x34.s">winning 34 byte entry</a> from Philip. Most of the above really comes together nicely in his code:</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb22-1" data-line-number="1">ov =<span class="bn"> $22 </span><span class="co">; == $40, initial value for the overflow counter</span></a>
