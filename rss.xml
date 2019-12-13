@@ -8,8 +8,101 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2019-08-18T00:00:00Z</updated>
+    <updated>2019-12-04T00:00:00Z</updated>
     <entry>
+    <title>Python argparse</title>
+    <link href="http://nurpax.github.com/posts/2019-12-04-argparse.html" />
+    <id>http://nurpax.github.com/posts/2019-12-04-argparse.html</id>
+    <published>2019-12-04T00:00:00Z</published>
+    <updated>2019-12-04T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>How I use argparse.</p>
+<h2 id="basic-main-stub">Basic main() stub</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="im">import</span> argparse</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="im">import</span> sys</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">_examples <span class="op">=</span> <span class="st">&#39;&#39;&#39;examples:</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="st">  # Run x, y, z</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="st">  python </span><span class="sc">%(prog)s</span><span class="st"> --output=tmp</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="st">&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="kw">def</span> main():</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">    parser <span class="op">=</span> argparse.ArgumentParser(</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">        description<span class="op">=</span><span class="st">&#39;Argparse test&#39;</span>,</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">        epilog<span class="op">=</span>_examples,</a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">        formatter_class<span class="op">=</span>argparse.RawDescriptionHelpFormatter</a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">    )</a>
+<a class="sourceLine" id="cb1-16" data-line-number="16">    parser.add_argument(<span class="st">&#39;--output&#39;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Specify output dir&#39;</span>)</a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">    args <span class="op">=</span> parser.parse_args()</a>
+<a class="sourceLine" id="cb1-18" data-line-number="18">    <span class="bu">print</span> (<span class="bu">vars</span>(args))</a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</a>
+<a class="sourceLine" id="cb1-21" data-line-number="21">    main()</a></code></pre></div>
+<h2 id="argument-default-values">Argument default values</h2>
+<p>Use <code>default=</code> to set a default value for an argument.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1">parser.add_argument(<span class="st">&#39;--format&#39;</span>, default<span class="op">=</span><span class="st">&#39;html&#39;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Specify output format&#39;</span>, metavar<span class="op">=</span><span class="st">&#39;FMT&#39;</span>)</a></code></pre></div>
+<p>To show default values in your help strings, use <code>%(default)s</code> interpolation:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1">parser.add_argument(<span class="st">&#39;--format&#39;</span>, default<span class="op">=</span><span class="st">&#39;html&#39;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Specify output format (default: </span><span class="sc">%(default)s</span><span class="st">)&#39;</span>)</a></code></pre></div>
+<p>If the default value is type <code>str</code>, it will be run through your <code>type</code> callback, otherwise it’s returned directly. This can be helpful when authoring help strings containing <code>%(default)s</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" data-line-number="1">parser.add_argument(<span class="st">&#39;--enable-x&#39;</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="va">True</span>,</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Enable feature x (default: </span><span class="sc">%(default)s</span><span class="st">)&#39;</span>)</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="co"># outputs: --enable-x ENABLE_X   Enable feature x (default: True)</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">parser.add_argument(<span class="st">&#39;--enable-y&#39;</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="st">&#39;y&#39;</span>,</a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">    <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Enable feature y (default: </span><span class="sc">%(default)s</span><span class="st">)&#39;</span>)</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="co"># outputs: --enable-y ENABLE_Y   Enable feature y (default: y)</span></a></code></pre></div>
+<h2 id="argument-types">Argument types</h2>
+<p>Use <code>type=</code> to set your own type conversion function. A <code>type</code> is just a function that converts a string to some output type.</p>
+<p><strong>Numbers.</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1">parser.add_argument(<span class="st">&#39;--int-val&#39;</span>, <span class="bu">type</span><span class="op">=</span><span class="bu">int</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Specify integer&#39;</span>, metavar<span class="op">=</span><span class="st">&#39;N&#39;</span>)</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">parser.add_argument(<span class="st">&#39;--flt-val&#39;</span>, <span class="bu">type</span><span class="op">=</span><span class="bu">float</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Specify float&#39;</span>, metavar<span class="op">=</span><span class="st">&#39;N&#39;</span>)</a></code></pre></div>
+<p><strong>Booleans.</strong> You can’t use <code>type=bool</code> for booleans (try running <code>bool('True')</code> in the REPL if you want to know why.) Do this instead:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">def</span> _str_to_bool(v):</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">    <span class="cf">if</span> <span class="bu">isinstance</span>(v, <span class="bu">bool</span>):</a>
+<a class="sourceLine" id="cb6-3" data-line-number="3">        <span class="cf">return</span> v</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">    <span class="cf">if</span> v.lower() <span class="kw">in</span> (<span class="st">&#39;yes&#39;</span>, <span class="st">&#39;true&#39;</span>, <span class="st">&#39;t&#39;</span>, <span class="st">&#39;y&#39;</span>, <span class="st">&#39;1&#39;</span>):</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">        <span class="cf">return</span> <span class="va">True</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">    <span class="cf">elif</span> v.lower() <span class="kw">in</span> (<span class="st">&#39;no&#39;</span>, <span class="st">&#39;false&#39;</span>, <span class="st">&#39;f&#39;</span>, <span class="st">&#39;n&#39;</span>, <span class="st">&#39;0&#39;</span>):</a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">        <span class="cf">return</span> <span class="va">False</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">    <span class="cf">else</span>:</a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">        <span class="cf">raise</span> argparse.ArgumentTypeError(<span class="st">&#39;Boolean value expected.&#39;</span>)</a>
+<a class="sourceLine" id="cb6-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">parser.add_argument(<span class="st">&#39;--enable-output&#39;</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="va">False</span>, metavar<span class="op">=</span><span class="st">&#39;BOOL&#39;</span>)</a></code></pre></div>
+<p><strong>Comma-separated list of values.</strong> How to specify a list of strings like <code>python foo.py --tags=apple,fruit</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">def</span> _parse_comma_sep(s):</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">    <span class="cf">if</span> (s <span class="kw">is</span> <span class="va">None</span>) <span class="kw">or</span> (s <span class="op">==</span> <span class="st">&#39;&#39;</span>):</a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">        <span class="cf">return</span> []</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="cf">return</span> s.split(<span class="st">&#39;,&#39;</span>)</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">parser.add_argument(<span class="st">&#39;--tags&#39;</span>, <span class="bu">type</span><span class="op">=</span>_parse_comma_sep, default<span class="op">=</span><span class="st">&#39;&#39;</span>, metavar<span class="op">=</span><span class="st">&#39;TAGS&#39;</span>)</a></code></pre></div>
+<h2 id="subcommands">Subcommands</h2>
+<p>Add a subcommand called <code>log</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="im">import</span> argparse</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="im">import</span> sys</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">_examples <span class="op">=</span> <span class="st">&#39;&#39;&#39;examples:</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6"><span class="st">  # Show log in html format</span></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="st">  python </span><span class="sc">%(prog)s</span><span class="st"> log --format=html</span></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="st">&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb8-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb8-10" data-line-number="10"><span class="kw">def</span> main():</a>
+<a class="sourceLine" id="cb8-11" data-line-number="11">    parser <span class="op">=</span> argparse.ArgumentParser(</a>
+<a class="sourceLine" id="cb8-12" data-line-number="12">        description<span class="op">=</span><span class="st">&#39;Argparse test&#39;</span>,</a>
+<a class="sourceLine" id="cb8-13" data-line-number="13">        epilog<span class="op">=</span>_examples,</a>
+<a class="sourceLine" id="cb8-14" data-line-number="14">        formatter_class<span class="op">=</span>argparse.RawDescriptionHelpFormatter</a>
+<a class="sourceLine" id="cb8-15" data-line-number="15">    )</a>
+<a class="sourceLine" id="cb8-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb8-17" data-line-number="17">    subparsers <span class="op">=</span> parser.add_subparsers(<span class="bu">help</span><span class="op">=</span><span class="st">&#39;Sub-commands&#39;</span>, dest<span class="op">=</span><span class="st">&#39;command&#39;</span>)</a>
+<a class="sourceLine" id="cb8-18" data-line-number="18">    parser_log <span class="op">=</span> subparsers.add_parser(<span class="st">&#39;log&#39;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Show log&#39;</span>)</a>
+<a class="sourceLine" id="cb8-19" data-line-number="19">    parser_log.add_argument(<span class="st">&#39;--format&#39;</span>, <span class="bu">help</span><span class="op">=</span><span class="st">&#39;Specify format&#39;</span>, choices<span class="op">=</span>[<span class="st">&#39;raw&#39;</span>, <span class="st">&#39;html&#39;</span>])</a>
+<a class="sourceLine" id="cb8-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb8-21" data-line-number="21">    args <span class="op">=</span> parser.parse_args()</a>
+<a class="sourceLine" id="cb8-22" data-line-number="22">    <span class="bu">print</span> (<span class="bu">vars</span>(args))</a>
+<a class="sourceLine" id="cb8-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb8-24" data-line-number="24"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</a>
+<a class="sourceLine" id="cb8-25" data-line-number="25">    main()</a></code></pre></div>]]></summary>
+</entry>
+<entry>
     <title>Dirty tricks 6502 programmers use</title>
     <link href="http://nurpax.github.com/posts/2019-08-18-dirty-tricks-6502-programmers-use.html" />
     <id>http://nurpax.github.com/posts/2019-08-18-dirty-tricks-6502-programmers-use.html</id>
@@ -1483,197 +1576,6 @@ ffmpeg -i screencap.avi -c:v libx264 -pix_fmt yuv420p -preset veryslow -crf 5 fo
 ffmpeg -i input.mov -vf scale=320:240 output_%04d.png</code></pre>
 <p>Convert a MOV file into an MP4 (e.g., for uploading Quicktime screencaps to Twitter):</p>
 <pre><code>ffmpeg -i movie.mov -vcodec copy -acodec copy out.mp4</code></pre>]]></summary>
-</entry>
-<entry>
-    <title>BINTRIS C64 title screen implementation (series part 3)</title>
-    <link href="http://nurpax.github.com/posts/2018-05-27-bintris-on-c64-part-3.html" />
-    <id>http://nurpax.github.com/posts/2018-05-27-bintris-on-c64-part-3.html</id>
-    <published>2018-05-27T00:00:00Z</published>
-    <updated>2018-05-27T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>(Looking for the BINTRIS C64 disk image? Find it <a href="/posts/2018-05-21-bintris-on-c64-part-2.html">here</a>.)</p>
-<p>This blog post discusses the implementation of the BINTRIS C64 title screen.</p>
-<p>The title screen consists of a multicolor bitmap at the top and a text mode scroller at the bottom. Here’s how it looks like:</p>
-<div class="youtube">
-<iframe class="video" src="https://www.youtube.com/embed/akaQcBNG9TE?rel=0&amp;controls=1&amp;showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-</iframe>
-</div>
-<p>This is a pretty standard text mode scroller: use the horizontal scroll register <code>$d016</code> for 0-7 pixel shifting. When you reach pixel offset 7, reset to pixel offset 0 and move the whole character row left by one character (8 pixels). Additionally, the scroller text is colored with raster bars.</p>
-<p>But wait a minute.. The screen is in multicolor bitmap mode. How can we use a <em>text mode</em> scroller at the bottom? Fortunately it’s pretty easy to mix bitmap and text mode within a single frame. Just switch to text-mode right before raster beam reaches the scroller, and switch back to bitmap mode once the raster beam is past it.</p>
-<p>The below animation illustrates how the raster IRQs trigger:</p>
-<p><?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
-    "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 716 539"><style>text { font-family: "arial";}
-
-#rasterbeam {
-  animation-name: rasterline;
-  animation-duration: 4s;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
-}
-@keyframes rasterline {
-  from { transform: translateY(26.0px); }
-  to { transform: translateY(506.0px);  }
-}
-#hilite1 {
-  animation-name: hilite1;
-  animation-duration: 4s;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
-  transform-origin: center;
-  transform-box: fill-box;
-}
-@keyframes hilite1 {
-  0% { opacity:0; }
-  6.25% { opacity:0; }
-  6.26% { opacity:1; }
-  16.25% { opacity:0; }
-  100% { opacity:0; }
-}
-
-#hilite2 {
-  animation-name: hilite2;
-  animation-duration: 4s;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
-  transform-origin: center;
-  transform-box: fill-box;
-}
-@keyframes hilite2 {
-  0% { opacity:0; }
-  86.666664% { opacity:0; }
-  86.67667% { opacity:1; }
-  96.666664% { opacity:0; }
-  100% { opacity:0; }
-}
-
-#hilite3 {
-  animation-name: hilite3;
-  animation-duration: 4s;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
-  transform-origin: center;
-  transform-box: fill-box;
-}
-@keyframes hilite3 {
-  0% { opacity:0; }
-  88.333336% { opacity:0; }
-  88.34334% { opacity:1; }
-  98.333336% { opacity:0; }
-  100% { opacity:0; }
-}
-
-</style><g><image width="716.0" height="539.0" xlink:href="/images/bintris/titlescreen_for_blog.png" /><rect width="748.75" height="2.0" x="-16.875" y="56.0" fill="#008d46" /><rect width="748.75" height="2.0" x="-16.875" y="442.0" fill="#cf4600" /><rect width="748.75" height="2.0" x="-16.875" y="450.0" fill="#0046cf" /><rect width="748.75" height="2.0" x="-16.875" y="0.0" id="rasterbeam" fill="#ffffff" opacity="0.7" /></g><g><g id="title"><rect width="14.0" height="14.0" x="148.0" y="508.0" fill="#008d46" /><text x="167.0" y="521.0" fill="white">bitmap mode</text><rect width="130.0" height="23.0" x="145.0" y="504.0" fill="#fff" id="hilite1" /></g><g id="title"><rect width="14.0" height="14.0" x="298.0" y="508.0" fill="#cf4600" /><text x="317.0" y="521.0" fill="white">text mode</text><rect width="130.0" height="23.0" x="295.0" y="504.0" fill="#fff" id="hilite2" /></g><g id="title"><rect width="14.0" height="14.0" x="433.0" y="508.0" fill="#0046cf" /><text x="452.0" y="521.0" fill="white">raster bar</text><rect width="130.0" height="23.0" x="430.0" y="504.0" fill="#fff" id="hilite3" /></g></g></svg></p>
-<p>In summary:</p>
-<ul>
-<li>Line 16 (<code>irq0</code>): set multicolor bitmap mode, move character row left by one character if <code>framecount&amp;7==0</code>.</li>
-<li>Line 238 (<code>irq1</code>): switch to text mode, set horizontal scroll based on <code>framecount</code> bits 0-2</li>
-<li>Line 241 (<code>irq2</code>): raster bars (using the <a href="http://codebase64.org/doku.php?id=base:double_irq_explained">double IRQ trick</a> for stable raster), loop back to Line 16</li>
-</ul>
-<p>And the same in assembly:</p>
-<pre><code>.const irq0line = 16
-.const textmodeswitchline = 50+200-12
-.const rastercolorline = 50+200-9
-
-framecount: .byte 0     // increased at the beginning of each frame
-
-// Macro to save&amp;restore registers and setup the next routine in the
-// raster IRQ chain.
-.macro irq_start(end_lbl) {
-    sta end_lbl-6
-    stx end_lbl-4
-    sty end_lbl-2
-}
-
-.macro irq_end(next, line) {
-    :EndIRQ(next, line, false)
-    lda #$00
-    ldx #$00
-    ldy #$00
-    rti
-}
-
-
-irq0: {
-    irq_start(end)
-
-    inc framecount
-
-    // Set screen mode
-    lda #$3b // bitmap mode
-    sta $d011
-    lda #$18 // multicolor
-    sta $d016
-    // screen memory ptr
-    lda #$18
-    sta $d018
-
-    jsr scroller_update_char_row
-
-    irq_end(irq1, textmodeswitchline)
-end:
-    rti
-}
-
-irq1: {
-    irq_start(end)
-
-    lda #$1b        // screen on, text mode
-    sta $d011
-
-    lda framecount
-    and #7
-    eor #7 // xor bits 0-2 and leave bit 3 zero for 38 column mode
-    sta $d016
-
-    lda #$10 // bank + $0400
-    sta $d018
-
-    irq_end(irq2, rastercolorline)
-end:
-}
-
-// Stable raster IRQ for color bars
-irq2: {
-    double_irq(end, irq3)
-
-irq3:
-    txs
-
-    // Wait exactly 9 * (2+3) cycles so that the raster line is in the border
-    ldx #$09
-    dex
-    bne *-1
-
-    // First line is a bad line so we have only 23 cycles!
-    lda colors1+0           // 4 cycles
-    sta $d021               // 4 cycles
-    .for (var i = 0; i &lt; 6; i++) {
-        nop
-    }
-    bit $fe
-
-    // Next 7 lines are normal lines, so 63 cycles per color change
-    ldx #$01
-!:
-    lda colors1,x           // 4 cycles
-    sta $d021               // 4 cycles
-    .for (var i = 0; i &lt; (63-15)/2; i++) {
-        nop
-    }
-    inx                     // 2
-    cpx #colorend-colors1   // 2
-    bne !-                  // 3
-
-    lda #0
-    sta $d021
-
-    irq_end(irq0, irq0line)
-end:
-}</code></pre>
-<p>I put up a full stand-alone version of this <a href="https://github.com/nurpax/c64-samples/tree/master/text-scroller">on github</a> – this should compile on KickAssembler. It’s a slightly cleaned up version of the BINTRIS titlescreen. For some historical reason I used VIC bank 1 instead of the default and made screen RAM reside at <code>$4400</code> instead of <code>$0400</code>. This can make the source a bit harder to follow.</p>
-<h2 id="next-in-series">Next in series</h2>
-<p>The next post will discuss how the main BINTRIS game screen is rendered.</p>]]></summary>
 </entry>
 
 </feed>
