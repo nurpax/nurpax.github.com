@@ -8,8 +8,80 @@
         <name>Janne Hellsten</name>
         <email>jjhellst@gmail.com</email>
     </author>
-    <updated>2019-12-04T00:00:00Z</updated>
+    <updated>2021-02-22T00:00:00Z</updated>
     <entry>
+    <title>Debugging C64jasm projects with VICE and C64Debugger</title>
+    <link href="http://nurpax.github.com/posts/2021-02-22-c64jasm-debug-info.html" />
+    <id>http://nurpax.github.com/posts/2021-02-22-c64jasm-debug-info.html</id>
+    <published>2021-02-22T00:00:00Z</published>
+    <updated>2021-02-22T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>This is a tutorial on how to export debug info from projects compiled with <a href="https://nurpax.github.io/c64jasm/">c64jasm</a> for use with <a href="https://vice-emu.sourceforge.io/">VICE</a> and <a href="https://sourceforge.net/projects/c64-debugger/">C64Debugger</a>.</p>
+<p>C64jasm 0.9.1 added debug symbol output support for VICE and C64Debugger. The debug info files come in two flavors:</p>
+<ul>
+<li><code>--vice-moncommands</code>: VICE monitor commands file to show label names in the monitor.</li>
+<li><code>--c64debugger-symbols</code>: KickAss debug symbols for C64Debugger. Maps program addresses to source locations enabling source level debugging.</li>
+</ul>
+<p>Both flavors support setting breakpoints in the assembly source with the <code>!break</code> directive.</p>
+<h1 id="vice-monitor-commands">VICE monitor commands</h1>
+<p>To enable easier debugging with VICE, you can use the <code>--vice-moncommands</code> option to generate a program address to label name mapping script (moncommands). This script also includes break commands if any of the source files used the <code>!break</code> directive to set breakpoints.</p>
+<p>Here’s how to output and use a moncommands script. You can try this with the c64jasm git repository or your own assembly project.</p>
+<pre><code>git clone https://github.com/nurpax/c64jasm.git
+cd c64jasm/examples/content-pipe</code></pre>
+<p>Edit src/main.asm and add a <code>!break</code> as below:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb2-1" data-line-number="1">+basic_start(<span class="bu">entry</span>)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co">;--------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co">; Execution starts here</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">;--------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="bu">entry</span>: {</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    !<span class="pp">break</span>          <span class="co">; 👈 add breakpoint here!</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">    lda #<span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">    <span class="bu">js</span>r music.init</a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">    sei</a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">    lda #<span class="bn">$35        </span><span class="co">; Bank out kernal and basic</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">    sta<span class="bn"> $01         </span><span class="co">; $e000-$ffff</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">    +setup_irq(irq_top, irq_top_line)</a>
+<a class="sourceLine" id="cb2-14" data-line-number="14">    <span class="bu">cli</span></a></code></pre></div>
+<p>Then compile the project:</p>
+<pre><code>c64jasm src/main.asm --vice-moncommands=main.vs --out main.prg</code></pre>
+<p>This produces two files: <code>main.prg</code> and <code>main.vs</code>. The contents of <code>main.vs</code> should look something like this:</p>
+<pre><code>al C:080d .entry
+al C:0854 .entry::frame_loop
+al C:0857 .entry::vsync
+al C:0868 .animate_sprites
+al C:086d .animate_sprites::anim_sprites
+al C:0891 .animate_sprites::anim_sprites_x
+[bunch of lines omitted..]
+al C:20e8 .pet_rle::decode::decode_line::dst
+al C:20f2 .background_petscii_rle</code></pre>
+<p>You can use these files in VICE like so:</p>
+<pre><code>x64 -moncommands main.vs main.prg</code></pre>
+<p>If everything went fine, VICE should break into the monitor at the start of the example project. Depending on your VICE build and configuration, you will see the monitor either in a separate window (preferred) or in the VICE C64 window like on my MBP:</p>
+<div class="center">
+<img width="100%" src="/images/c64/c64jasm/vice-monitor-disasm.png" />
+</div>
+<p>You can step through instructions with <code>step</code>, disassemble from the current program counter with <code>disass</code> or continue execution with <code>g</code>. (You should be able to enter the monitor also using a keyboard shortcut <code>ALT-H</code> but I keep pressing it and nothing happens. 🤷‍♀️)</p>
+<h1 id="c64debugger-and-source-level-debugging">C64Debugger and source-level debugging</h1>
+<p>Using the same example project from above, here’s how you will build the project and produce C64Debugger compatible debug symbols:</p>
+<pre><code>c64jasm src/main.asm --c64debugger-symbols=main.dbg --out main.prg</code></pre>
+<p>You can start C64Debugger with the below command. (It takes a bit of time for the debugger to start – there may be better way to run a .prg with C64Debugger.)</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># This invocation assumes KickAss debug symbols reside in main.dbg, as generated</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co"># above with c64jasm.</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="ex">c64debugger</span> -wait 2500 -autojmp -layout 9 -prg main.prg</a></code></pre></div>
+<p>C64Debugger should break at the start of the example project and you should see something like this:</p>
+<div class="center">
+<img width="100%" src="/images/c64/c64jasm/c64debugger-entry-break.png" />
+</div>
+<p>This is where it gets interesting. C64Debugger supports source-level debugging so that you can see a side-by-side view of your program’s disassembly and original assembly source code. You can enter this mode with <code>CTRL-SHIFT-F3</code> and your C64Debugger should show a view like this:</p>
+<div class="center">
+<img width="100%" src="/images/c64/c64jasm/c64debugger-source-debug.png" />
+</div>
+<p>You can step through instructions by pressing <code>F10</code> and continue execution with <code>F11</code>.</p>
+<p>Here’s a nice summary of C64Debugger keyboard shortcuts: <a href="https://github.com/sunsided/c64-debugger/blob/github/Docs/C64%20Debugger%20shortcuts%20v06458.pdf">C64 Debugger shortcuts v06458.pdf</a>. I couldn’t find this nicely formatted PDF from their project page.</p>
+<p>This is it for this debug info tutorial. Happy debugging!</p>]]></summary>
+</entry>
+<entry>
     <title>Python argparse</title>
     <link href="http://nurpax.github.com/posts/2019-12-04-argparse.html" />
     <id>http://nurpax.github.com/posts/2019-12-04-argparse.html</id>
@@ -1538,47 +1610,6 @@ xloop:
 <p>That’s roughly 31 clock cycles per block. In the <a href="http://nurpax.com/bintris">BINTRIS web version</a> each block is a bunch of SVG <code>&lt;rect&gt;</code> elements wrapped in a <code>&lt;g&gt;</code> element wrapped in a <code>React.PureComponent</code>. I’m pretty sure the cost to render a block in the web version is at least a couple of orders of magnitude higher. That’s not React’s fault of course, I should totally get the blame for abusing React for gamedev like this.</p>
 <h2 id="next-in-series">Next in series</h2>
 <p>The next post will discuss vertical scrolling with flexible line distance (FLD) and will also go into details on how the BINTRIS logo warp was done.</p>]]></summary>
-</entry>
-<entry>
-    <title>Handy command-line incantations</title>
-    <link href="http://nurpax.github.com/posts/2018-05-28-handy-command-line-incantations.html" />
-    <id>http://nurpax.github.com/posts/2018-05-28-handy-command-line-incantations.html</id>
-    <published>2018-05-28T00:00:00Z</published>
-    <updated>2018-05-28T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>Just some command line copy&amp;pastes that I always tend to forget. Mainly ImageMagick and ffmpeg.</p>
-<h2 id="image-files">Image files</h2>
-<p>View image width, height &amp; format:</p>
-<pre><code>identify &lt;imagefile&gt;</code></pre>
-<p>Make a .gif anim from a collection of image files:</p>
-<pre><code>convert -loop 0 -delay 300 image1.png image2.png image3.png result.gif</code></pre>
-<p>Resize an image with point-sampling while NOT preserving aspect-ratio (ImageMagick forces original aspect ratio without warning):</p>
-<pre><code>convert input.png -sample 640x200! output.png</code></pre>
-<p>Double image width and height with point-sampling:</p>
-<pre><code>convert in.png -filter point -resize 200% out.png</code></pre>
-<p>Stack two images side by side:</p>
-<pre><code>convert left.png right.png -gravity center +append out.png</code></pre>
-<p>Crop the input image and then make a .gif (<code>+repage</code> is required to actually crop the output image dimensions too):</p>
-<pre><code># 104x30 is the size of the crop rectangle
-# +62+22 is an offset to the top/left corner of the crop area
-convert -crop 104x30+62+22 +repage -loop 0 -delay 300 image?.png result.gif</code></pre>
-<p>Convert a .pdf to .png files at a 1080p resolution (useful to export high res PNGs out of Google Slides):</p>
-<pre><code># In Google Slides: Download as PDF
-magick convert -density 300 input.pdf -quality 100 -resize x1080 &quot;slide.png&quot;</code></pre>
-<h2 id="video-files">Video files</h2>
-<p>View video file format details:</p>
-<pre><code>ffprobe &lt;videofile&gt;</code></pre>
-<p>Convert a VICE video capture .avi (in DivX format) to MP4:</p>
-<pre><code>ffmpeg -i screencap.avi -c:v libx264 -crf 19 -preset slow -c:a libvo_aacenc -b:a 192k -ac 2 out.mp4
-# or a simpler version (save to .avi the lossless FFV1 codec in VICE)
-ffmpeg -i screencap.avi -c:v libx264 -pix_fmt yuv420p -preset veryslow -crf 5 foo.mp4</code></pre>
-<p>Convert a series of image files into an MP4:</p>
-<pre><code>ffmpeg -r 25 -i &#39;frame_%04d.png&#39; -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4</code></pre>
-<p>Convert a MOV/MP4 into a series of image files:</p>
-<pre><code>ffmpeg -i input.mov output_%04d.png
-# with scaling to 320x240 resolution
-ffmpeg -i input.mov -vf scale=320:240 output_%04d.png</code></pre>
-<p>Convert a MOV file into an MP4 (e.g., for uploading Quicktime screencaps to Twitter):</p>
-<pre><code>ffmpeg -i movie.mov -vcodec copy -acodec copy out.mp4</code></pre>]]></summary>
 </entry>
 
 </feed>
