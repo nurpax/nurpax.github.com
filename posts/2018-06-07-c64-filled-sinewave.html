@@ -52,70 +52,70 @@
 <p>So I recently made this little sinewave demo effect on the Commodore 64:</p>
 <p><img class="img-pixelated img-medium-wide" src="../images/c64/sine/sinewave-gifanim-2018-05-31.gif" /></p>
 <p>This generated a lot of lively discussion on <a href="https://twitter.com/nurpax/status/1002288831511580672">twitter</a> and <a href="https://www.reddit.com/r/c64/comments/8o9aoh/some_charset_hacking_from_last_week/">/r/c64</a>. A bunch of people were curious as to how it works and I promised to explain it on my blog.</p>
-<p>The main idea is to use character mode with a custom character set. I sample y-coordinate every 8 pixels to produce a list of line segments <span class="math inline">[(0, <em>y</em><sub>0</sub>), (8, <em>y</em><sub>1</sub>), (16, <em>y</em><sub>2</sub>), ..., (320, <em>y</em><sub>40</sub>)]</span>. In the below animation, you can see these line segments along with blue rectangles that signify which 8x8 character blocks intersect the line segments.</p>
+<p>The main idea is to use character mode with a custom character set. I sample y-coordinate every 8 pixels to produce a list of line segments <span class="math inline">[(0,<em>y</em><sub>0</sub>),(8,<em>y</em><sub>1</sub>),(16,<em>y</em><sub>2</sub>),...,(320,<em>y</em><sub>40</sub>)]</span>. In the below animation, you can see these line segments along with blue rectangles that signify which 8x8 character blocks intersect the line segments.</p>
 <p><img class="img-medium-wide" src="../images/c64/sine/sinewave-block-cover.gif" /></p>
 <p>The goal then is to fill all the pixels below a line segment with light blue and everything above it with dark blue.</p>
 <p>Here’s how you might code this up in Python:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co"># Compute sine wave by stepping every 8th pixel</span></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">ypos <span class="op">=</span> [sinewave(phase, x) <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">+</span> <span class="dv">8</span>, <span class="dv">8</span>)]</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">clear_screen(BLUE)</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co"># Loop through each line segment</span></a>
-<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">//</span> <span class="dv">8</span>):</a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">    x0 <span class="op">=</span> x <span class="op">*</span> <span class="dv">8</span></a>
-<a class="sourceLine" id="cb1-9" data-line-number="9">    x1 <span class="op">=</span> x <span class="op">*</span> <span class="dv">8</span> <span class="op">+</span> <span class="dv">8</span></a>
-<a class="sourceLine" id="cb1-10" data-line-number="10">    y0 <span class="op">=</span> ypos[x]</a>
-<a class="sourceLine" id="cb1-11" data-line-number="11">    y1 <span class="op">=</span> ypos[x <span class="op">+</span> <span class="dv">1</span>]</a>
-<a class="sourceLine" id="cb1-12" data-line-number="12">    <span class="co"># Fill everything below the (x0,y0)-(x1,y1) line segment</span></a>
-<a class="sourceLine" id="cb1-13" data-line-number="13">    <span class="co"># with LIGHT_BLUE</span></a>
-<a class="sourceLine" id="cb1-14" data-line-number="14">    fill_polygon([(x0, y0), (x1, y1), (x1, <span class="dv">200</span>), (x0, <span class="dv">200</span>)], LIGHT_BLUE)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute sine wave by stepping every 8th pixel</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>ypos <span class="op">=</span> [sinewave(phase, x) <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">+</span> <span class="dv">8</span>, <span class="dv">8</span>)]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>clear_screen(BLUE)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop through each line segment</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">//</span> <span class="dv">8</span>):</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    x0 <span class="op">=</span> x <span class="op">*</span> <span class="dv">8</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    x1 <span class="op">=</span> x <span class="op">*</span> <span class="dv">8</span> <span class="op">+</span> <span class="dv">8</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    y0 <span class="op">=</span> ypos[x]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    y1 <span class="op">=</span> ypos[x <span class="op">+</span> <span class="dv">1</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Fill everything below the (x0,y0)-(x1,y1) line segment</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># with LIGHT_BLUE</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    fill_polygon([(x0, y0), (x1, y1), (x1, <span class="dv">200</span>), (x0, <span class="dv">200</span>)], LIGHT_BLUE)</span></code></pre></div>
 <p>Unfortunately using a polygon fill routine in C64 bitmap mode would be pretty slow. To make this run fast, I precompute the different ways a line segment can intersect 8x8 character blocks using an edge function rasterizer written in Python. Here’s an image that shows some combinations of a line hitting 3 vertically stacked 8x8 blocks:</p>
 <p><img class="img-pixelated img-smallest" src="../images/c64/sine/sinewave-fill-closeup.gif" /></p>
 <p>Here’s Python code for the block rasterizer:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"> <span class="co"># one bit of subpixel precision</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"> subpix <span class="op">=</span> <span class="dv">2</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="kw">def</span> mk8x8(yoffs, a, b, c):</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">    arr <span class="op">=</span> [<span class="dv">0</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span> <span class="op">*</span> <span class="dv">8</span>)]</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span>):</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">        yy <span class="op">=</span> (y <span class="op">+</span> yoffs) <span class="op">*</span> subpix</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">        <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span>):</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">            xx <span class="op">=</span> x <span class="op">*</span> subpix</a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">            <span class="cf">if</span> a <span class="op">*</span> xx <span class="op">+</span> b <span class="op">*</span> yy <span class="op">+</span> c <span class="op">&gt;=</span> <span class="fl">0.0</span>:</a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">                arr[x <span class="op">+</span> y <span class="op">*</span> <span class="dv">8</span>] <span class="op">=</span> <span class="dv">1</span></a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">    <span class="cf">return</span> arr</a>
-<a class="sourceLine" id="cb2-13" data-line-number="13"></a>
-<a class="sourceLine" id="cb2-14" data-line-number="14"><span class="kw">def</span> construct_fill_table():</a>
-<a class="sourceLine" id="cb2-15" data-line-number="15">    x0 <span class="op">=</span> <span class="dv">0</span></a>
-<a class="sourceLine" id="cb2-16" data-line-number="16">    x1 <span class="op">=</span> <span class="dv">8</span> <span class="op">*</span> subpix</a>
-<a class="sourceLine" id="cb2-17" data-line-number="17">    fill_tbl <span class="op">=</span> [<span class="va">None</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span> <span class="op">*</span> subpix)]</a>
-<a class="sourceLine" id="cb2-18" data-line-number="18">    <span class="cf">for</span> y0 <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span> <span class="op">*</span> subpix):</a>
-<a class="sourceLine" id="cb2-19" data-line-number="19">        fill_tbl[y0] <span class="op">=</span> [<span class="va">None</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span> <span class="op">*</span> subpix)]</a>
-<a class="sourceLine" id="cb2-20" data-line-number="20">        <span class="cf">for</span> yi1 <span class="kw">in</span> <span class="bu">range</span>(<span class="op">-</span><span class="dv">4</span> <span class="op">*</span> subpix, <span class="dv">4</span> <span class="op">*</span> subpix):</a>
-<a class="sourceLine" id="cb2-21" data-line-number="21">            y1 <span class="op">=</span> y0 <span class="op">+</span> yi1</a>
-<a class="sourceLine" id="cb2-22" data-line-number="22">            a <span class="op">=</span> <span class="op">-</span>(y1 <span class="op">-</span> y0)</a>
-<a class="sourceLine" id="cb2-23" data-line-number="23">            b <span class="op">=</span> (x1 <span class="op">-</span> x0)</a>
-<a class="sourceLine" id="cb2-24" data-line-number="24">            c <span class="op">=</span> <span class="op">-</span>(a <span class="op">*</span> x0 <span class="op">+</span> b <span class="op">*</span> y0)</a>
-<a class="sourceLine" id="cb2-25" data-line-number="25">            chr_a <span class="op">=</span> mk8x8(<span class="op">-</span><span class="dv">8</span>, a, b, c)</a>
-<a class="sourceLine" id="cb2-26" data-line-number="26">            chr_b <span class="op">=</span> mk8x8(<span class="dv">0</span>, a, b, c)</a>
-<a class="sourceLine" id="cb2-27" data-line-number="27">            chr_c <span class="op">=</span> mk8x8(<span class="dv">8</span>, a, b, c)</a>
-<a class="sourceLine" id="cb2-28" data-line-number="28">            fill_tbl[y0][yi1 <span class="op">+</span> <span class="dv">4</span> <span class="op">*</span> subpix] <span class="op">=</span> [chr_a, chr_b, chr_c]</a>
-<a class="sourceLine" id="cb2-29" data-line-number="29">    <span class="cf">return</span> fill_tbl</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a> <span class="co"># one bit of subpixel precision</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> subpix <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mk8x8(yoffs, a, b, c):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    arr <span class="op">=</span> [<span class="dv">0</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span> <span class="op">*</span> <span class="dv">8</span>)]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span>):</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        yy <span class="op">=</span> (y <span class="op">+</span> yoffs) <span class="op">*</span> subpix</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span>):</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            xx <span class="op">=</span> x <span class="op">*</span> subpix</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> a <span class="op">*</span> xx <span class="op">+</span> b <span class="op">*</span> yy <span class="op">+</span> c <span class="op">&gt;=</span> <span class="fl">0.0</span>:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                arr[x <span class="op">+</span> y <span class="op">*</span> <span class="dv">8</span>] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> arr</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> construct_fill_table():</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    x0 <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    x1 <span class="op">=</span> <span class="dv">8</span> <span class="op">*</span> subpix</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    fill_tbl <span class="op">=</span> [<span class="va">None</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span> <span class="op">*</span> subpix)]</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y0 <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span> <span class="op">*</span> subpix):</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        fill_tbl[y0] <span class="op">=</span> [<span class="va">None</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">8</span> <span class="op">*</span> subpix)]</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> yi1 <span class="kw">in</span> <span class="bu">range</span>(<span class="op">-</span><span class="dv">4</span> <span class="op">*</span> subpix, <span class="dv">4</span> <span class="op">*</span> subpix):</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            y1 <span class="op">=</span> y0 <span class="op">+</span> yi1</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            a <span class="op">=</span> <span class="op">-</span>(y1 <span class="op">-</span> y0)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            b <span class="op">=</span> (x1 <span class="op">-</span> x0)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>            c <span class="op">=</span> <span class="op">-</span>(a <span class="op">*</span> x0 <span class="op">+</span> b <span class="op">*</span> y0)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>            chr_a <span class="op">=</span> mk8x8(<span class="op">-</span><span class="dv">8</span>, a, b, c)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>            chr_b <span class="op">=</span> mk8x8(<span class="dv">0</span>, a, b, c)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            chr_c <span class="op">=</span> mk8x8(<span class="dv">8</span>, a, b, c)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>            fill_tbl[y0][yi1 <span class="op">+</span> <span class="dv">4</span> <span class="op">*</span> subpix] <span class="op">=</span> [chr_a, chr_b, chr_c]</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fill_tbl</span></code></pre></div>
 <p>A Python renderer using the table generated <code>construct_fill_table()</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">def</span> draw_fills(ypos):</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">    <span class="cf">for</span> xi <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">//</span> <span class="dv">8</span>):</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">        x <span class="op">=</span> xi <span class="op">*</span> <span class="dv">8</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">        y0 <span class="op">=</span> <span class="bu">int</span>((ypos[xi] <span class="op">*</span> subpix))</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">        y1 <span class="op">=</span> <span class="bu">int</span>((ypos[xi <span class="op">+</span> <span class="dv">1</span>] <span class="op">*</span> subpix))</a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">        yy0 <span class="op">=</span> y0 <span class="op">&amp;</span> <span class="op">~</span>(<span class="dv">8</span> <span class="op">*</span> subpix <span class="op">-</span> <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">        yy1 <span class="op">=</span> y1 <span class="op">&amp;</span> <span class="op">~</span>(<span class="dv">8</span> <span class="op">*</span> subpix <span class="op">-</span> <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">        y0 <span class="op">-=</span> yy0</a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">        y1 <span class="op">-=</span> yy0</a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">        chrs <span class="op">=</span> fill_tbl[y0][y1 <span class="op">-</span> y0 <span class="op">+</span> <span class="dv">4</span> <span class="op">*</span> subpix]</a>
-<a class="sourceLine" id="cb3-11" data-line-number="11">        blit_8x8(x, yy0 <span class="op">/</span> subpix <span class="op">-</span> <span class="dv">8</span>, chrs[<span class="dv">0</span>])</a>
-<a class="sourceLine" id="cb3-12" data-line-number="12">        blit_8x8(x, yy0 <span class="op">/</span> subpix, chrs[<span class="dv">1</span>])</a>
-<a class="sourceLine" id="cb3-13" data-line-number="13">        blit_8x8(x, yy0 <span class="op">/</span> subpix <span class="op">+</span> <span class="dv">8</span>, chrs[<span class="dv">2</span>])</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> draw_fills(ypos):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> xi <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">320</span> <span class="op">//</span> <span class="dv">8</span>):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> xi <span class="op">*</span> <span class="dv">8</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        y0 <span class="op">=</span> <span class="bu">int</span>((ypos[xi] <span class="op">*</span> subpix))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        y1 <span class="op">=</span> <span class="bu">int</span>((ypos[xi <span class="op">+</span> <span class="dv">1</span>] <span class="op">*</span> subpix))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        yy0 <span class="op">=</span> y0 <span class="op">&amp;</span> <span class="op">~</span>(<span class="dv">8</span> <span class="op">*</span> subpix <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        yy1 <span class="op">=</span> y1 <span class="op">&amp;</span> <span class="op">~</span>(<span class="dv">8</span> <span class="op">*</span> subpix <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        y0 <span class="op">-=</span> yy0</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        y1 <span class="op">-=</span> yy0</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        chrs <span class="op">=</span> fill_tbl[y0][y1 <span class="op">-</span> y0 <span class="op">+</span> <span class="dv">4</span> <span class="op">*</span> subpix]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        blit_8x8(x, yy0 <span class="op">/</span> subpix <span class="op">-</span> <span class="dv">8</span>, chrs[<span class="dv">0</span>])</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        blit_8x8(x, yy0 <span class="op">/</span> subpix, chrs[<span class="dv">1</span>])</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        blit_8x8(x, yy0 <span class="op">/</span> subpix <span class="op">+</span> <span class="dv">8</span>, chrs[<span class="dv">2</span>])</span></code></pre></div>
 <p>Note that in the above code, each entry in the <code>fill_tbl</code> 2d-array is a list 3 character bitmaps. A character bitmap is a 64 entry list of zeros and ones. To make use of this on the C64, you need to turn this data into two separate arrays: the actual character set and an array indexed by <span class="math inline"><em>y</em>0</span>, <span class="math inline"><em>y</em>1</span> that returns a list of 3 character indices.</p>
 <p>Here’s how these two tables look like. First the charset:</p>
 <p><img class="img-pixelated img-small" src="../images/c64/sine/charset-16x16.png" /></p>
@@ -128,7 +128,7 @@
 ... 252 more entries ...</code></pre>
 <p>If you’d run the C64 equivalent of the above Python routine on the default charset, you’d see something like this:</p>
 <p><img class="img-pixelated img-medium-wide" src="../images/c64/sine/sinewave-sans-charset.gif" /></p>
-<p>Since I have full control over the sine animation, I choose animation parameters that make the line segments behave “nicely”. Niceness is defined as follows: let <span class="math inline">(<em>x</em>0, <em>y</em>0)</span> and <span class="math inline">(<em>x</em>0 + 8, <em>y</em>1)</span> be the end points of a line segment. The segment behaves “nicely” if it satisfies the following condition: <span class="math inline">|<em>y</em>0 − <em>y</em>1| &lt; <em>c</em></span> (where <span class="math inline"><em>c</em></span> is some small number, in my case 8). This is required in order to keep the <code>fill_tbl</code> at a reasonable size and to limit the number of unique 8x8 characters (since the hardware character set is only 256 entries).</p>
+<p>Since I have full control over the sine animation, I choose animation parameters that make the line segments behave “nicely”. Niceness is defined as follows: let <span class="math inline">(<em>x</em>0,<em>y</em>0)</span> and <span class="math inline">(<em>x</em>0+8,<em>y</em>1)</span> be the end points of a line segment. The segment behaves “nicely” if it satisfies the following condition: <span class="math inline">|<em>y</em>0−<em>y</em>1| &lt; <em>c</em></span> (where <span class="math inline"><em>c</em></span> is some small number, in my case 8). This is required in order to keep the <code>fill_tbl</code> at a reasonable size and to limit the number of unique 8x8 characters (since the hardware character set is only 256 entries).</p>
 <p>That’s about all there is to it, I guess.</p>
 
 

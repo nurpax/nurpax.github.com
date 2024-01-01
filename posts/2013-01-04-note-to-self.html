@@ -47,58 +47,93 @@
 
 <p class="post-author">Janne Hellsten on January  4, 2013</p>
 
-<p>Note to self: Don’t use SQLite3 from multiple Haskell threads – at least not with <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a>.</p>
-<p>I recently implemented a To-Do app (the “Hello World” of web apps) using <a href="http://angularjs.org/">AngularJS</a> on the frontend and <a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t heard about AngularJS, I highly recommend you to check it out – it’s got a very clean approach to developing modern single-page web apps.</p>
-<p>In my app, the Snap-based server was used mainly for authentication and persistence. The rest of the app runs client-side in JavaScript and talks to the server over a simple REST API. Getting all this up and running was surprisingly easy.</p>
-<p>Anyhow.. Turns out it’s easy to write an AngularJS app that sends a lot of concurrent requests to the server, even in the single user case. As an example, you can iterate through a list of todo-items in JavaScript, persisting each item with a call to <code>item.$save()</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb1-1" data-line-number="1">    <span class="va">$scope</span>.<span class="at">archive</span> <span class="op">=</span> <span class="kw">function</span>() <span class="op">{</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">        <span class="kw">var</span> oldTodos <span class="op">=</span> <span class="va">$scope</span>.<span class="at">todos</span><span class="op">;</span></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">        <span class="va">$scope</span>.<span class="at">todos</span> <span class="op">=</span> []<span class="op">;</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">        <span class="va">angular</span>.<span class="at">forEach</span>(oldTodos<span class="op">,</span> <span class="kw">function</span>(todo) <span class="op">{</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">            <span class="cf">if</span> (<span class="op">!</span><span class="va">todo</span>.<span class="at">done</span>)</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">                <span class="va">$scope</span>.<span class="va">todos</span>.<span class="at">push</span>(todo)<span class="op">;</span></a>
-<a class="sourceLine" id="cb1-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">            <span class="va">todo</span>.<span class="at">$save</span>()<span class="op">;</span></a>
-<a class="sourceLine" id="cb1-9" data-line-number="9">        <span class="op">}</span>)<span class="op">;</span></a>
-<a class="sourceLine" id="cb1-10" data-line-number="10">    <span class="op">};</span></a></code></pre></div>
-<p>Each <code>$save()</code> triggers an AJAX call and the server will see these as multiple concurrent requests.</p>
-<p>Unfortunately though, I started seeing lot of SQLITE_BUSY errors on the server side with this usage. Turns out accessing a single SQLite3 database from multiple threads, each with its own connection is not as simple as I thought. If you’re in the middle of reading rows from a SELECT and you issue an INSERT from another connection, the INSERT will fail with an SQLITE_BUSY error. Here’s Haskell code that reproduces this problem:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">module</span> <span class="dt">Direct</span> (</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  directSqliteTest</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  ) <span class="kw">where</span></a>
-<a class="sourceLine" id="cb2-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="kw">import</span> <span class="dt">Control.Monad</span></a>
-<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="kw">import</span> <span class="dt">Database.SQLite3.Direct</span></a>
-<a class="sourceLine" id="cb2-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">directSqliteTest <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">  <span class="dt">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span></a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">  <span class="dt">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span></a>
-<a class="sourceLine" id="cb2-14" data-line-number="14"></a>
-<a class="sourceLine" id="cb2-15" data-line-number="15">  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span></a>
-<a class="sourceLine" id="cb2-16" data-line-number="16">  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span></a>
-<a class="sourceLine" id="cb2-17" data-line-number="17"></a>
-<a class="sourceLine" id="cb2-18" data-line-number="18">  <span class="dt">Right</span> (<span class="dt">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span></a>
-<a class="sourceLine" id="cb2-19" data-line-number="19">  a <span class="ot">&lt;-</span> step sr</a>
-<a class="sourceLine" id="cb2-20" data-line-number="20">  a <span class="ot">&lt;-</span> step sr</a>
-<a class="sourceLine" id="cb2-21" data-line-number="21">  print a</a>
-<a class="sourceLine" id="cb2-22" data-line-number="22">  x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span></a>
-<a class="sourceLine" id="cb2-23" data-line-number="23">  <span class="co">-- ^^ SQLITE_BUSY is triggered</span></a>
-<a class="sourceLine" id="cb2-24" data-line-number="24">  finalize sr</a>
-<a class="sourceLine" id="cb2-25" data-line-number="25">  print x</a>
-<a class="sourceLine" id="cb2-26" data-line-number="26"></a>
-<a class="sourceLine" id="cb2-27" data-line-number="27">  void <span class="fu">$</span> close conn1</a>
-<a class="sourceLine" id="cb2-28" data-line-number="28">  void <span class="fu">$</span> close conn2</a></code></pre></div>
+<p>Note to self: Don’t use SQLite3 from multiple Haskell threads – at
+least not with
+<a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a>.</p>
+<p>I recently implemented a To-Do app (the “Hello World” of web apps)
+using <a href="http://angularjs.org/">AngularJS</a> on the frontend and
+<a href="http://snapframework.com/">Snap</a> on the backend. If you haven’t
+heard about AngularJS, I highly recommend you to check it out – it’s
+got a very clean approach to developing modern single-page web apps.</p>
+<p>In my app, the Snap-based server was used mainly for authentication
+and persistence. The rest of the app runs client-side in JavaScript
+and talks to the server over a simple REST API. Getting all this up
+and running was surprisingly easy.</p>
+<p>Anyhow.. Turns out it’s easy to write an AngularJS app that sends a
+lot of concurrent requests to the server, even in the single user
+case. As an example, you can iterate through a list of todo-items in
+JavaScript, persisting each item with a call to <code>item.$save()</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>    $scope<span class="op">.</span><span class="at">archive</span> <span class="op">=</span> <span class="kw">function</span>() {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> oldTodos <span class="op">=</span> $scope<span class="op">.</span><span class="at">todos</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        $scope<span class="op">.</span><span class="at">todos</span> <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        angular<span class="op">.</span><span class="fu">forEach</span>(oldTodos<span class="op">,</span> <span class="kw">function</span>(todo) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (<span class="op">!</span>todo<span class="op">.</span><span class="at">done</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                $scope<span class="op">.</span><span class="at">todos</span><span class="op">.</span><span class="fu">push</span>(todo)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            todo<span class="op">.</span><span class="fu">$save</span>()<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span></code></pre></div>
+<p>Each <code>$save()</code> triggers an AJAX call and the server will see these as
+multiple concurrent requests.</p>
+<p>Unfortunately though, I started seeing lot of SQLITE_BUSY errors on
+the server side with this usage. Turns out accessing a single SQLite3
+database from multiple threads, each with its own connection is not as
+simple as I thought. If you’re in the middle of reading rows from a
+SELECT and you issue an INSERT from another connection, the INSERT
+will fail with an SQLITE_BUSY error. Here’s Haskell code that
+reproduces this problem:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Direct</span> (</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  directSqliteTest</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="kw">where</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Database.SQLite3.Direct</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="ot">directSqliteTest ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>directSqliteTest <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Right</span> conn1 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Right</span> conn2 <span class="ot">&lt;-</span> open <span class="st">&quot;test.db&quot;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  exec conn1 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Right</span> (<span class="dt">Just</span> sr) <span class="ot">&lt;-</span> prepare conn1 <span class="st">&quot;SELECT * from a&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> step sr</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> step sr</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span> a</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> exec conn2 <span class="st">&quot;INSERT INTO a (text) VALUES ('foo')&quot;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ^^ SQLITE_BUSY is triggered</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  finalize sr</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span> x</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  void <span class="op">$</span> close conn1</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  void <span class="op">$</span> close conn2</span></code></pre></div>
 <p>The above code will print:</p>
 <pre><code>$ ./dist/build/sqlite-test/sqlite-test
 Right Row
 Right Row
 Left (ErrorBusy,Utf8 &quot;database is locked&quot;)</code></pre>
-<p>As <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple</a> does connection pooling, the above pattern is very likely to happen. The SQLite snaplet maintains a connection pool which is used to service connections to request handlers. Concurrent requests will each be handed their own connection instead of using a single shared connection. A request can be in the middle of reading database rows from the while another request tries to write to the database using another connection, and <em>boom</em>, the above SQLITE_BUSY scenario triggers.</p>
-<p>As a quick band-aid fix, I changed snaplet-sqlite-simple to not use a connection pool but instead allocate a single database handle on init and servicing the same handle sequentially to anyone that asks (<a href="https://github.com/nurpax/snaplet-sqlite-simple/commit/3957f722cce6abf7e1059f481668379e05b62286">commit 3957f722</a>). For extra safety, I also stuck the connection inside an <code>MVar</code> so that all SQLite operations get serialized within the Snap application.</p>
-<p>Hopefully I’ll be able to switch to a more concurrent model in the future, but at least the current v0.4.0 release works without SQLITE_BUSY errors.</p>
+<p>As
+<a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple</a>
+does connection pooling, the above pattern is very likely to happen.
+The SQLite snaplet maintains a connection pool which is used to
+service connections to request handlers. Concurrent requests will
+each be handed their own connection instead of using a single shared
+connection. A request can be in the middle of reading database rows
+from the while another request tries to write to the database using
+another connection, and <em>boom</em>, the above SQLITE_BUSY scenario
+triggers.</p>
+<p>As a quick band-aid fix, I changed snaplet-sqlite-simple to not use a
+connection pool but instead allocate a single database handle on init
+and servicing the same handle sequentially to anyone that asks
+(<a href="https://github.com/nurpax/snaplet-sqlite-simple/commit/3957f722cce6abf7e1059f481668379e05b62286">commit 3957f722</a>). For extra safety, I also stuck the
+connection inside an <code>MVar</code> so that all SQLite operations get
+serialized within the Snap application.</p>
+<p>Hopefully I’ll be able to switch to a more concurrent model in the
+future, but at least the current v0.4.0 release works without
+SQLITE_BUSY errors.</p>
 
 
 </article>

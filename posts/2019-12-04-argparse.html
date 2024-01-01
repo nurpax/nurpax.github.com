@@ -49,90 +49,90 @@
 
 <p>How I use argparse.</p>
 <h3 id="basic-main-stub">Basic main() stub</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="im">import</span> argparse</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="im">import</span> sys</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">_examples <span class="op">=</span> <span class="st">'''examples:</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="st">  # Run x, y, z</span></a>
-<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="st">  python </span><span class="sc">%(prog)s</span><span class="st"> --output=tmp</span></a>
-<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="st">'''</span></a>
-<a class="sourceLine" id="cb1-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="kw">def</span> main():</a>
-<a class="sourceLine" id="cb1-11" data-line-number="11">    parser <span class="op">=</span> argparse.ArgumentParser(</a>
-<a class="sourceLine" id="cb1-12" data-line-number="12">        description<span class="op">=</span><span class="st">'Argparse test'</span>,</a>
-<a class="sourceLine" id="cb1-13" data-line-number="13">        epilog<span class="op">=</span>_examples,</a>
-<a class="sourceLine" id="cb1-14" data-line-number="14">        formatter_class<span class="op">=</span>argparse.RawDescriptionHelpFormatter</a>
-<a class="sourceLine" id="cb1-15" data-line-number="15">    )</a>
-<a class="sourceLine" id="cb1-16" data-line-number="16">    parser.add_argument(<span class="st">'--output'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify output dir'</span>)</a>
-<a class="sourceLine" id="cb1-17" data-line-number="17">    args <span class="op">=</span> parser.parse_args()</a>
-<a class="sourceLine" id="cb1-18" data-line-number="18">    <span class="bu">print</span> (<span class="bu">vars</span>(args))</a>
-<a class="sourceLine" id="cb1-19" data-line-number="19"></a>
-<a class="sourceLine" id="cb1-20" data-line-number="20"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</a>
-<a class="sourceLine" id="cb1-21" data-line-number="21">    main()</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> argparse</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>_examples <span class="op">=</span> <span class="st">'''examples:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="st">  # Run x, y, z</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="st">  python </span><span class="sc">%(prog)s</span><span class="st"> --output=tmp</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="st">'''</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> main():</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    parser <span class="op">=</span> argparse.ArgumentParser(</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        description<span class="op">=</span><span class="st">'Argparse test'</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        epilog<span class="op">=</span>_examples,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        formatter_class<span class="op">=</span>argparse.RawDescriptionHelpFormatter</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    parser.add_argument(<span class="st">'--output'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify output dir'</span>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    args <span class="op">=</span> parser.parse_args()</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> (<span class="bu">vars</span>(args))</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    main()</span></code></pre></div>
 <h3 id="argument-default-values">Argument default values</h3>
 <p>Use <code>default=</code> to set a default value for an argument.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1">parser.add_argument(<span class="st">'--format'</span>, default<span class="op">=</span><span class="st">'html'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify output format'</span>, metavar<span class="op">=</span><span class="st">'FMT'</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--format'</span>, default<span class="op">=</span><span class="st">'html'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify output format'</span>, metavar<span class="op">=</span><span class="st">'FMT'</span>)</span></code></pre></div>
 <p>To show default values in your help strings, use <code>%(default)s</code> interpolation:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1">parser.add_argument(<span class="st">'--format'</span>, default<span class="op">=</span><span class="st">'html'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify output format (default: </span><span class="sc">%(default)s</span><span class="st">)'</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--format'</span>, default<span class="op">=</span><span class="st">'html'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify output format (default: </span><span class="sc">%(default)s</span><span class="st">)'</span>)</span></code></pre></div>
 <p>If the default value is type <code>str</code>, it will be run through your <code>type</code> callback, otherwise it’s returned directly. This can be helpful when authoring help strings containing <code>%(default)s</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" data-line-number="1">parser.add_argument(<span class="st">'--enable-x'</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="va">True</span>,</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="bu">help</span><span class="op">=</span><span class="st">'Enable feature x (default: </span><span class="sc">%(default)s</span><span class="st">)'</span>)</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="co"># outputs: --enable-x ENABLE_X   Enable feature x (default: True)</span></a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">parser.add_argument(<span class="st">'--enable-y'</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="st">'y'</span>,</a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">    <span class="bu">help</span><span class="op">=</span><span class="st">'Enable feature y (default: </span><span class="sc">%(default)s</span><span class="st">)'</span>)</a>
-<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="co"># outputs: --enable-y ENABLE_Y   Enable feature y (default: y)</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--enable-x'</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">help</span><span class="op">=</span><span class="st">'Enable feature x (default: </span><span class="sc">%(default)s</span><span class="st">)'</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># outputs: --enable-x ENABLE_X   Enable feature x (default: True)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--enable-y'</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="st">'y'</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">help</span><span class="op">=</span><span class="st">'Enable feature y (default: </span><span class="sc">%(default)s</span><span class="st">)'</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># outputs: --enable-y ENABLE_Y   Enable feature y (default: y)</span></span></code></pre></div>
 <h3 id="argument-types">Argument types</h3>
 <p>Use <code>type=</code> to set your own type conversion function. A <code>type</code> is just a function that converts a string to some output type.</p>
 <p><strong>Numbers.</strong></p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1">parser.add_argument(<span class="st">'--int-val'</span>, <span class="bu">type</span><span class="op">=</span><span class="bu">int</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify integer'</span>, metavar<span class="op">=</span><span class="st">'N'</span>)</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">parser.add_argument(<span class="st">'--flt-val'</span>, <span class="bu">type</span><span class="op">=</span><span class="bu">float</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify float'</span>, metavar<span class="op">=</span><span class="st">'N'</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--int-val'</span>, <span class="bu">type</span><span class="op">=</span><span class="bu">int</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify integer'</span>, metavar<span class="op">=</span><span class="st">'N'</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--flt-val'</span>, <span class="bu">type</span><span class="op">=</span><span class="bu">float</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify float'</span>, metavar<span class="op">=</span><span class="st">'N'</span>)</span></code></pre></div>
 <p><strong>Booleans.</strong> You can’t use <code>type=bool</code> for booleans (try running <code>bool('True')</code> in the REPL if you want to know why.) Do this instead:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">def</span> _str_to_bool(v):</a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">    <span class="cf">if</span> <span class="bu">isinstance</span>(v, <span class="bu">bool</span>):</a>
-<a class="sourceLine" id="cb6-3" data-line-number="3">        <span class="cf">return</span> v</a>
-<a class="sourceLine" id="cb6-4" data-line-number="4">    <span class="cf">if</span> v.lower() <span class="kw">in</span> (<span class="st">'yes'</span>, <span class="st">'true'</span>, <span class="st">'t'</span>, <span class="st">'y'</span>, <span class="st">'1'</span>):</a>
-<a class="sourceLine" id="cb6-5" data-line-number="5">        <span class="cf">return</span> <span class="va">True</span></a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">    <span class="cf">elif</span> v.lower() <span class="kw">in</span> (<span class="st">'no'</span>, <span class="st">'false'</span>, <span class="st">'f'</span>, <span class="st">'n'</span>, <span class="st">'0'</span>):</a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">        <span class="cf">return</span> <span class="va">False</span></a>
-<a class="sourceLine" id="cb6-8" data-line-number="8">    <span class="cf">else</span>:</a>
-<a class="sourceLine" id="cb6-9" data-line-number="9">        <span class="cf">raise</span> argparse.ArgumentTypeError(<span class="st">'Boolean value expected.'</span>)</a>
-<a class="sourceLine" id="cb6-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb6-11" data-line-number="11">parser.add_argument(<span class="st">'--enable-output'</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="va">False</span>, metavar<span class="op">=</span><span class="st">'BOOL'</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _str_to_bool(v):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(v, <span class="bu">bool</span>):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v.lower() <span class="kw">in</span> (<span class="st">'yes'</span>, <span class="st">'true'</span>, <span class="st">'t'</span>, <span class="st">'y'</span>, <span class="st">'1'</span>):</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">True</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> v.lower() <span class="kw">in</span> (<span class="st">'no'</span>, <span class="st">'false'</span>, <span class="st">'f'</span>, <span class="st">'n'</span>, <span class="st">'0'</span>):</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">False</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> argparse.ArgumentTypeError(<span class="st">'Boolean value expected.'</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--enable-output'</span>, <span class="bu">type</span><span class="op">=</span>_str_to_bool, default<span class="op">=</span><span class="va">False</span>, metavar<span class="op">=</span><span class="st">'BOOL'</span>)</span></code></pre></div>
 <p><strong>Comma-separated list of values.</strong> How to specify a list of strings like <code>python foo.py --tags=apple,fruit</code>:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">def</span> _parse_comma_sep(s):</a>
-<a class="sourceLine" id="cb7-2" data-line-number="2">    <span class="cf">if</span> (s <span class="kw">is</span> <span class="va">None</span>) <span class="kw">or</span> (s <span class="op">==</span> <span class="st">''</span>):</a>
-<a class="sourceLine" id="cb7-3" data-line-number="3">        <span class="cf">return</span> []</a>
-<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="cf">return</span> s.split(<span class="st">','</span>)</a>
-<a class="sourceLine" id="cb7-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6">parser.add_argument(<span class="st">'--tags'</span>, <span class="bu">type</span><span class="op">=</span>_parse_comma_sep, default<span class="op">=</span><span class="st">''</span>, metavar<span class="op">=</span><span class="st">'TAGS'</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _parse_comma_sep(s):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (s <span class="kw">is</span> <span class="va">None</span>) <span class="kw">or</span> (s <span class="op">==</span> <span class="st">''</span>):</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> []</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> s.split(<span class="st">','</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>parser.add_argument(<span class="st">'--tags'</span>, <span class="bu">type</span><span class="op">=</span>_parse_comma_sep, default<span class="op">=</span><span class="st">''</span>, metavar<span class="op">=</span><span class="st">'TAGS'</span>)</span></code></pre></div>
 <h3 id="subcommands">Subcommands</h3>
 <p>Add a subcommand called <code>log</code>:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode py"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="im">import</span> argparse</a>
-<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="im">import</span> sys</a>
-<a class="sourceLine" id="cb8-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb8-4" data-line-number="4">_examples <span class="op">=</span> <span class="st">'''examples:</span></a>
-<a class="sourceLine" id="cb8-5" data-line-number="5"></a>
-<a class="sourceLine" id="cb8-6" data-line-number="6"><span class="st">  # Show log in html format</span></a>
-<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="st">  python </span><span class="sc">%(prog)s</span><span class="st"> log --format=html</span></a>
-<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="st">'''</span></a>
-<a class="sourceLine" id="cb8-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb8-10" data-line-number="10"><span class="kw">def</span> main():</a>
-<a class="sourceLine" id="cb8-11" data-line-number="11">    parser <span class="op">=</span> argparse.ArgumentParser(</a>
-<a class="sourceLine" id="cb8-12" data-line-number="12">        description<span class="op">=</span><span class="st">'Argparse test'</span>,</a>
-<a class="sourceLine" id="cb8-13" data-line-number="13">        epilog<span class="op">=</span>_examples,</a>
-<a class="sourceLine" id="cb8-14" data-line-number="14">        formatter_class<span class="op">=</span>argparse.RawDescriptionHelpFormatter</a>
-<a class="sourceLine" id="cb8-15" data-line-number="15">    )</a>
-<a class="sourceLine" id="cb8-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb8-17" data-line-number="17">    subparsers <span class="op">=</span> parser.add_subparsers(<span class="bu">help</span><span class="op">=</span><span class="st">'Sub-commands'</span>, dest<span class="op">=</span><span class="st">'command'</span>)</a>
-<a class="sourceLine" id="cb8-18" data-line-number="18">    parser_log <span class="op">=</span> subparsers.add_parser(<span class="st">'log'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Show log'</span>)</a>
-<a class="sourceLine" id="cb8-19" data-line-number="19">    parser_log.add_argument(<span class="st">'--format'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify format'</span>, choices<span class="op">=</span>[<span class="st">'raw'</span>, <span class="st">'html'</span>])</a>
-<a class="sourceLine" id="cb8-20" data-line-number="20"></a>
-<a class="sourceLine" id="cb8-21" data-line-number="21">    args <span class="op">=</span> parser.parse_args()</a>
-<a class="sourceLine" id="cb8-22" data-line-number="22">    <span class="bu">print</span> (<span class="bu">vars</span>(args))</a>
-<a class="sourceLine" id="cb8-23" data-line-number="23"></a>
-<a class="sourceLine" id="cb8-24" data-line-number="24"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</a>
-<a class="sourceLine" id="cb8-25" data-line-number="25">    main()</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode py"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> argparse</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>_examples <span class="op">=</span> <span class="st">'''examples:</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="st">  # Show log in html format</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="st">  python </span><span class="sc">%(prog)s</span><span class="st"> log --format=html</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="st">'''</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> main():</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    parser <span class="op">=</span> argparse.ArgumentParser(</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        description<span class="op">=</span><span class="st">'Argparse test'</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        epilog<span class="op">=</span>_examples,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        formatter_class<span class="op">=</span>argparse.RawDescriptionHelpFormatter</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    subparsers <span class="op">=</span> parser.add_subparsers(<span class="bu">help</span><span class="op">=</span><span class="st">'Sub-commands'</span>, dest<span class="op">=</span><span class="st">'command'</span>)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    parser_log <span class="op">=</span> subparsers.add_parser(<span class="st">'log'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Show log'</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    parser_log.add_argument(<span class="st">'--format'</span>, <span class="bu">help</span><span class="op">=</span><span class="st">'Specify format'</span>, choices<span class="op">=</span>[<span class="st">'raw'</span>, <span class="st">'html'</span>])</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    args <span class="op">=</span> parser.parse_args()</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> (<span class="bu">vars</span>(args))</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&quot;__main__&quot;</span>:</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    main()</span></code></pre></div>
 
 
 </article>

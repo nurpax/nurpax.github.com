@@ -47,14 +47,34 @@
 
 <p class="post-author">Janne Hellsten on December 20, 2012</p>
 
-<p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple 0.3</a>, a compatibility update for the recently released <a href="http://hackage.haskell.org/package/snap">Snap 0.10</a>. This library is glue for hooking up a Snap application to an <a href="http://www.sqlite.org/">SQLite</a> database using the <a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a> library. Using SQLite with Snap is a handy, light-weight approach for quickly prototyping database-backed web apps – you don’t need to configure a separate SQL server just to run your web app.</p>
-<p>While the new snaplet-sqlite-simple 0.3 release doesn’t add any significant new functionality, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example project</a> would be worth a mention.</p>
-<p>This example project implements a simple web app that has a login screen (with new user registration) and a main page where logged in users can drop comments. Users and comments are both persisted into an SQLite database.</p>
-<p>Here’s a couple of screenshots to show how it looks like. Let’s start with the login screen:</p>
+<p>I recently released <a href="http://hackage.haskell.org/package/snaplet-sqlite-simple">snaplet-sqlite-simple
+0.3</a>, a
+compatibility update for the recently released <a href="http://hackage.haskell.org/package/snap">Snap
+0.10</a>. This library is glue
+for hooking up a Snap application to an
+<a href="http://www.sqlite.org/">SQLite</a> database using the
+<a href="http://hackage.haskell.org/package/sqlite-simple">sqlite-simple</a>
+library. Using SQLite with Snap is a handy, light-weight approach for
+quickly prototyping database-backed web apps – you don’t need to
+configure a separate SQL server just to run your web app.</p>
+<p>While the new snaplet-sqlite-simple 0.3 release doesn’t add any
+significant new functionality, I thought a few things in its <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example
+project</a>
+would be worth a mention.</p>
+<p>This example project implements a simple web app that has a login
+screen (with new user registration) and a main page where logged in
+users can drop comments. Users and comments are both persisted into
+an SQLite database.</p>
+<p>Here’s a couple of screenshots to show how it looks like. Let’s start
+with the login screen:</p>
 <div class="screenshot white-bg">
 <img src="../images/snaplet-sqlite-simple-example-login.png" title="Login screen" />
 </div>
-<p>If you create a new user and login to the app, you’re taken to the main page. Here the logged in user can add comments. The comments get persisted into a database and are associated with the current user (e.g., other users can’t see them.) Here’s how the main page looks like:</p>
+<p>If you create a new user and login to the app, you’re taken to the
+main page. Here the logged in user can add comments. The comments
+get persisted into a database and are associated with the current user
+(e.g., other users can’t see them.) Here’s how the main page looks
+like:</p>
 <div class="screenshot white-bg">
 <img src="../images/snaplet-sqlite-simple-example-comments.png" title="Main page" />
 </div>
@@ -62,45 +82,60 @@
 <ul>
 <li>Connecting to an SQLite database</li>
 <li>Creating database tables (if not created) on web app’s init</li>
-<li>Associating your own user data with Snap’s <a href="http://hackage.haskell.org/packages/archive/snap/0.10.0.1/doc/html/Snap-Snaplet-Auth.html">Snap.Snaplet.Auth</a> user objects</li>
+<li>Associating your own user data with Snap’s
+<a href="http://hackage.haskell.org/packages/archive/snap/0.10.0.1/doc/html/Snap-Snaplet-Auth.html">Snap.Snaplet.Auth</a>
+user objects</li>
 <li>Making simple database queries and rendering the results on the main screen</li>
 </ul>
-<p>Setting up the connection is easy, see the <code>app</code> function in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Site.hs">Site.hs</a>.</p>
-<p>Creating the database schema on app startup is perhaps less obvious. This also happens on app init:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">-- | The application initializer.</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="ot">app ::</span> <span class="dt">SnapletInit</span> <span class="dt">App</span> <span class="dt">App</span></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="co">-- ...</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">    <span class="co">-- Grab the DB connection pool from the sqlite snaplet and call</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">    <span class="co">-- into the Model to create all the DB tables if necessary.</span></a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">    <span class="kw">let</span> connPool <span class="fu">=</span> sqlitePool <span class="fu">$</span> d <span class="fu">^#</span> snapletValue</a>
-<a class="sourceLine" id="cb1-7" data-line-number="7">    liftIO <span class="fu">$</span> withResource connPool <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.createTables conn</a></code></pre></div>
-<p>The actual table creation is done in <a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Db.hs">Db.hs</a>. This module also contains query functions for saving and listing comments for a given user.</p>
-<p>Everything on the main page requires a logged in user. Requiring a logged in user is ensured using <code>withLoggedInUser</code> which either calls a handler with the currently logged in user or redirects to the login screen. It’s defined as:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">-- | Run actions with a logged in user or go back to the login screen</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="ot">withLoggedInUser ::</span> (<span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()) <span class="ot">-&gt;</span> <span class="dt">H</span> ()</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">withLoggedInUser action <span class="fu">=</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  currentUser <span class="fu">&gt;&gt;=</span> go</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">    go <span class="dt">Nothing</span>  <span class="fu">=</span> handleLogin (<span class="dt">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">    go (<span class="dt">Just</span> u) <span class="fu">=</span> maybeWhen (userId u) (action <span class="fu">.</span> user)</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">      <span class="kw">where</span></a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">        user uid <span class="fu">=</span> <span class="dt">Db.User</span> (read <span class="fu">.</span> T.unpack <span class="fu">$</span> unUid uid) (userLogin u)</a></code></pre></div>
-<p>You can use it anywhere you need to access the currently logged in user. For example, here’s how the main page handler deals with the current user:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">mainPage <span class="fu">=</span> withLoggedInUser go</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="ot">    go ::</span> <span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">    go user <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">      comments <span class="ot">&lt;-</span> withTop db <span class="fu">$</span> Db.listComments user</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">      heistLocal (splices comments) <span class="fu">$</span> render <span class="st">&quot;/index&quot;</span></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">    splices cs <span class="fu">=</span></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">      I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</a></code></pre></div>
-<p>To learn more about using sqlite-simple with Snap, I recommend you clone the code from Git, build the example, play with the app and read the <a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example source code</a>:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="fu">git</span> clone git://github.com/nurpax/snaplet-sqlite-simple.git</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="bu">cd</span> example</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="ex">cabal-dev</span> install</a>
-<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="ex">./cabal-dev/bin/example</span></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5"><span class="co"># browse to http://localhost:8000</span></a></code></pre></div>
+<p>Setting up the connection is easy, see the <code>app</code> function in
+<a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Site.hs">Site.hs</a>.</p>
+<p>Creating the database schema on app startup is perhaps less obvious.
+This also happens on app init:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | The application initializer.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">app ::</span> <span class="dt">SnapletInit</span> <span class="dt">App</span> <span class="dt">App</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- ...</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Grab the DB connection pool from the sqlite snaplet and call</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- into the Model to create all the DB tables if necessary.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> connPool <span class="ot">=</span> sqlitePool <span class="op">$</span> d <span class="op">^#</span> snapletValue</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> withResource connPool <span class="op">$</span> \conn <span class="ot">-&gt;</span> Db.createTables conn</span></code></pre></div>
+<p>The actual table creation is done in
+<a href="https://github.com/nurpax/snaplet-sqlite-simple/blob/master/example/src/Db.hs">Db.hs</a>.
+This module also contains query functions for saving and listing
+comments for a given user.</p>
+<p>Everything on the main page requires a logged in user. Requiring a
+logged in user is ensured using <code>withLoggedInUser</code> which either calls
+a handler with the currently logged in user or redirects to the login
+screen. It’s defined as:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Run actions with a logged in user or go back to the login screen</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ot">withLoggedInUser ::</span> (<span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()) <span class="ot">-&gt;</span> <span class="dt">H</span> ()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>withLoggedInUser action <span class="ot">=</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  currentUser <span class="op">&gt;&gt;=</span> go</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    go <span class="dt">Nothing</span>  <span class="ot">=</span> handleLogin (<span class="dt">Just</span> <span class="st">&quot;Must be logged in to view the main page&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    go (<span class="dt">Just</span> u) <span class="ot">=</span> maybeWhen (userId u) (action <span class="op">.</span> user)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">where</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        user uid <span class="ot">=</span> <span class="dt">Db.User</span> (<span class="fu">read</span> <span class="op">.</span> T.unpack <span class="op">$</span> unUid uid) (userLogin u)</span></code></pre></div>
+<p>You can use it anywhere you need to access the currently logged in
+user. For example, here’s how the main page handler deals with the
+current user:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">mainPage ::</span> <span class="dt">H</span> ()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mainPage <span class="ot">=</span> withLoggedInUser go</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ot">    go ::</span> <span class="dt">Db.User</span> <span class="ot">-&gt;</span> <span class="dt">H</span> ()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    go user <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      comments <span class="ot">&lt;-</span> withTop db <span class="op">$</span> Db.listComments user</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      heistLocal (splices comments) <span class="op">$</span> render <span class="st">&quot;/index&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    splices cs <span class="ot">=</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      I.bindSplices [(<span class="st">&quot;comments&quot;</span>, I.mapSplices renderComment cs)]</span></code></pre></div>
+<p>To learn more about using sqlite-simple with Snap, I recommend you
+clone the code from Git, build the example, play with the app and read
+the
+<a href="https://github.com/nurpax/snaplet-sqlite-simple/tree/master/example/src">example source code</a>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git://github.com/nurpax/snaplet-sqlite-simple.git</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> example</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cabal-dev</span> install</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./cabal-dev/bin/example</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># browse to http://localhost:8000</span></span></code></pre></div>
 
 
 </article>

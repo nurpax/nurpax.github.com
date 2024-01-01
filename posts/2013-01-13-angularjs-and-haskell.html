@@ -48,19 +48,35 @@
 <p class="post-author">Janne Hellsten on January 13, 2013</p>
 
 <h3 id="introduction">Introduction</h3>
-<p>I recently wrote a simple To-Do app in <a href="http://angularjs.org/">AngularJS</a> using the Haskell web development framework called <a href="http://snapframework.com/">Snap</a>. I started with the To-Do example I found on the <a href="http://angularjs.org/">AngularJS’s homepage</a> and added the necessary JavaScript plumbing to enable talking to a Haskell web server over a REST API. I figured someone might find my little app a useful starting point for developing web applications with AngularJS and Snap, and so I decided to upload the <a href="https://github.com/nurpax/snap-examples/tree/master/angularjs-todo">code on github</a> and write this code walkthrough.</p>
+<p>I recently wrote a simple To-Do app in <a href="http://angularjs.org/">AngularJS</a> using
+the Haskell web development framework called <a href="http://snapframework.com/">Snap</a>. I started
+with the To-Do example I found on the <a href="http://angularjs.org/">AngularJS’s
+homepage</a> and added the necessary JavaScript plumbing to
+enable talking to a Haskell web server over a REST API. I figured
+someone might find my little app a useful starting point for
+developing web applications with AngularJS and Snap, and so I decided
+to upload the <a href="https://github.com/nurpax/snap-examples/tree/master/angularjs-todo">code on github</a> and write this code
+walkthrough.</p>
 <p>To get started, you can try to build &amp; run the app:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">git</span> clone git://github.com/nurpax/snap-examples</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="bu">cd</span> snap-examples/angularjs-todo</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="ex">cabal-dev</span> install</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="ex">./cabal-dev/bin/angularjs-todo</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="co"># browse to http://localhost:8000</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone git://github.com/nurpax/snap-examples</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> snap-examples/angularjs-todo</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cabal-dev</span> install</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./cabal-dev/bin/angularjs-todo</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># browse to http://localhost:8000</span></span></code></pre></div>
 <p>You should see something like this:</p>
 <div class="screenshot white-bg">
 <img src="../images/angular-todo1.png" title="AngularJS ToDo app with Haskell" />
 </div>
-<p>I will not go into much detail about AngularJS usage here – you should read more about it on their <a href="http://angularjs.org/">homepage</a>. This post will focus on what’s needed in order to build an AngularJS app with a Haskell backend.</p>
-<p>In an AngularJS app, a major part of the application is JavaScript and runs in the the browser. These applications are usually backed by a central server. In our case, the backend is written in Haskell. This server takes care of user management, authentication and persistence. The frontend talks to the backend via a REST API. The REST API communicates things like adding or listing to-do items.</p>
+<p>I will not go into much detail about AngularJS usage here – you
+should read more about it on their <a href="http://angularjs.org/">homepage</a>. This post
+will focus on what’s needed in order to build an AngularJS app with a
+Haskell backend.</p>
+<p>In an AngularJS app, a major part of the application is JavaScript and
+runs in the the browser. These applications are usually backed by a
+central server. In our case, the backend is written in Haskell. This
+server takes care of user management, authentication and persistence.
+The frontend talks to the backend via a REST API. The REST API
+communicates things like adding or listing to-do items.</p>
 <h3 id="frontend-javascript-parts">Frontend JavaScript parts</h3>
 <p>The main client-side source files are:</p>
 <ul>
@@ -68,82 +84,110 @@
 <li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a> - Controller for to-do items</li>
 <li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/services.js">static/services.js</a> - Model definition</li>
 </ul>
-<p>The “AngularJS application” is defined <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>. It contains definitions on how to display the main page, how to list to-do items and how to hook up UI events to controller actions.</p>
-<p>The application calls into a <code>TodoCtrl</code> controller defined in <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a>. The controller mostly deals with UI events. The controller talks to the backend via a <code>Todo</code> service.</p>
-<p>The <code>Todo</code> service is defined <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/services.js">static/services.js</a>. It defines the client-server interface for accessing user’s to-do items, providing methods such as <code>Todo.query()</code> and <code>Todo.save()</code>.</p>
+<p>The “AngularJS application” is defined <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>. It
+contains definitions on how to display the main page, how to list
+to-do items and how to hook up UI events to controller actions.</p>
+<p>The application calls into a <code>TodoCtrl</code> controller defined in
+<a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/todo.js">static/todo.js</a>. The controller mostly deals with UI events. The
+controller talks to the backend via a <code>Todo</code> service.</p>
+<p>The <code>Todo</code> service is defined <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/services.js">static/services.js</a>. It defines the
+client-server interface for accessing user’s to-do items, providing
+methods such as <code>Todo.query()</code> and <code>Todo.save()</code>.</p>
 <h3 id="the-haskell-backend">The Haskell backend</h3>
-<p>The most interesting server parts can be found in the following source files:</p>
+<p>The most interesting server parts can be found in the following source
+files:</p>
 <ul>
 <li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">src/Site.hs</a> - Main server module (login, authentication, REST)</li>
 <li><a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">src/Db.hs</a> - Model definition (types, JSON serialization, database persistence)</li>
 </ul>
-<p>The model definition of our to-do app is quite simple. The main type is the <code>Todo</code> item:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Todo</span> <span class="fu">=</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">  <span class="dt">Todo</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">  {<span class="ot"> todoId   ::</span> <span class="dt">Maybe</span> <span class="dt">Int64</span>  <span class="co">-- database row id</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  ,<span class="ot"> todoText ::</span> <span class="dt">T.Text</span>       <span class="co">-- todo text</span></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  ,<span class="ot"> todoDone ::</span> <span class="dt">Bool</span>         <span class="co">-- completed?</span></a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">  } <span class="kw">deriving</span> (<span class="dt">Show</span>)</a></code></pre></div>
-<p>The <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module defines how these objects can be serialized to/from JSON using the <a href="http://hackage.haskell.org/package/aeson">aeson package</a>:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">Todo</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">  parseJSON (<span class="dt">Object</span> v) <span class="fu">=</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">    <span class="dt">Todo</span> <span class="fu">&lt;$&gt;</span> optional (v <span class="fu">.:</span> <span class="st">&quot;id&quot;</span>)</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">         <span class="fu">&lt;*&gt;</span> v <span class="fu">.:</span> <span class="st">&quot;text&quot;</span></a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">         <span class="fu">&lt;*&gt;</span> v <span class="fu">.:</span> <span class="st">&quot;done&quot;</span></a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">  parseJSON _ <span class="fu">=</span> mzero</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="kw">instance</span> <span class="dt">ToJSON</span> <span class="dt">Todo</span> <span class="kw">where</span></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">  toJSON (<span class="dt">Todo</span> i text done) <span class="fu">=</span></a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">    object [ <span class="st">&quot;id&quot;</span> <span class="fu">.=</span> fromJust i</a>
-<a class="sourceLine" id="cb3-11" data-line-number="11">           , <span class="st">&quot;text&quot;</span> <span class="fu">.=</span> text</a>
-<a class="sourceLine" id="cb3-12" data-line-number="12">           , <span class="st">&quot;done&quot;</span> <span class="fu">.=</span> done</a>
-<a class="sourceLine" id="cb3-13" data-line-number="13">           ]</a></code></pre></div>
-<p>The rest of the module is about persisting <code>Todo</code>s in an SQLite database.</p>
-<p>The final piece of the puzzle is the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">Site</a> module which plugs all of the above server bits together. It manages routing, authentication and serves to-do items over a REST API. The server-side routing is defined as follows:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="co">-- | Render main page</span></a>
-<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="ot">mainPage ::</span> <span class="dt">H</span> ()</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">mainPage <span class="fu">=</span> withLoggedInUser (const <span class="fu">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)</a>
-<a class="sourceLine" id="cb4-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5"><span class="co">-- | The application's routes.</span></a>
-<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="ot">routes ::</span> [(<span class="dt">ByteString</span>, <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">App</span> ())]</a>
-<a class="sourceLine" id="cb4-7" data-line-number="7">routes <span class="fu">=</span> [ (<span class="st">&quot;/login&quot;</span>,        with auth handleLoginSubmit)</a>
-<a class="sourceLine" id="cb4-8" data-line-number="8">         , (<span class="st">&quot;/logout&quot;</span>,       with auth handleLogout)</a>
-<a class="sourceLine" id="cb4-9" data-line-number="9">         , (<span class="st">&quot;/new_user&quot;</span>,     with auth handleNewUser)</a>
-<a class="sourceLine" id="cb4-10" data-line-number="10">         , (<span class="st">&quot;/api/todo&quot;</span>,     with auth handleTodos)</a>
-<a class="sourceLine" id="cb4-11" data-line-number="11">         , (<span class="st">&quot;/&quot;</span>,             with auth mainPage)</a>
-<a class="sourceLine" id="cb4-12" data-line-number="12">         , (<span class="st">&quot;/static&quot;</span>,       serveDirectory <span class="st">&quot;static&quot;</span>)</a>
-<a class="sourceLine" id="cb4-13" data-line-number="13">         ]</a></code></pre></div>
+<p>The model definition of our to-do app is quite simple. The main type
+is the <code>Todo</code> item:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Todo</span> <span class="ot">=</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Todo</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  {<span class="ot"> todoId   ::</span> <span class="dt">Maybe</span> <span class="dt">Int64</span>  <span class="co">-- database row id</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> todoText ::</span> <span class="dt">T.Text</span>       <span class="co">-- todo text</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  ,<span class="ot"> todoDone ::</span> <span class="dt">Bool</span>         <span class="co">-- completed?</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  } <span class="kw">deriving</span> (<span class="dt">Show</span>)</span></code></pre></div>
+<p>The <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module defines how these objects can be serialized
+to/from JSON using the <a href="http://hackage.haskell.org/package/aeson">aeson package</a>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">FromJSON</span> <span class="dt">Todo</span> <span class="kw">where</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  parseJSON (<span class="dt">Object</span> v) <span class="ot">=</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Todo</span> <span class="op">&lt;$&gt;</span> optional (v <span class="op">.:</span> <span class="st">&quot;id&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>         <span class="op">&lt;*&gt;</span> v <span class="op">.:</span> <span class="st">&quot;text&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>         <span class="op">&lt;*&gt;</span> v <span class="op">.:</span> <span class="st">&quot;done&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  parseJSON _ <span class="ot">=</span> mzero</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">ToJSON</span> <span class="dt">Todo</span> <span class="kw">where</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  toJSON (<span class="dt">Todo</span> i text done) <span class="ot">=</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    object [ <span class="st">&quot;id&quot;</span> <span class="op">.=</span> fromJust i</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>           , <span class="st">&quot;text&quot;</span> <span class="op">.=</span> text</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>           , <span class="st">&quot;done&quot;</span> <span class="op">.=</span> done</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>           ]</span></code></pre></div>
+<p>The rest of the module is about persisting <code>Todo</code>s in an SQLite
+database.</p>
+<p>The final piece of the puzzle is the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Site.hs">Site</a> module which
+plugs all of the above server bits together. It manages routing,
+authentication and serves to-do items over a REST API. The
+server-side routing is defined as follows:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Render main page</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ot">mainPage ::</span> <span class="dt">H</span> ()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>mainPage <span class="ot">=</span> withLoggedInUser (<span class="fu">const</span> <span class="op">$</span> serveDirectory <span class="st">&quot;static&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- | The application's routes.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ot">routes ::</span> [(<span class="dt">ByteString</span>, <span class="dt">Handler</span> <span class="dt">App</span> <span class="dt">App</span> ())]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>routes <span class="ot">=</span> [ (<span class="st">&quot;/login&quot;</span>,        with auth handleLoginSubmit)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;/logout&quot;</span>,       with auth handleLogout)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;/new_user&quot;</span>,     with auth handleNewUser)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;/api/todo&quot;</span>,     with auth handleTodos)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;/&quot;</span>,             with auth mainPage)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>         , (<span class="st">&quot;/static&quot;</span>,       serveDirectory <span class="st">&quot;static&quot;</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>         ]</span></code></pre></div>
 <p>There’s a couple of things to note about the above routing table:</p>
 <ul>
 <li>The REST interface is at <code>/api/todo</code> and gets handled by <code>handleTodos</code></li>
-<li>Serving the main page is just a matter of serving static files. This is because all the important templating happens on client-side in <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>.</li>
+<li>Serving the main page is just a matter of serving static files.
+This is because all the important templating happens on client-side
+in <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/static/index.html">static/index.html</a>.</li>
 </ul>
-<p>The actual implementation of the <code>/api/todo</code> handler is straightforward (esp. with the hidden gem that is <a href="http://hackage.haskell.org/package/snap-extras">snap-extras</a>):</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="ot">handleTodos ::</span> <span class="dt">H</span> ()</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">handleTodos <span class="fu">=</span></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3">  method <span class="dt">GET</span>  (withLoggedInUser getTodos) <span class="fu">&lt;|&gt;</span></a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">  method <span class="dt">POST</span> (withLoggedInUser saveTodo)</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb5-6" data-line-number="6">    getTodos user <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb5-7" data-line-number="7">      todos <span class="ot">&lt;-</span> withDb <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.listTodos conn user</a>
-<a class="sourceLine" id="cb5-8" data-line-number="8">      writeJSON todos</a>
-<a class="sourceLine" id="cb5-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb5-10" data-line-number="10">    saveTodo user <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb5-11" data-line-number="11">      newTodo <span class="ot">&lt;-</span> getJSON</a>
-<a class="sourceLine" id="cb5-12" data-line-number="12">      either (const <span class="fu">$</span> return ()) persist newTodo</a>
-<a class="sourceLine" id="cb5-13" data-line-number="13">        <span class="kw">where</span></a>
-<a class="sourceLine" id="cb5-14" data-line-number="14">          persist todo <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb5-15" data-line-number="15">            savedTodo <span class="ot">&lt;-</span> withDb <span class="fu">$</span> \conn <span class="ot">-&gt;</span> Db.saveTodo conn user todo</a>
-<a class="sourceLine" id="cb5-16" data-line-number="16">            writeJSON savedTodo</a></code></pre></div>
-<p>Function <code>handleTodos</code> handles either <code>GET</code> or <code>POST</code> requests, for retrieving and modifying todo items. All its request parameters come in as JSON – these are turned into Haskell objects using <code>getJSON</code> from <a href="http://hackage.haskell.org/packages/archive/snap-extras/0.3/doc/html/Snap-Extras-JSON.html">Snap.Extras.JSON</a>. Similarly, we use <code>writeJSON</code> for outputting the request response. Automatic JSON encode and decode is made possible by the <code>FromJSON</code> and <code>ToJSON</code> instances defined in the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module.</p>
+<p>The actual implementation of the <code>/api/todo</code> handler is
+straightforward (esp. with the hidden gem that is <a href="http://hackage.haskell.org/package/snap-extras">snap-extras</a>):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ot">handleTodos ::</span> <span class="dt">H</span> ()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>handleTodos <span class="ot">=</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  method <span class="dt">GET</span>  (withLoggedInUser getTodos) <span class="op">&lt;|&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  method <span class="dt">POST</span> (withLoggedInUser saveTodo)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    getTodos user <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      todos <span class="ot">&lt;-</span> withDb <span class="op">$</span> \conn <span class="ot">-&gt;</span> Db.listTodos conn user</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      writeJSON todos</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    saveTodo user <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      newTodo <span class="ot">&lt;-</span> getJSON</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">either</span> (<span class="fu">const</span> <span class="op">$</span> <span class="fu">return</span> ()) persist newTodo</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">where</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>          persist todo <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            savedTodo <span class="ot">&lt;-</span> withDb <span class="op">$</span> \conn <span class="ot">-&gt;</span> Db.saveTodo conn user todo</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            writeJSON savedTodo</span></code></pre></div>
+<p>Function <code>handleTodos</code> handles either <code>GET</code> or <code>POST</code> requests, for
+retrieving and modifying todo items. All its request parameters come
+in as JSON – these are turned into Haskell objects using <code>getJSON</code>
+from <a href="http://hackage.haskell.org/packages/archive/snap-extras/0.3/doc/html/Snap-Extras-JSON.html">Snap.Extras.JSON</a>. Similarly, we use
+<code>writeJSON</code> for outputting the request response. Automatic JSON
+encode and decode is made possible by the <code>FromJSON</code> and <code>ToJSON</code>
+instances defined in the <a href="https://github.com/nurpax/snap-examples/blob/master/angularjs-todo/src/Db.hs">Db</a> module.</p>
 <h3 id="debugging-json-responses">Debugging JSON responses</h3>
-<p>A good way to debug your REST APIs is to use Chrome’s Developer Tools. Open the Developer console and click on the Network tab. When you load a page, you can see what requests are being made and you can inspect what JSON gets sent by clicking on the individual <code>/api/todo</code> requests. Here’s an example of what traffic gets generated when complete a to-do:</p>
+<p>A good way to debug your REST APIs is to use Chrome’s Developer Tools.
+Open the Developer console and click on the Network tab. When you
+load a page, you can see what requests are being made and you can
+inspect what JSON gets sent by clicking on the individual <code>/api/todo</code>
+requests. Here’s an example of what traffic gets generated when
+complete a to-do:</p>
 <div class="screenshot white-bg">
 <img src="../images/angular-todo2-check.png" title="Chrome dev tool view" />
 </div>
 <p>This is the result of a <code>todo.$save()</code> AJAX call.</p>
 <h3 id="what-next">What next?</h3>
-<p>Well.. The easy part is over. If you want to learn more about using AngularJS with Snap, I suggest that you:</p>
+<p>Well.. The easy part is over. If you want to learn more about using
+AngularJS with Snap, I suggest that you:</p>
 <ul>
 <li>Read the <a href="http://angularjs.org/">AngularJS docs</a></li>
 <li>Read the <a href="http://snapframework.com/">Snap Framework docs</a></li>

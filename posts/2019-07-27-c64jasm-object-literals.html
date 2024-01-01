@@ -56,10 +56,10 @@
     indent: 4
 };</code></pre>
 <p>The equivalent in c64jasm syntax would be:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb2-1" data-line-number="1">!let options = {</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="fu">    filename:</span> <span class="st">&quot;main.asm&quot;</span>,</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="fu">    indent:</span> <span class="dv">4</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">}</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>!let options <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filename:</span> &quot;main<span class="op">.</span>asm<span class="st">&quot;,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">indent:</span> 4</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 id="how-is-this-useful-in-assembler">How is this useful in assembler?</h3>
 <p>Turns out object literals can be quite useful for a few things:</p>
 <ul>
@@ -68,113 +68,113 @@
 <li>Implicitly parametrize macro expansion</li>
 </ul>
 <p><strong>Named parameters</strong>: C64jasm supports only positional arguments in macro calls. However, just like in JavaScript, objects are a great substitute for named parameters:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb3-1" data-line-number="1">!<span class="pp">macro</span> clear_screen_named(args) {</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">    lda #args.clearByte</a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">    ldx #<span class="dv">0</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="bu">loop</span>:</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">    !let screen = args.screen</a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">    sta screen, x</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">    sta screen +<span class="bn"> $100, </span>x</a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">    sta screen +<span class="bn"> $200, </span>x</a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">    sta screen +<span class="bn"> $300, </span>x</a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">    inx</a>
-<a class="sourceLine" id="cb3-11" data-line-number="11">    bne <span class="bu">loop</span></a>
-<a class="sourceLine" id="cb3-12" data-line-number="12">}</a>
-<a class="sourceLine" id="cb3-13" data-line-number="13"></a>
-<a class="sourceLine" id="cb3-14" data-line-number="14">+clear_screen_named({ screen:<span class="bn"> $0400, </span>clearByte: <span class="dv">$</span>a0 })</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>!<span class="pp">macro</span> clear_screen_named<span class="op">(</span>args<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span>args<span class="op">.</span>clearByte</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ldx <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    !let screen <span class="op">=</span> args<span class="op">.</span>screen</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    sta screen<span class="op">,</span> x</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    sta screen <span class="op">+</span> <span class="op">$</span><span class="bn">100</span><span class="op">,</span> x</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    sta screen <span class="op">+</span> <span class="op">$</span><span class="bn">200</span><span class="op">,</span> x</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    sta screen <span class="op">+</span> <span class="op">$</span><span class="bn">300</span><span class="op">,</span> x</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    inx</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    bne loop</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>+clear_screen_named<span class="op">({</span> screen<span class="op">:</span> <span class="op">$</span><span class="bn">0400</span><span class="op">,</span> clearByte<span class="op">:</span> <span class="op">$</span>a0 <span class="op">})</span></span></code></pre></div>
 <p><strong>Zero-page addresses</strong>: If you’ve written any decent amounts of 6502 assembly, you may have ran into problems keeping track of what’s in the zeropage. Perhaps you first started out by just keeping all the addresses in your head or code comments:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb4-1" data-line-number="1">    lda #<span class="dv">0</span></a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">    sta<span class="bn"> $20    </span><span class="co">; sprite index</span></a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">    lda #<span class="dv">2</span></a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">    sta<span class="bn"> $21    </span><span class="co">; num sprites</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    sta <span class="op">$</span><span class="bn">20</span>    <span class="co">; sprite index</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span><span class="dv">2</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    sta <span class="op">$</span><span class="bn">21</span>    <span class="co">; num sprites</span></span></code></pre></div>
 <p>This is hard to read and easily breaks on modification. Instead, I tend to declare my zeropage allocation in variables:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb5-1" data-line-number="1">!let zp_sprite_idx =<span class="bn"> $20</span></a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">!let zp_num_sprites =<span class="bn"> $21</span></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3">    lda #<span class="dv">0</span></a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">    sta zp_sprite_idx</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">    lda #<span class="dv">2</span></a>
-<a class="sourceLine" id="cb5-6" data-line-number="6">    sta zp_num_sprites</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>!let zp_sprite_idx <span class="op">=</span> <span class="op">$</span><span class="bn">20</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>!let zp_num_sprites <span class="op">=</span> <span class="op">$</span><span class="bn">21</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    sta zp_sprite_idx</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span><span class="dv">2</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    sta zp_num_sprites</span></code></pre></div>
 <p>You can express the above equivalently using an object literal:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb6-1" data-line-number="1">!let zp = {</a>
-<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="fu">    sprite_idx:</span><span class="bn"> $20,</span></a>
-<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="fu">    num_sprites:</span><span class="bn"> $21</span></a>
-<a class="sourceLine" id="cb6-4" data-line-number="4">}</a>
-<a class="sourceLine" id="cb6-5" data-line-number="5">    lda #<span class="dv">0</span></a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">    sta zp.sprite_idx</a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">    lda #<span class="dv">2</span></a>
-<a class="sourceLine" id="cb6-8" data-line-number="8">    sta zp.num_sprites</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>!let zp <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprite_idx:</span> $20,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">num_sprites:</span> $21</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    sta zp<span class="op">.</span>sprite_idx</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span><span class="dv">2</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    sta zp<span class="op">.</span>num_sprites</span></code></pre></div>
 <p>Turns out, the latter form combines well with macro expansion.</p>
 <h3 id="macros-and-zeropage-temporaries">Macros and zeropage temporaries</h3>
 <p>Consider the below <code>mul_imm</code> macro that multiplies a 16-bit value by 3. It needs 2 bytes of zeropage memory to hold a temporary value (<code>zp_tmp0</code>). It’s hardcoded to store the tempory in zeropage addresses <code>$20-$21</code>.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb7-1" data-line-number="1">!<span class="pp">macro</span> add16(res, n1, n2) {</a>
-<a class="sourceLine" id="cb7-2" data-line-number="2">    <span class="bu">clc</span></a>
-<a class="sourceLine" id="cb7-3" data-line-number="3">    lda n1</a>
-<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="bu">adc</span> n2</a>
-<a class="sourceLine" id="cb7-5" data-line-number="5">    sta res+<span class="dv">0</span></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6">    lda n1+<span class="dv">1</span></a>
-<a class="sourceLine" id="cb7-7" data-line-number="7">    <span class="bu">adc</span> n2+<span class="dv">1</span></a>
-<a class="sourceLine" id="cb7-8" data-line-number="8">    sta res+<span class="dv">1</span></a>
-<a class="sourceLine" id="cb7-9" data-line-number="9">}</a>
-<a class="sourceLine" id="cb7-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb7-11" data-line-number="11">!<span class="pp">macro</span> mul_imm(m, imm) {</a>
-<a class="sourceLine" id="cb7-12" data-line-number="12">    !let zp_tmp0 =<span class="bn"> $20</span></a>
-<a class="sourceLine" id="cb7-13" data-line-number="13">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
-<a class="sourceLine" id="cb7-14" data-line-number="14">        +add16(zp_tmp0, m, m)</a>
-<a class="sourceLine" id="cb7-15" data-line-number="15">        +add16(m, zp_tmp0, m)</a>
-<a class="sourceLine" id="cb7-16" data-line-number="16">    } <span class="pp">else</span> {</a>
-<a class="sourceLine" id="cb7-17" data-line-number="17">        !error <span class="st">&quot;only imm=3 is supported&quot;</span></a>
-<a class="sourceLine" id="cb7-18" data-line-number="18">    }</a>
-<a class="sourceLine" id="cb7-19" data-line-number="19">}</a>
-<a class="sourceLine" id="cb7-20" data-line-number="20"></a>
-<a class="sourceLine" id="cb7-21" data-line-number="21"><span class="fu">func:</span> {</a>
-<a class="sourceLine" id="cb7-22" data-line-number="22">    +mul_imm(num1, <span class="dv">3</span>)</a>
-<a class="sourceLine" id="cb7-23" data-line-number="23">}</a>
-<a class="sourceLine" id="cb7-24" data-line-number="24"><span class="fu">irq_func:</span> {</a>
-<a class="sourceLine" id="cb7-25" data-line-number="25">    +mul_imm(num1, <span class="dv">3</span>)  <span class="co">; Ouch! Clobbers $20-21!</span></a>
-<a class="sourceLine" id="cb7-26" data-line-number="26">}</a>
-<a class="sourceLine" id="cb7-27" data-line-number="27"></a>
-<a class="sourceLine" id="cb7-28" data-line-number="28"><span class="fu">num1:</span> !<span class="dt">word</span> <span class="dv">27</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>!<span class="pp">macro</span> add16<span class="op">(</span>res<span class="op">,</span> n1<span class="op">,</span> n2<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">clc</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    lda n1</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">adc</span> n2</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    sta res<span class="op">+</span><span class="dv">0</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    lda n1<span class="op">+</span><span class="dv">1</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">adc</span> n2<span class="op">+</span><span class="dv">1</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    sta res<span class="op">+</span><span class="dv">1</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>!<span class="pp">macro</span> mul_imm<span class="op">(</span>m<span class="op">,</span> imm<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    !let zp_tmp0 <span class="op">=</span> <span class="op">$</span><span class="bn">20</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    !<span class="pp">if</span> <span class="op">(</span>imm <span class="op">==</span> <span class="dv">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        +add16<span class="op">(</span>zp_tmp0<span class="op">,</span> m<span class="op">,</span> m<span class="op">)</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        +add16<span class="op">(</span>m<span class="op">,</span> zp_tmp0<span class="op">,</span> m<span class="op">)</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="pp">else</span> <span class="op">{</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        !error <span class="st">&quot;only imm=3 is supported&quot;</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="fu">func:</span> <span class="op">{</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    +mul_imm<span class="op">(</span>num1<span class="op">,</span> <span class="dv">3</span><span class="op">)</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="fu">irq_func:</span> <span class="op">{</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    +mul_imm<span class="op">(</span>num1<span class="op">,</span> <span class="dv">3</span><span class="op">)</span>  <span class="co">; Ouch! Clobbers $20-21!</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="fu">num1:</span> !<span class="dt">word</span> <span class="dv">27</span></span></code></pre></div>
 <p>What if the code calling this macro is also using zeropage <code>$20-$21</code>? The values in <code>$20-$21</code> will get clobbered by the macro. You also probably cannot use this macro in an IRQ as the IRQ might then clobber <code>$20-21</code> while your main code is running and using the same memory.</p>
 <p>We could of course pass in a 3rd parameter <code>zp_tmp0</code> that’d specify the temp zeropage location. But this is ugly even with one 16-bit zeropage temp and only gets worse in macros needing many temporaries.</p>
 <p>Let’s parametrize zeropage temp locations in <code>mul_imm</code> by adding a <code>zp</code> macro argument that holds the zeropage allocation:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb8-1" data-line-number="1">!<span class="pp">macro</span> mul_imm(zp, m, imm) {</a>
-<a class="sourceLine" id="cb8-2" data-line-number="2">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
-<a class="sourceLine" id="cb8-3" data-line-number="3">        +add16(zp.tmp0, m, m)</a>
-<a class="sourceLine" id="cb8-4" data-line-number="4">        +add16(m, zp.tmp0, m)</a>
-<a class="sourceLine" id="cb8-5" data-line-number="5">    }</a>
-<a class="sourceLine" id="cb8-6" data-line-number="6">}</a>
-<a class="sourceLine" id="cb8-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="fu">func:</span> {</a>
-<a class="sourceLine" id="cb8-9" data-line-number="9">    !let temps = { tmp0:<span class="bn"> $20 </span>}</a>
-<a class="sourceLine" id="cb8-10" data-line-number="10">    +mul_imm(temps, num1, <span class="dv">3</span>)</a>
-<a class="sourceLine" id="cb8-11" data-line-number="11">}</a>
-<a class="sourceLine" id="cb8-12" data-line-number="12"><span class="fu">irq_func:</span> {</a>
-<a class="sourceLine" id="cb8-13" data-line-number="13">    !let temps = { tmp0:<span class="bn"> $40 </span>}</a>
-<a class="sourceLine" id="cb8-14" data-line-number="14">    +mul_imm(temps, num1, <span class="dv">3</span>)  <span class="co">; OK, no clobber</span></a>
-<a class="sourceLine" id="cb8-15" data-line-number="15">}</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>!<span class="pp">macro</span> mul_imm<span class="op">(</span>zp<span class="op">,</span> m<span class="op">,</span> imm<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    !<span class="pp">if</span> <span class="op">(</span>imm <span class="op">==</span> <span class="dv">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        +add16<span class="op">(</span>zp<span class="op">.</span>tmp0<span class="op">,</span> m<span class="op">,</span> m<span class="op">)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        +add16<span class="op">(</span>m<span class="op">,</span> zp<span class="op">.</span>tmp0<span class="op">,</span> m<span class="op">)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">func:</span> <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    !let temps <span class="op">=</span> <span class="op">{</span> tmp0<span class="op">:</span> <span class="op">$</span><span class="bn">20</span> <span class="op">}</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    +mul_imm<span class="op">(</span>temps<span class="op">,</span> num1<span class="op">,</span> <span class="dv">3</span><span class="op">)</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="fu">irq_func:</span> <span class="op">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    !let temps <span class="op">=</span> <span class="op">{</span> tmp0<span class="op">:</span> <span class="op">$</span><span class="bn">40</span> <span class="op">}</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    +mul_imm<span class="op">(</span>temps<span class="op">,</span> num1<span class="op">,</span> <span class="dv">3</span><span class="op">)</span>  <span class="co">; OK, no clobber</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>Better but still noisy.</p>
 <p><del>Now here’s the kicker: we can drop the <code>zp</code> argument from <code>mul_imm</code> declaration and rely on a convention that <code>zp</code> is passed implicitly in the enclosing scope at the macro call site.</del></p>
 <p><del>In code:</del></p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co">; no 'zp' arg here, rely on it being in scope</span></a>
-<a class="sourceLine" id="cb9-2" data-line-number="2">!<span class="pp">macro</span> mul_imm(m, imm) {</a>
-<a class="sourceLine" id="cb9-3" data-line-number="3">    !<span class="pp">if</span> (imm == <span class="dv">3</span>) {</a>
-<a class="sourceLine" id="cb9-4" data-line-number="4">        +add16(zp.tmp0, m, m)</a>
-<a class="sourceLine" id="cb9-5" data-line-number="5">        +add16(m, zp.tmp0, m)</a>
-<a class="sourceLine" id="cb9-6" data-line-number="6">    }</a>
-<a class="sourceLine" id="cb9-7" data-line-number="7">}</a>
-<a class="sourceLine" id="cb9-8" data-line-number="8"></a>
-<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="co">; default zeropage temps</span></a>
-<a class="sourceLine" id="cb9-10" data-line-number="10">!let zp = { tmp0:<span class="bn"> $20 </span>}</a>
-<a class="sourceLine" id="cb9-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb9-12" data-line-number="12"><span class="fu">func:</span> {</a>
-<a class="sourceLine" id="cb9-13" data-line-number="13">    <span class="co">; use default zp tmp0=$20</span></a>
-<a class="sourceLine" id="cb9-14" data-line-number="14">    +mul_imm(num1, <span class="dv">3</span>)</a>
-<a class="sourceLine" id="cb9-15" data-line-number="15">}</a>
-<a class="sourceLine" id="cb9-16" data-line-number="16"><span class="fu">irq_func:</span> {</a>
-<a class="sourceLine" id="cb9-17" data-line-number="17">    <span class="co">; override zp with tmp0=$40 within irq_func</span></a>
-<a class="sourceLine" id="cb9-18" data-line-number="18">    !let zp = { tmp0:<span class="bn"> $40 </span>}</a>
-<a class="sourceLine" id="cb9-19" data-line-number="19">    +mul_imm(num1, <span class="dv">3</span>)</a>
-<a class="sourceLine" id="cb9-20" data-line-number="20">}</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">; no 'zp' arg here, rely on it being in scope</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>!<span class="pp">macro</span> mul_imm<span class="op">(</span>m<span class="op">,</span> imm<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    !<span class="pp">if</span> <span class="op">(</span>imm <span class="op">==</span> <span class="dv">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        +add16<span class="op">(</span>zp<span class="op">.</span>tmp0<span class="op">,</span> m<span class="op">,</span> m<span class="op">)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        +add16<span class="op">(</span>m<span class="op">,</span> zp<span class="op">.</span>tmp0<span class="op">,</span> m<span class="op">)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">; default zeropage temps</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>!let zp <span class="op">=</span> <span class="op">{</span> tmp0<span class="op">:</span> <span class="op">$</span><span class="bn">20</span> <span class="op">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">func:</span> <span class="op">{</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">; use default zp tmp0=$20</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    +mul_imm<span class="op">(</span>num1<span class="op">,</span> <span class="dv">3</span><span class="op">)</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">irq_func:</span> <span class="op">{</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">; override zp with tmp0=$40 within irq_func</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    !let zp <span class="op">=</span> <span class="op">{</span> tmp0<span class="op">:</span> <span class="op">$</span><span class="bn">40</span> <span class="op">}</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    +mul_imm<span class="op">(</span>num1<span class="op">,</span> <span class="dv">3</span><span class="op">)</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p><strong>Update 2019-08-09</strong>: Implicit parameters by the sort of “dynamic scoping” shown here does not work as of c64jasm 0.7.0. When a macro is expanded, any symbols in the macro will use bindings from where the macro was declared, not where it’s expanded. Use global variables instead. See <a href="https://gist.github.com/nurpax/5aeaba58e359c6d040a9e0f87fa68ab9">this gist</a> for an example on how to do this cleanly.</p>
 <h3 id="wrap-up">Wrap-up</h3>
 <p>This post walked through a couple of tricks that became possible in the latest c64jasm v0.6.0 release. If you’re feeling adventurous, read more <a href="https://nurpax.github.io/c64jasm/">here</a>. Or <a href="https://nurpax.github.io/c64jasm-browser/">try it in your browser</a>!</p>

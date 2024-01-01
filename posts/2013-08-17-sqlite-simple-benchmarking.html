@@ -48,8 +48,15 @@
 <p class="post-author">Janne Hellsten on August 17, 2013</p>
 
 <h3 id="introduction">Introduction</h3>
-<p>I recently benchmarked my Haskell SQLite bindings package <a href="https://github.com/nurpax/sqlite-simple">sqlite-simple</a>. I was curious to know how sqlite-simple performance compares to native C, Python and other Haskell database bindings. Initial results for sqlite-simple were extremely poor but improved significantly after optimizations. This post will present the results of this benchmarking. It also discusses some of the optimizations that resulted from this performance analysis.</p>
-<p>Initially sqlite-simple scored barely over 50K rows/s. Optimizations brought this up to 1.8M rows/s, a nice 34x improvement.</p>
+<p>I recently benchmarked my Haskell SQLite bindings package
+<a href="https://github.com/nurpax/sqlite-simple">sqlite-simple</a>. I was curious to know how sqlite-simple performance
+compares to native C, Python and other Haskell database bindings.
+Initial results for sqlite-simple were extremely poor but improved
+significantly after optimizations. This post will present the results
+of this benchmarking. It also discusses some of the optimizations
+that resulted from this performance analysis.</p>
+<p>Initially sqlite-simple scored barely over 50K rows/s. Optimizations
+brought this up to 1.8M rows/s, a nice 34x improvement.</p>
 <h3 id="setup">Setup</h3>
 <p>Here’s the setup I used for running my experiments:</p>
 <ul>
@@ -74,14 +81,18 @@
 <li>Measure the time it takes to query the first column of all these rows.</li>
 </ol>
 <p>The schema consists of a single <code>testdata</code> table, defined as:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">CREATE</span> <span class="kw">TABLE</span> testdata (<span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, str TEXT, t <span class="dt">TIMESTAMP</span>)</a></code></pre></div>
-<p>See <a href="https://github.com/nurpax/db-bench/tree/master/db-util">db-bench/db-util</a> for more details.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> testdata (<span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, str TEXT, t <span class="dt">TIMESTAMP</span>)</span></code></pre></div>
+<p>See
+<a href="https://github.com/nurpax/db-bench/tree/master/db-util">db-bench/db-util</a>
+for more details.</p>
 <p>The sqlite-simple query being measured is defined as:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">selectInts ::</span> <span class="dt">S.Connection</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">selectInts conn <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">  rows <span class="ot">&lt;-</span> S.query_ conn <span class="st">&quot;SELECT id FROM testdata&quot;</span><span class="ot"> ::</span> <span class="dt">IO</span> [(<span class="dt">S.Only</span> <span class="dt">Int</span>)]</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">  checksum <span class="fu">$</span> foldl' (\acc (<span class="dt">S.Only</span> v) <span class="ot">-&gt;</span> v <span class="fu">+</span> acc) <span class="dv">0</span> rows</a></code></pre></div>
-<p>Basically, it SELECTs all the rows from the <code>testdata</code> table and converts the result into a Haskell list of <code>Int</code>s and, as a sanity check, sums the resulting integers together.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">selectInts ::</span> <span class="dt">S.Connection</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>selectInts conn <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  rows <span class="ot">&lt;-</span> S.query_ conn <span class="st">&quot;SELECT id FROM testdata&quot;</span><span class="ot"> ::</span> <span class="dt">IO</span> [(<span class="dt">S.Only</span> <span class="dt">Int</span>)]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  checksum <span class="op">$</span> foldl' (\acc (<span class="dt">S.Only</span> v) <span class="ot">-&gt;</span> v <span class="op">+</span> acc) <span class="dv">0</span> rows</span></code></pre></div>
+<p>Basically, it SELECTs all the rows from the <code>testdata</code> table and
+converts the result into a Haskell list of <code>Int</code>s and, as a sanity
+check, sums the resulting integers together.</p>
 <p>Several variants of this function are benchmarked. The main variants for SQLite are:</p>
 <ul>
 <li>direct-sqlite <code>selectIntsDS</code>: Lowest possible API level - least memory allocated</li>
@@ -89,11 +100,27 @@
 <li>sqlite-simple <code>selectInts</code>: Convert rows into Haskell list containing all the rows</li>
 </ul>
 <p>We’ll focus mostly on <code>selectInts</code> when comparing against other implementations.</p>
-<p>You can find implementations of the same for various Haskell database libraries under <a href="https://github.com/nurpax/db-bench/tree/master/haskell">db-bench/haskell</a>. C and Python implementations are under <a href="https://github.com/nurpax/db-bench/tree/master/native">db-bench/native</a> and <a href="https://github.com/nurpax/db-bench/tree/master/python">db-bench/python</a>, respectively.</p>
+<p>You can find implementations of the same for
+various Haskell database libraries under
+<a href="https://github.com/nurpax/db-bench/tree/master/haskell">db-bench/haskell</a>.
+C and Python implementations are under
+<a href="https://github.com/nurpax/db-bench/tree/master/native">db-bench/native</a>
+and
+<a href="https://github.com/nurpax/db-bench/tree/master/python">db-bench/python</a>,
+respectively.</p>
 <h3 id="establishing-performance-targets">Establishing performance targets</h3>
-<p>My benchmarking goal was to figure out how much overhead the sqlite-simple library adds on top of raw SQLite performance. Ideally, a query should spend all its time in native SQLite and zero time in Haskell bindings.</p>
-<p>To better focus optimization work, I first set out to establish some reasonable performance targets to compare against. Establishing targets was straightforward. As sqlite-simple runs on top of direct-sqlite, the sqlite-simple can only be as fast as direct-sqlite. As direct-sqlite runs on top of the native SQLite library, the fastest sqlite-simple and direct-sqlite can possibly go is as fast as SQLite.</p>
-<p>To turn this into numbers, I implemented multiple versions of my query benchmark (in order of fastest to slowest):</p>
+<p>My benchmarking goal was to figure out how much overhead the
+sqlite-simple library adds on top of raw SQLite performance. Ideally,
+a query should spend all its time in native SQLite and zero time in
+Haskell bindings.</p>
+<p>To better focus optimization work, I first set out to establish some
+reasonable performance targets to compare against. Establishing
+targets was straightforward. As sqlite-simple runs on top of
+direct-sqlite, the sqlite-simple can only be as fast as direct-sqlite.
+As direct-sqlite runs on top of the native SQLite library, the fastest
+sqlite-simple and direct-sqlite can possibly go is as fast as SQLite.</p>
+<p>To turn this into numbers, I implemented multiple versions of my query
+benchmark (in order of fastest to slowest):</p>
 <ul>
 <li>A native C benchmark on top of the SQLite library (<a href="https://github.com/nurpax/db-bench/tree/master/native/main.c">source</a>)</li>
 <li>Haskell: A Haskell version using direct-sqlite (<a href="https://github.com/nurpax/db-bench/tree/master/haskell/Sqlite.hs">source</a>, see function <code>selectInts</code>)</li>
@@ -106,34 +133,80 @@
 </div>
 </div>
 <h3 id="results-analysis">Results analysis</h3>
-<p>The collected benchmark data was used to identify various performance improvement opportunities in sqlite-simple.</p>
-<p>Original performance without optimizations was just barely over 50K rows/s. This was a performance bug I caused when I forked sqlite-simple from postgresql-simple. The problem was in a function called <code>stepStmt</code> that should’ve been tail recursive but wasn’t. Fixing this in <a href="https://github.com/nurpax/sqlite-simple/commit/d2b6f6a50e116e1bad28395eac4646c1e6b34c4b">d2b6f6a5</a> nicely bumped up the score from 53K to 750K rows/s.</p>
-<p>The next couple of optimizations dealt mostly with clean up to reduce allocation rate. With <a href="https://github.com/nurpax/sqlite-simple/commit/3239d474f033b2ab048744c9ea177b1e36930cce">3239d474f0</a> and <a href="https://github.com/nurpax/sqlite-simple/commit/0ee050807ded66b2eb34238f2a8d91cde6be8aa1">0ee050807d</a>, the benchmark score went up from 750K to 764K rows/s.</p>
-<p>At this point I ran out of low hanging fruit in sqlite-simple and started to look elsewhere for optimizations. A low-level direct-sqlite benchmark was clocking around 2.43M rows/s which seemed a little low when a C implementation of the same was processing rows at almost 6.9M rows/s. Even a Python reimplementation of my benchmark case was faster at 2.5M rows/s. To highlight how large the performance delta between C and direct-sqlite were, it’s helpful to turn the comparison into absolute clock cycles. On my 3.2GHz machine, 6.9M rows/s means SQLite spends roughly 460 clock cycles per row.</p>
-<p>Similarly, at 2.43M rows/s on direct-sqlite, each row cost roughly 1300 clock cycles out of which 460 was spent in the native SQLite library. Somehow roughly 840 clock cycles per row were spent in Haskell SQLite bindings. The overhead of just calling into SQLite from Haskell was higher than the actual cost of computing the result set inside SQLite! Yet, there wasn’t much going on in the wrapper library.</p>
+<p>The collected benchmark data was used to identify various performance
+improvement opportunities in sqlite-simple.</p>
+<p>Original performance without optimizations was just barely over 50K
+rows/s. This was a performance bug I caused when I forked
+sqlite-simple from postgresql-simple. The problem was in a function
+called <code>stepStmt</code> that should’ve been tail recursive but wasn’t.
+Fixing this in <a href="https://github.com/nurpax/sqlite-simple/commit/d2b6f6a50e116e1bad28395eac4646c1e6b34c4b">d2b6f6a5</a> nicely bumped up the score
+from 53K to 750K rows/s.</p>
+<p>The next couple of optimizations dealt mostly with clean up to reduce
+allocation rate. With <a href="https://github.com/nurpax/sqlite-simple/commit/3239d474f033b2ab048744c9ea177b1e36930cce">3239d474f0</a> and
+<a href="https://github.com/nurpax/sqlite-simple/commit/0ee050807ded66b2eb34238f2a8d91cde6be8aa1">0ee050807d</a>, the benchmark score went up from 750K to
+764K rows/s.</p>
+<p>At this point I ran out of low hanging fruit in sqlite-simple and
+started to look elsewhere for optimizations. A low-level
+direct-sqlite benchmark was clocking around 2.43M rows/s which seemed
+a little low when a C implementation of the same was processing rows
+at almost 6.9M rows/s. Even a Python reimplementation of my benchmark
+case was faster at 2.5M rows/s. To highlight how large the
+performance delta between C and direct-sqlite were, it’s helpful to
+turn the comparison into absolute clock cycles. On my 3.2GHz machine,
+6.9M rows/s means SQLite spends roughly 460 clock cycles per row.</p>
+<p>Similarly, at 2.43M rows/s on direct-sqlite, each row cost roughly
+1300 clock cycles out of which 460 was spent in the native SQLite
+library. Somehow roughly 840 clock cycles per row were spent in
+Haskell SQLite bindings. The overhead of just calling into SQLite
+from Haskell was higher than the actual cost of computing the result
+set inside SQLite! Yet, there wasn’t much going on in the wrapper
+library.</p>
 <p>Consider the innerloop of the direct-sqlite benchmark:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ot">sumRowsColumnInt64 ::</span> <span class="dt">DS.Statement</span> <span class="ot">-&gt;</span> <span class="dt">Int64</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int64</span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">sumRowsColumnInt64 stmt <span class="fu">!</span>acc <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  r <span class="ot">&lt;-</span> DS.step stmt</a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  <span class="kw">case</span> r <span class="kw">of</span></a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">    <span class="dt">DS.Row</span> <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">      <span class="kw">do</span></a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">        i <span class="ot">&lt;-</span> DS.columnInt64 stmt <span class="dv">0</span></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">        sumRowsColumnInt64 stmt (acc <span class="fu">+</span> i)</a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">    <span class="dt">DS.Done</span> <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">      return acc</a></code></pre></div>
-<p>The direct-sqlite calls <code>DS.step</code> and <code>DS.columnInt64</code> map quite directly to their native SQLite counterparts <code><a href="http://www.sqlite.org/c3ref/step.html">sqlite3_step</a></code> and <code><a href="http://www.sqlite.org/c3ref/column_blob.html">sqlite3_column_int</a></code>. Thus the expectation is that their cost should be roughly the same as in the C version of this benchmark.</p>
-<p>No matter how bad a compiler you might have, there’s no way the simple Haskell code around <code>sqlite3_step</code> and <code>sqlite3_column_int</code> would add up to 840 clocks per row.</p>
-<p>Turns out FFI call overhead dominated this benchmark. It was possible to reduce this overhead by using the <code>unsafe</code> FFI calling convention for some of the SQLite column accessors. This change was made in direct-sqlite <a href="https://github.com/IreneKnapp/direct-sqlite/pull/20">pull request #20</a>. As the name <code>unsafe</code> implies, it’s not OK to simply mark all FFI functions as unsafe – please refer to the pull request discussion for details. The tl;dr of the FFI discussion was that it’s OK to mark result data accessors like <code>sqlite3_column_int64</code> and <code>sqlite3_column_count</code> as <code>unsafe</code> but that any functions doing the actual query heavy lifting like <code>sqlite3_step</code> should be kept safe.</p>
-<p>The FFI optimizations were a big deal: the direct-sqlite benchmark score went up from 2.43M to 3.6M rows/s. As expected, this bumped up the sqlite-simple score up to 1.8M rows/s.</p>
-<p>The following chart summarizes how performance progressed through the above optimizations:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">sumRowsColumnInt64 ::</span> <span class="dt">DS.Statement</span> <span class="ot">-&gt;</span> <span class="dt">Int64</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int64</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sumRowsColumnInt64 stmt <span class="op">!</span>acc <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> DS.step stmt</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> r <span class="kw">of</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">DS.Row</span> <span class="ot">-&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">do</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        i <span class="ot">&lt;-</span> DS.columnInt64 stmt <span class="dv">0</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        sumRowsColumnInt64 stmt (acc <span class="op">+</span> i)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">DS.Done</span> <span class="ot">-&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span> acc</span></code></pre></div>
+<p>The direct-sqlite calls <code>DS.step</code> and <code>DS.columnInt64</code> map quite
+directly to their native SQLite counterparts
+<code><a href="http://www.sqlite.org/c3ref/step.html">sqlite3_step</a></code> and
+<code><a href="http://www.sqlite.org/c3ref/column_blob.html">sqlite3_column_int</a></code>.
+Thus the expectation is that their cost should be roughly the same as
+in the C version of this benchmark.</p>
+<p>No matter how bad a compiler you might have, there’s no way the simple
+Haskell code around <code>sqlite3_step</code> and <code>sqlite3_column_int</code> would add
+up to 840 clocks per row.</p>
+<p>Turns out FFI call overhead dominated this benchmark. It was possible
+to reduce this overhead by using the <code>unsafe</code> FFI calling convention
+for some of the SQLite column accessors. This change was made in
+direct-sqlite <a href="https://github.com/IreneKnapp/direct-sqlite/pull/20">pull request
+#20</a>. As the
+name <code>unsafe</code> implies, it’s not OK to simply mark all FFI functions as
+unsafe – please refer to the pull request discussion for details.
+The tl;dr of the FFI discussion was that it’s OK to mark result data
+accessors like <code>sqlite3_column_int64</code> and <code>sqlite3_column_count</code> as
+<code>unsafe</code> but that any functions doing the actual query heavy lifting
+like <code>sqlite3_step</code> should be kept safe.</p>
+<p>The FFI optimizations were a big deal: the direct-sqlite benchmark
+score went up from 2.43M to 3.6M rows/s. As expected, this bumped up
+the sqlite-simple score up to 1.8M rows/s.</p>
+<p>The following chart summarizes how performance progressed through the
+above optimizations:</p>
 <div>
 <h5 id="optimization-progress-rowss">Optimization progress (rows/s)</h5>
 <div id="chart-opt-progress" style="width:600px;height:360px;">
 </div>
 </div>
 <h3 id="comparing-to-other-implementations-and-databases">Comparing to other implementations and databases</h3>
-<p>As an extra bonus, I also compared my results to other databases and to other Haskell database bindings. Furthermore, I wanted to know how well Python fares with its built-in sqlite3 module. I thus implemented a few more variants of my benchmark:</p>
+<p>As an extra bonus, I also compared my results to other databases and
+to other Haskell database bindings. Furthermore, I wanted to know how
+well Python fares with its built-in sqlite3 module. I thus
+implemented a few more variants of my benchmark:</p>
 <ul>
 <li>mysql-simple (<a href="https://github.com/nurpax/db-bench/tree/master/haskell/Mysql.hs">source</a>)</li>
 <li>postgresql-simple (<a href="https://github.com/nurpax/db-bench/tree/master/haskell/Psql.hs">source</a>)</li>
@@ -145,7 +218,11 @@
 <div id="chart-cross-db" style="width:600px;height:360px;">
 </div>
 </div>
-<p>I didn’t do any performance analysis for non-sqlite benchmark results, and wouldn’t draw too many conclusions about the results. These results do seem to confirm though that the HDBC library adds a fairly significant overhead to database row access. Comparing HDBC against sqlite-simple, we get 105K vs 1.8M rows/s.</p>
+<p>I didn’t do any performance analysis for non-sqlite benchmark results,
+and wouldn’t draw too many conclusions about the results. These
+results do seem to confirm though that the HDBC library adds a fairly
+significant overhead to database row access. Comparing HDBC against
+sqlite-simple, we get 105K vs 1.8M rows/s.</p>
 <h3 id="next-steps">Next steps</h3>
 <p>There are still many areas that would need further analysis:</p>
 <ul>
@@ -153,8 +230,14 @@
 <li>Use other column types than <code>Int</code>s</li>
 <li>Per-query overhead</li>
 </ul>
-<p>I expect low per-query overhead to be particularly important for web applications. The typical usage in web apps would be that a single page load performs several queries with relatively low number of rows returned by each query.</p>
-<p>Thanks to <a href="https://github.com/Emm">Emmanuel Surleau</a>, <a href="https://github.com/IreneKnapp">Irene Knapp</a> and <a href="https://github.com/joeyadams">Joey Adams</a> for their optimization ideas, contributions and code reviews.</p>
+<p>I expect low per-query overhead to be particularly important for web
+applications. The typical usage in web apps would be that a single
+page load performs several queries with relatively low number of rows
+returned by each query.</p>
+<p>Thanks to <a href="https://github.com/Emm">Emmanuel Surleau</a>, <a href="https://github.com/IreneKnapp">Irene
+Knapp</a> and <a href="https://github.com/joeyadams">Joey
+Adams</a> for their optimization ideas,
+contributions and code reviews.</p>
 <p>Until next time.</p>
 <script type="text/javascript">
 function barchart(divname, legendPos, data)

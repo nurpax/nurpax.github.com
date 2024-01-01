@@ -60,20 +60,20 @@
 <pre><code>git clone https://github.com/nurpax/c64jasm.git
 cd c64jasm/examples/content-pipe</code></pre>
 <p>Edit src/main.asm and add a <code>!break</code> as below:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><a class="sourceLine" id="cb2-1" data-line-number="1">+basic_start(<span class="bu">entry</span>)</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co">;--------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co">; Execution starts here</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">;--------------------------------------------------------------</span></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="bu">entry</span>: {</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">    !<span class="pp">break</span>          <span class="co">; 👈 add breakpoint here!</span></a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">    lda #<span class="dv">0</span></a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">    <span class="bu">js</span>r music.init</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9"></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">    sei</a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">    lda #<span class="bn">$35        </span><span class="co">; Bank out kernal and basic</span></a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">    sta<span class="bn"> $01         </span><span class="co">; $e000-$ffff</span></a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">    +setup_irq(irq_top, irq_top_line)</a>
-<a class="sourceLine" id="cb2-14" data-line-number="14">    <span class="bu">cli</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>+basic_start<span class="op">(</span>entry<span class="op">)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">;--------------------------------------------------------------</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">; Execution starts here</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">;--------------------------------------------------------------</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">entry:</span> <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    !<span class="pp">break</span>          <span class="co">; 👈 add breakpoint here!</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    jsr music<span class="op">.</span>init</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    sei</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    lda <span class="op">#$</span><span class="bn">35</span>        <span class="co">; Bank out kernal and basic</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    sta <span class="op">$</span><span class="bn">01</span>         <span class="co">; $e000-$ffff</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    +setup_irq<span class="op">(</span>irq_top<span class="op">,</span> irq_top_line<span class="op">)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">cli</span></span></code></pre></div>
 <p>Then compile the project:</p>
 <pre><code>c64jasm src/main.asm --vice-moncommands=main.vs --out main.prg</code></pre>
 <p>This produces two files: <code>main.prg</code> and <code>main.vs</code>. The contents of <code>main.vs</code> should look something like this:</p>
@@ -97,10 +97,10 @@ al C:20f2 .background_petscii_rle</code></pre>
 <p>Using the same example project from above, here’s how you will build the project and produce C64Debugger compatible debug symbols:</p>
 <pre><code>c64jasm src/main.asm --c64debugger-symbols=main.dbg --out main.prg</code></pre>
 <p>You can start C64Debugger with the below command. (It takes a bit of time for the debugger to start – there may be better way to run a .prg with C64Debugger.)</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># This invocation assumes KickAss debug symbols reside in main.dbg, as generated</span></a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co"># above with c64jasm.</span></a>
-<a class="sourceLine" id="cb7-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="ex">c64debugger</span> -wait 2500 -autojmp -layout 9 -prg main.prg</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This invocation assumes KickAss debug symbols reside in main.dbg, as generated</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># above with c64jasm.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">c64debugger</span> <span class="at">-wait</span> 2500 <span class="at">-autojmp</span> <span class="at">-layout</span> 9 <span class="at">-prg</span> main.prg</span></code></pre></div>
 <p>C64Debugger should break at the start of the example project and you should see something like this:</p>
 <div class="center">
 <img width="100%" src="../images/c64/c64jasm/c64debugger-entry-break.png" />

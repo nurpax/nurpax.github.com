@@ -135,7 +135,6 @@ button:active {
 
 <p class="post-author">Janne Hellsten on June 19, 2018</p>
 
-
 <p>(Looking for the BINTRIS C64 disk image? Find it <a href="../posts/2018-05-21-bintris-on-c64-part-2.html">here</a>.)</p>
 <h3 id="introduction">Introduction</h3>
 <p>This post discusses how BINTRIS uses YSCROLL manipulation to implement bad line suppression and full-screen vertical scrolling (flexible line distance, or FLD).</p>
@@ -145,7 +144,8 @@ button:active {
 <img width="100%" class="img-pixelated" src="../images/bintris/bintris-writer-fld.gif" /><em>Vertical scrolling.</em>
 </p>
 <p class="img-column">
-<img width="100%" class="img-pixelated" src="../images/bintris/bintris-logo-wobble.gif" /> <em>BINTRIS logo warp effect.</em>
+<img width="100%" class="img-pixelated" src="../images/bintris/bintris-logo-wobble.gif" />
+<em>BINTRIS logo warp effect.</em>
 </p>
 </div>
 <p>Note: all timing values in this post are for specific to PAL-B C64 models.</p>
@@ -173,35 +173,36 @@ button:active {
 <em>The FLD effect.</em>
 </div>
 <div class="img-column">
-<img style="display:block" width="100%" class="img-pixelated" src="../images/bintris/bintris-writer-fld.gif" /> <em>Vertical scrolling.</em>
+<img style="display:block" width="100%" class="img-pixelated" src="../images/bintris/bintris-writer-fld.gif" />
+<em>Vertical scrolling.</em>
 </div>
 </div>
 <p>To scroll by N lines, simply trigger a raster IRQ at the top of the screen (say on line 46) and suppress N bad lines. Here’s how you might do this in C-like pseudo code:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">// YSCROLL is mapped to $d011</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co">// RASTER is mapped to $d012</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="cf">while</span>(!new_frame()) {</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">    <span class="co">// do nothing</span></a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">}</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">YSCROLL = <span class="bn">0x1B</span>;  <span class="co">// default YSCROLL value (%111)</span></a>
-<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="co">// wait for FLD start line</span></a>
-<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="cf">while</span> (RASTER != <span class="bn">0x40</span>) {</a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">    <span class="co">// do nothing</span></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">}</a>
-<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="cf">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; num_fld_lines; i++) {</a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">    <span class="dt">uint8_t</span> cur_raster = RASTER;</a>
-<a class="sourceLine" id="cb2-14" data-line-number="14">    <span class="co">// wait for next next line</span></a>
-<a class="sourceLine" id="cb2-15" data-line-number="15">    <span class="cf">while</span> (cur_raster == RASTER) {</a>
-<a class="sourceLine" id="cb2-16" data-line-number="16">        <span class="co">// do nothing</span></a>
-<a class="sourceLine" id="cb2-17" data-line-number="17">    }</a>
-<a class="sourceLine" id="cb2-18" data-line-number="18">    <span class="co">// skip over bad line by manipulating YSCROLL</span></a>
-<a class="sourceLine" id="cb2-19" data-line-number="19">    YSCROLL = ((YSCROLL + <span class="dv">1</span>) &amp; <span class="dv">7</span>) | <span class="bn">0x18</span>;</a>
-<a class="sourceLine" id="cb2-20" data-line-number="20">}</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// YSCROLL is mapped to $d011</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// RASTER is mapped to $d012</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span><span class="op">(!</span>new_frame<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// do nothing</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>YSCROLL <span class="op">=</span> <span class="bn">0x1B</span><span class="op">;</span>  <span class="co">// default YSCROLL value (%111)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// wait for FLD start line</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>RASTER <span class="op">!=</span> <span class="bn">0x40</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// do nothing</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_fld_lines<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> cur_raster <span class="op">=</span> RASTER<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// wait for next next line</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>cur_raster <span class="op">==</span> RASTER<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">// do nothing</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// skip over bad line by manipulating YSCROLL</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    YSCROLL <span class="op">=</span> <span class="op">((</span>YSCROLL <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">7</span><span class="op">)</span> <span class="op">|</span> <span class="bn">0x18</span><span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>I found <a href="http://codebase64.org/doku.php?id=base:fld">working FLD code in 6502 assembly</a> from codebase64.org. I tested it by porting it to KickAssembler and running it on VICE.</p>
 <h3 id="skipping-bad-lines">Skipping Bad Lines</h3>
 <p>As discussed above, it’s possible to vertically scroll down the whole screen by manipulating the YSCROLL register at appropriate times. However, vertical scrolling is not the only reason why you might want to skip bad lines. Recall from the Bad Lines section that on a bad line, the CPU can run only 20-23 cycles worth of machine code. <em>(NB: although many tutorials say that you have 23 CPU cycles on a bad line, in practice you really only have 20-22 cycles to work with. I might write a separate article about this topic later on.)</em></p>
 <p>The situation gets even worse if there are any sprites on a bad line. Also, the more sprites you have, the fewer CPU cycles are available. Here’s a simplified formula for evaluating how many cycles you can spend on a bad line with sprites:</p>
-<p><span class="math inline"><em>n</em><em>u</em><em>m</em>_<em>c</em><em>y</em><em>c</em><em>l</em><em>e</em><em>s</em> = 23 − (3 + 2 * <em>n</em><em>u</em><em>m</em>_<em>s</em><em>p</em><em>r</em><em>i</em><em>t</em><em>e</em><em>s</em>)</span></p>
+<p><span class="math inline"><em>n</em><em>u</em><em>m</em>_<em>c</em><em>y</em><em>c</em><em>l</em><em>e</em><em>s</em> = 23 − (3+2*<em>n</em><em>u</em><em>m</em>_<em>s</em><em>p</em><em>r</em><em>i</em><em>t</em><em>e</em><em>s</em>)</span></p>
 <p><em>(NB: This is a bit simplified, see <a href="http://www.antimon.org/dl/c64/code/missing.txt">Missing Cycles</a> for details.)</em></p>
 <p>Let’s say you have enabled sprites 0-3 and they all hit a bad line. Now you have only 12 cycles to spare on your fancy raster routine (or in practice, more like 10 cycles.)</p>
 <p>Ten cycles is not all that much. For example, say you want to load and store some values. Here’s all you can run during a single bad line:</p>

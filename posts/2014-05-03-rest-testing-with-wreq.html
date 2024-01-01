@@ -48,10 +48,23 @@
 <p class="post-author">Janne Hellsten on May  4, 2014</p>
 
 <h3 id="introduction">Introduction</h3>
-<p>This blog post is about my experiences rewriting Node.js/JavaScript-based REST unit tests in Haskell using <a href="http://hackage.haskell.org/package/wreq">wreq</a> and <a href="https://batterseapower.github.io/test-framework/">test-framework</a>. I hope the test cases presented in this post are useful practical examples of using <code>test-framework</code> for IO-heavy testing.</p>
-<p>The tests discussed in this post are for my <a href="https://github.com/nurpax/hswtrack">Hswtrack</a> project. Hswtrack is a web application for exercise tracking. The application server is built with <a href="http://snapframework.com/">Snap</a> and the UI in JavaScript with JQuery and <a href="http://handlebarsjs.com/">Handlebars.js</a>.</p>
-<p>Here’s a summary of what type of REST entry points will be tested in this post:</p>
+<p>This blog post is about my experiences rewriting
+Node.js/JavaScript-based REST unit tests in Haskell using <a href="http://hackage.haskell.org/package/wreq">wreq</a> and
+<a href="https://batterseapower.github.io/test-framework/">test-framework</a>. I hope the test cases presented in this post are
+useful practical examples of using <code>test-framework</code> for IO-heavy
+testing.</p>
+<p>The tests discussed in this post are for my <a href="https://github.com/nurpax/hswtrack">Hswtrack</a>
+project. Hswtrack is a web application for exercise tracking. The
+application server is built with <a href="http://snapframework.com/">Snap</a> and the UI in JavaScript
+with JQuery and <a href="http://handlebarsjs.com/">Handlebars.js</a>.</p>
+<p>Here’s a summary of what type of REST entry points will be tested in
+this post:</p>
 <table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 15%" />
+<col style="width: 42%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Entry point</th>
@@ -87,9 +100,19 @@
 </tr>
 </tbody>
 </table>
-<p>Most entry point require a prior successful login. The response body is encoded as JSON. When called unauthenticated, the server returns an HTTP 403 error code.</p>
-<p>As the server talks to the client in JSON, I initially thought JavaScript + NodeJS would be a nice combo for developing these tests. I first tried <a href="http://frisbyjs.com/">Frisby</a> which looked simple and had good looking documentation. Unfortunately it turned out to be cumbersome for the types of tests I wanted to write. I also tried writing my own test framework with Q promises but that came out like <a href="https://twitter.com/SlexAxton/status/455568049181958144">Tea party code</a> too. (You can view the source for my JavaScript tests <a href="https://github.com/nurpax/hswtrack/blob/0e820183ce28a6e62056c0dda7c99d5109ad3e68/test/rest/tests/workout.js">here</a>.)</p>
-<p>Feeling dissatisfied about the state of my tests, I decided to rewrite my unit tests in Haskell.</p>
+<p>Most entry point require a prior successful login. The response body
+is encoded as JSON. When called unauthenticated, the server returns
+an HTTP 403 error code.</p>
+<p>As the server talks to the client in JSON, I initially thought
+JavaScript + NodeJS would be a nice combo for developing these tests.
+I first tried <a href="http://frisbyjs.com/">Frisby</a> which looked simple and
+had good looking documentation. Unfortunately it turned out to be
+cumbersome for the types of tests I wanted to write. I also tried
+writing my own test framework with Q promises but that came out like
+<a href="https://twitter.com/SlexAxton/status/455568049181958144">Tea party code</a> too. (You can view the source for my
+JavaScript tests <a href="https://github.com/nurpax/hswtrack/blob/0e820183ce28a6e62056c0dda7c99d5109ad3e68/test/rest/tests/workout.js">here</a>.)</p>
+<p>Feeling dissatisfied about the state of my tests, I decided to rewrite
+my unit tests in Haskell.</p>
 <h3 id="types-of-tests">Types of tests</h3>
 <p>I wanted to develop the following types of tests:</p>
 <ul>
@@ -99,90 +122,117 @@
 <li>Test object creation, update and deletion when logged in</li>
 <li>Test that attempts to modify or delete other users’ data are rejected</li>
 </ul>
-<p>Any tests that modify or create objects need to run with an authenticated user. This means each such test would need to either log in as part of its init sequence or have its authentication cookies passed into it. I went for the latter approach as it allows logging in once and running multiple tests with the same cookies.</p>
-<p>I define top-level test cases called <code>createUserTests</code> and <code>loginUserTests</code> which first perform user creation or login, followed by running a list of sub-tests with cookies acquired from the login process. The sequencing is explicitly declared by using <code>test-framework</code>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
+<p>Any tests that modify or create objects need to run with an
+authenticated user. This means each such test would need to either
+log in as part of its init sequence or have its authentication cookies
+passed into it. I went for the latter approach as it allows logging
+in once and running multiple tests with the same cookies.</p>
+<p>I define top-level test cases called <code>createUserTests</code> and
+<code>loginUserTests</code> which first perform user creation or login, followed
+by running a list of sub-tests with cookies acquired from the login
+process. The sequencing is explicitly declared by using
+<code>test-framework</code>’s <code>TestGroup</code>s and <code>Test</code>s.</p>
 <p>Here’s the definition of <code>loginUserTests</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co">-- from the login process.</span></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">loginUserTests tests <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">  r <span class="ot">&lt;-</span> post (mkUrl <span class="st">&quot;/rest/login&quot;</span>) [<span class="st">&quot;login&quot;</span> <span class="fu">:=</span> login, <span class="st">&quot;password&quot;</span> <span class="fu">:=</span> passwd]</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6">  <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> cookies <span class="fu">.~</span> (r <span class="fu">^.</span> responseCookieJar)</a>
-<a class="sourceLine" id="cb1-7" data-line-number="7">  return</a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">    <span class="fu">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span></a>
-<a class="sourceLine" id="cb1-9" data-line-number="9">    <span class="fu">.</span> map (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="fu">$</span> tests</a></code></pre></div>
-<p>It performs a HTTP POST on <code>/rest/login</code> with the test user’s login credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes them to sub-tests so that they can run authenticated.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- | Login a user and run a list of subtests with cookies acquired</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- from the login process.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">loginUserTests ::</span> [(<span class="dt">String</span>, <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span>)] <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Test</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>loginUserTests tests <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> post (mkUrl <span class="st">&quot;/rest/login&quot;</span>) [<span class="st">&quot;login&quot;</span> <span class="op">:=</span> login, <span class="st">&quot;password&quot;</span> <span class="op">:=</span> passwd]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> opts <span class="ot">=</span> defaults <span class="op">&amp;</span> cookies <span class="op">.~</span> (r <span class="op">^.</span> responseCookieJar)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span> testGroup <span class="st">&quot;Tests with logged in user&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span> <span class="fu">map</span> (\(name, test) <span class="ot">-&gt;</span> testCase name (test opts)) <span class="op">$</span> tests</span></code></pre></div>
+<p>It performs a HTTP POST on <code>/rest/login</code> with the test user’s login
+credentials, grabs the authentication cookies with <code>defaults &amp; cookies .~ (r ^. responseCookieJar)</code> and passes them to sub-tests so that they
+can run authenticated.</p>
 <p>Here’s how <code>loginUserTests</code> gets used:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">-- Test case that tests that we're successfully logged in</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co">-- Options must contain the necessary login cookies.</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">testLoggedInOk opts <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">  <span class="dt">Just</span> <span class="dt">True</span> <span class="fu">@=?</span> (r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="fu">.</span> _Bool)</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">main <span class="fu">=</span></a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">  defaultMain</a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">  [ buildTest <span class="fu">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">  , buildTest <span class="fu">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">  ]</a></code></pre></div>
-<p>Function <code>testLoggedInOk</code> tests that it can HTTP GET <code>/rest/app</code> successfully. It also tests that the returned JSON object contains a field <code>loggedIn</code> with value <code>true</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Test case that tests that we're successfully logged in</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Options must contain the necessary login cookies.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ot">testLoggedInOk ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>testLoggedInOk opts <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/app&quot;</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Just</span> <span class="dt">True</span> <span class="op">@=?</span> (r <span class="op">^?</span> responseBody <span class="op">.</span> key <span class="st">&quot;loggedIn&quot;</span> <span class="op">.</span> _Bool)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  defaultMain</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  [ buildTest <span class="op">$</span> createUserTests [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  , buildTest <span class="op">$</span> loginUserTests  [(<span class="st">&quot;logged in?&quot;</span>, testLoggedInOk)]</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  ]</span></code></pre></div>
+<p>Function <code>testLoggedInOk</code> tests that it can HTTP GET <code>/rest/app</code>
+successfully. It also tests that the returned JSON object contains a
+field <code>loggedIn</code> with value <code>true</code>.</p>
 <h3 id="negative-testing">Negative testing</h3>
-<p>One shouldn’t forget about negative testing, so let’s develop a test for checking that entry points correctly respond with an error 403 on unauthenticated access:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co">-- GET requests against 'url' and expect to get error 403 back</span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">testLoggedInFail url opts <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  E.try (getWith opts url) <span class="fu">&gt;&gt;=</span> check</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">    check (<span class="dt">Left</span> (<span class="dt">HT.StatusCodeException</span> s _ _))</a>
-<a class="sourceLine" id="cb3-7" data-line-number="7">      <span class="fu">|</span> s <span class="fu">^.</span> statusCode <span class="fu">==</span> <span class="dv">403</span> <span class="fu">=</span> assertBool <span class="st">&quot;error ok&quot;</span> <span class="dt">True</span></a>
-<a class="sourceLine" id="cb3-8" data-line-number="8">      <span class="fu">|</span> otherwise              <span class="fu">=</span> assertBool <span class="st">&quot;unexpected status code&quot;</span> <span class="dt">False</span></a>
-<a class="sourceLine" id="cb3-9" data-line-number="9">    check (<span class="dt">Left</span> _)  <span class="fu">=</span> assertBool <span class="st">&quot;unexpected exception caught&quot;</span> <span class="dt">False</span></a>
-<a class="sourceLine" id="cb3-10" data-line-number="10">    check (<span class="dt">Right</span> r) <span class="fu">=</span> assertBool <span class="st">&quot;req should've failed&quot;</span> <span class="dt">False</span></a>
-<a class="sourceLine" id="cb3-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb3-12" data-line-number="12"><span class="ot">main ::</span> <span class="dt">IO</span> ()</a>
-<a class="sourceLine" id="cb3-13" data-line-number="13">main <span class="fu">=</span></a>
-<a class="sourceLine" id="cb3-14" data-line-number="14">  defaultMain [testGroup <span class="st">&quot;Require auth fail&quot;</span> requireAuthFail]</a>
-<a class="sourceLine" id="cb3-15" data-line-number="15">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb3-16" data-line-number="16">    requireAuthFail <span class="fu">=</span></a>
-<a class="sourceLine" id="cb3-17" data-line-number="17">      map (\u <span class="ot">-&gt;</span> testCase u (testLoggedInFail (mkUrl u) defaults)) authReqd</a>
-<a class="sourceLine" id="cb3-18" data-line-number="18">    <span class="co">-- REST entry points which require user to be logged in</span></a>
-<a class="sourceLine" id="cb3-19" data-line-number="19">    authReqd <span class="fu">=</span> [ <span class="st">&quot;/rest/app&quot;</span></a>
-<a class="sourceLine" id="cb3-20" data-line-number="20">               , <span class="st">&quot;/rest/weights&quot;</span></a>
-<a class="sourceLine" id="cb3-21" data-line-number="21">               , <span class="st">&quot;/rest/notes&quot;</span></a>
-<a class="sourceLine" id="cb3-22" data-line-number="22">               , <span class="st">&quot;/rest/exercise&quot;</span></a>
-<a class="sourceLine" id="cb3-23" data-line-number="23">               , <span class="st">&quot;/rest/workout/exercise&quot;</span></a>
-<a class="sourceLine" id="cb3-24" data-line-number="24">               , <span class="st">&quot;/rest/workout&quot;</span></a>
-<a class="sourceLine" id="cb3-25" data-line-number="25">               , <span class="st">&quot;/rest/workout&quot;</span></a>
-<a class="sourceLine" id="cb3-26" data-line-number="26">               , <span class="st">&quot;/rest/stats/workout&quot;</span></a>
-<a class="sourceLine" id="cb3-27" data-line-number="27">               ]</a></code></pre></div>
+<p>One shouldn’t forget about negative testing, so let’s develop a test
+for checking that entry points correctly respond with an error 403 on
+unauthenticated access:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- GET requests against 'url' and expect to get error 403 back</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ot">testLoggedInFail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>testLoggedInFail url opts <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  E.try (getWith opts url) <span class="op">&gt;&gt;=</span> check</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    check (<span class="dt">Left</span> (<span class="dt">HT.StatusCodeException</span> s _ _))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="op">|</span> s <span class="op">^.</span> statusCode <span class="op">==</span> <span class="dv">403</span> <span class="ot">=</span> assertBool <span class="st">&quot;error ok&quot;</span> <span class="dt">True</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      <span class="op">|</span> <span class="fu">otherwise</span>              <span class="ot">=</span> assertBool <span class="st">&quot;unexpected status code&quot;</span> <span class="dt">False</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    check (<span class="dt">Left</span> _)  <span class="ot">=</span> assertBool <span class="st">&quot;unexpected exception caught&quot;</span> <span class="dt">False</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    check (<span class="dt">Right</span> r) <span class="ot">=</span> assertBool <span class="st">&quot;req should've failed&quot;</span> <span class="dt">False</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  defaultMain [testGroup <span class="st">&quot;Require auth fail&quot;</span> requireAuthFail]</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    requireAuthFail <span class="ot">=</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">map</span> (\u <span class="ot">-&gt;</span> testCase u (testLoggedInFail (mkUrl u) defaults)) authReqd</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- REST entry points which require user to be logged in</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    authReqd <span class="ot">=</span> [ <span class="st">&quot;/rest/app&quot;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot;/rest/weights&quot;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot;/rest/notes&quot;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot;/rest/exercise&quot;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot;/rest/workout/exercise&quot;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot;/rest/workout&quot;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot;/rest/workout&quot;</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>               , <span class="st">&quot;/rest/stats/workout&quot;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>               ]</span></code></pre></div>
 <h3 id="creating-objects">Creating objects</h3>
-<p>Here we will test two entry points: one for creating a new exercise like “Chin-ups” and one for listing existing exercises. Creation is a HTTP POST to <code>/rest/exercise</code> and listing exercises is HTTP GET <code>/rest/exercise</code>.</p>
-<p>A successful POST to <code>/rest/exercise</code> will create a new object on the server and return the object to the client as JSON. Here’s what that repsonse might look like:</p>
+<p>Here we will test two entry points: one for creating a new exercise
+like “Chin-ups” and one for listing existing exercises. Creation is a
+HTTP POST to <code>/rest/exercise</code> and listing exercises is HTTP GET
+<code>/rest/exercise</code>.</p>
+<p>A successful POST to <code>/rest/exercise</code> will create a new object on the
+server and return the object to the client as JSON. Here’s what that
+repsonse might look like:</p>
 <pre><code>{ &quot;id&quot;:2, &quot;name&quot;: &quot;Chin-ups&quot;, &quot;type&quot;:&quot;BW&quot; }</code></pre>
-<p>A successful GET of <code>/rest/exercise</code> will retrieve the full list of available exercises. It looks something like this:</p>
+<p>A successful GET of <code>/rest/exercise</code> will retrieve the full list of
+available exercises. It looks something like this:</p>
 <pre><code>[
   { &quot;id&quot;:1, &quot;name&quot;: &quot;Push-ups&quot;, &quot;type&quot;:&quot;BW&quot; },
   { &quot;id&quot;:2, &quot;name&quot;: &quot;Chin-ups&quot;, &quot;type&quot;:&quot;BW&quot; }
 ]</code></pre>
-<p>To test creating exercise objects, we’ll create an exercise, verify that its returned properties match what we gave on creation, and finally retrieve the complete exercise list and check that the object is listed.</p>
-<p>Here’s the code for the above test strategy. The <a href="http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html">Aeson Lens API</a> is particularly handy for this type of ad hoc JSON value inspection!</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">testAddExercise opts <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb6-3" data-line-number="3">  <span class="kw">let</span> name <span class="fu">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span></a>
-<a class="sourceLine" id="cb6-4" data-line-number="4">      ty   <span class="fu">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span></a>
-<a class="sourceLine" id="cb6-5" data-line-number="5">  r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="fu">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="fu">:=</span> ty]</a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">  <span class="co">-- Verify that the newly created object matches creation params</span></a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">  name <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;name&quot;</span> <span class="fu">.</span> _String</a>
-<a class="sourceLine" id="cb6-8" data-line-number="8">  ty   <span class="fu">@=?</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;type&quot;</span> <span class="fu">.</span> _String</a>
-<a class="sourceLine" id="cb6-9" data-line-number="9">  <span class="co">-- Verify that the object ended up in the global list of exercises</span></a>
-<a class="sourceLine" id="cb6-10" data-line-number="10">  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="fu">=</span> r <span class="fu">^?</span> responseBody <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</a>
-<a class="sourceLine" id="cb6-11" data-line-number="11">  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)</a>
-<a class="sourceLine" id="cb6-12" data-line-number="12">  assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)</a>
-<a class="sourceLine" id="cb6-13" data-line-number="13">  <span class="kw">where</span></a>
-<a class="sourceLine" id="cb6-14" data-line-number="14">    exercises r <span class="fu">=</span> r <span class="fu">^..</span> responseBody <span class="fu">.</span> values <span class="fu">.</span> key <span class="st">&quot;id&quot;</span> <span class="fu">.</span> _Integer</a></code></pre></div>
+<p>To test creating exercise objects, we’ll create an exercise, verify
+that its returned properties match what we gave on creation, and
+finally retrieve the complete exercise list and check that the object
+is listed.</p>
+<p>Here’s the code for the above test strategy. The <a href="http://hackage.haskell.org/package/lens/docs/Data-Aeson-Lens.html">Aeson Lens
+API</a> is particularly handy for this type of ad hoc JSON
+value inspection!</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">testAddExercise ::</span> <span class="dt">Options</span> <span class="ot">-&gt;</span> <span class="dt">Assertion</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>testAddExercise opts <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> name <span class="ot">=</span> <span class="st">&quot;Chin-ups&quot;</span><span class="ot"> ::</span> <span class="dt">T.Text</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      ty   <span class="ot">=</span> <span class="st">&quot;BW&quot;</span><span class="ot">       ::</span> <span class="dt">T.Text</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> postWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>) [<span class="st">&quot;name&quot;</span> <span class="op">:=</span> name, <span class="st">&quot;type&quot;</span> <span class="op">:=</span> ty]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Verify that the newly created object matches creation params</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  name <span class="op">@=?</span> r <span class="op">^.</span> responseBody <span class="op">.</span> key <span class="st">&quot;name&quot;</span> <span class="op">.</span> _String</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  ty   <span class="op">@=?</span> r <span class="op">^.</span> responseBody <span class="op">.</span> key <span class="st">&quot;type&quot;</span> <span class="op">.</span> _String</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Verify that the object ended up in the global list of exercises</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> (<span class="dt">Just</span> oid) <span class="ot">=</span> r <span class="op">^?</span> responseBody <span class="op">.</span> key <span class="st">&quot;id&quot;</span> <span class="op">.</span> _Integer</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> getWith opts (mkUrl <span class="st">&quot;/rest/exercise&quot;</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  assertBool <span class="st">&quot;oid should be in list&quot;</span> (oid <span class="ot">`elem`</span> exercises r)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    exercises r <span class="ot">=</span> r <span class="op">^..</span> responseBody <span class="op">.</span> values <span class="op">.</span> key <span class="st">&quot;id&quot;</span> <span class="op">.</span> _Integer</span></code></pre></div>
 <h3 id="conclusion">Conclusion</h3>
-<p>I only just got started developing these tests and so coverage is still poor. I’m pretty sure that as I develop new tests, interesting ways to restructure and generalize these tests will emerge.</p>
+<p>I only just got started developing these tests and so coverage is
+still poor. I’m pretty sure that as I develop new tests, interesting
+ways to restructure and generalize these tests will emerge.</p>
 <p>You can find the full source code to these tests <a href="https://github.com/nurpax/hswtrack/blob/blog-may-version/test/Test.hs">here</a>.</p>
 <p>Thanks for reading!</p>
 

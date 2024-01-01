@@ -47,19 +47,29 @@
 
 <p class="post-author">Janne Hellsten on October 12, 2014</p>
 
-<p>I like using use the Emacs <code>gud-mode</code> for my debugging sessions. Unfortunately, it’s pretty quirky in how it assigns source files to Emacs windows. This totally breaks my debugging flow. Today I decided to document this misbehavior and in a later post, explain how to fix it.</p>
-<p>The problem occurs when stepping through a program in <code>gud-mode</code> with <code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source buffers into the dedicated middle-left source window. Instead, source buffers are (randomly?) assigned on top of other GDB buffers like the GDB comint window. The layout problem gets even worse with multiple Emacs frames. Here are my repro steps with a diagram of what happens and how I’d like Emacs to behave instead.</p>
+<p>I like using use the Emacs <code>gud-mode</code> for my debugging sessions.
+Unfortunately, it’s pretty quirky in how it assigns source files to
+Emacs windows. This totally breaks my debugging flow. Today I decided
+to document this misbehavior and in a later post, explain how to fix
+it.</p>
+<p>The problem occurs when stepping through a program in <code>gud-mode</code> with
+<code>gdb-many-windows</code> enabled. I’d expect Emacs to assign new source
+buffers into the dedicated middle-left source window. Instead, source
+buffers are (randomly?) assigned on top of other GDB buffers like the
+GDB comint window. The layout problem gets even worse with multiple
+Emacs frames. Here are my repro steps with a diagram of what happens
+and how I’d like Emacs to behave instead.</p>
 <p>Here are the steps to reproduce the problem on Emacs 24.3.1.</p>
 <p>Bind <code>gud-next</code> and <code>gud-step</code> to <code>[f7]</code> and <code>[f8]</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">;; This goes into your .emacs</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">(add-hook 'gud-mode-hook</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">          '(<span class="kw">lambda</span> ()</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4">             (global-set-key (kbd <span class="st">&quot;&lt;f7&gt;&quot;</span>) 'gud-next)</a>
-<a class="sourceLine" id="cb1-5" data-line-number="5">             (global-set-key (kbd <span class="st">&quot;&lt;f8&gt;&quot;</span>) 'gud-step)))</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">;; This goes into your .emacs</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>(add-hook <span class="dt">'gud-mode-hook</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>          '(<span class="kw">lambda</span> ()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>             (global-set-key (kbd <span class="st">&quot;&lt;f7&gt;&quot;</span>) <span class="dt">'gud-next</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>             (global-set-key (kbd <span class="st">&quot;&lt;f8&gt;&quot;</span>) <span class="dt">'gud-step</span>)))</span></code></pre></div>
 <p>Build my example program:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="fu">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="bu">cd</span> emacs-gdb-proj</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="fu">make</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://gist.github.com/d94e2666ae05b58906c6.git emacs-gdb-proj</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> emacs-gdb-proj</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span></code></pre></div>
 <p>Start Emacs and enter GDB:</p>
 <pre><code>emacs &amp;
 M-x gdb
@@ -71,22 +81,78 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <p>The window layout should now look something like this (the source window with <code>main.c</code> highlighted):</p>
 <svg width="600" height="400">
 <!-- gud-test, locals of test -->
-<g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-size="20" font-family="Helvetica" fill="rgb(131,148,150)">*gud-test*</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./main.c</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
+<g transform="translate(0 0)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-size="20" font-family="Helvetica" fill="rgb(131,148,150)">*gud-test*</text>
+</g>
+<g transform="translate(300 0)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text>
+</g>
+<!-- source window, output window -->
+<g transform="translate(0 133)">
+<rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./main.c</text>
+</g>
+<g transform="translate(300 133)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text>
+</g>
+<!-- stack frame, breakpoints -->
+<g transform="translate(0 266)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text>
+</g>
+<g transform="translate(300 266)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text>
+</g>
 </svg>
 <p>The contents of <code>main.c</code> look like this:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></a>
-<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="dt">int</span> main() </a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">{</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">    foo();</a>
-<a class="sourceLine" id="cb5-6" data-line-number="6">    foo();</a>
-<a class="sourceLine" id="cb5-7" data-line-number="7">    foo();</a>
-<a class="sourceLine" id="cb5-8" data-line-number="8">}</a></code></pre></div>
-<p>If you step into the <code>foo()</code> function with <code>[f8]</code>, you’re taken into the <code>b.c</code> source file, which opens as expected into left-middle source window.</p>
-<p>However, if instead of directly stepping into <code>foo()</code> you open another source file in the source window, say, <code>C-x C-f</code>’ing the <code>Makefile</code> from the test project and hit <code>[f8]</code> again, BOOM, the <code>b.c</code> buffer opens in the comint <code>*gud-test*</code> window and not in the source window! The window layout now looks like this:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    foo<span class="op">();</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    foo<span class="op">();</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    foo<span class="op">();</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>If you step into the <code>foo()</code> function with <code>[f8]</code>, you’re taken into
+the <code>b.c</code> source file, which opens as expected into left-middle source
+window.</p>
+<p>However, if instead of directly stepping into <code>foo()</code> you open another
+source file in the source window, say, <code>C-x C-f</code>’ing the <code>Makefile</code>
+from the test project and hit <code>[f8]</code> again, BOOM, the <code>b.c</code> buffer
+opens in the comint <code>*gud-test*</code> window and not in the source window!
+The window layout now looks like this:</p>
 <svg width="600" height="400">
 <!-- b.c, locals of test -->
-<g transform="translate(0 0)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./b.c</text> </g> <g transform="translate(300 0)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text> </g> <!-- source window, output window --> <g transform="translate(0 133)"> <rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./Makefile</text> </g> <g transform="translate(300 133)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text> </g> <!-- stack frame, breakpoints --> <g transform="translate(0 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text> </g> <g transform="translate(300 266)"> <rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect> <text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text> </g>
+<g transform="translate(0 0)">
+<rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./b.c</text>
+</g>
+<g transform="translate(300 0)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*locals of test*</text>
+</g>
+<!-- source window, output window -->
+<g transform="translate(0 133)">
+<rect width="50%" height="33%" style="fill:rgb(101,123,131); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(0,43,53)">./Makefile</text>
+</g>
+<g transform="translate(300 133)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*input/output of test*</text>
+</g>
+<!-- stack frame, breakpoints -->
+<g transform="translate(0 266)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*stack frames of test*</text>
+</g>
+<g transform="translate(300 266)">
+<rect width="50%" height="33%" style="fill:rgb(0,43,53); stroke-width:2; stroke:rgb(0,0,0)"></rect>
+<text x="5%" y="18%" font-family="Helvetica" font-size="20" fill="rgb(131,148,150)">*breakpoints of test*</text>
+</g>
 </svg>
 <p>Another way to trigger the same:</p>
 <ol type="1">
@@ -96,7 +162,11 @@ Breakpoint 1 at 0x4004b1: file main.c, line 6.
 <li>Click on any of the functions/source files into bottom-left stack frame window.</li>
 </ol>
 <p>Again, the source file opens on top of the upper-left comint window.</p>
-<p>I did find some related Stackoverflow posts. <a href="http://stackoverflow.com/questions/3473134/emacs-23-1-1-with-gdb-forcing-source-windows">This post</a> contains a <code>defadvice</code> trick that seems to work for the latter reproduction steps, but it didn’t make a difference in the former case. <a href="http://stackoverflow.com/questions/24386672/use-gdb-within-emacs-always-show-the-source-code.">Another post</a> discusses a related problem but concludes that there’s no problem if you just use <code>gdb-many-windows</code>.</p>
+<p>I did find some related Stackoverflow posts. <a href="http://stackoverflow.com/questions/3473134/emacs-23-1-1-with-gdb-forcing-source-windows">This post</a> contains
+a <code>defadvice</code> trick that seems to work for the latter reproduction
+steps, but it didn’t make a difference in the former case. <a href="http://stackoverflow.com/questions/24386672/use-gdb-within-emacs-always-show-the-source-code.">Another
+post</a> discusses a related problem but concludes that there’s no
+problem if you just use <code>gdb-many-windows</code>.</p>
 <p>I hope to resolve this soon and update this post with a solution.</p>
 
 
