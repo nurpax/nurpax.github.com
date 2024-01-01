@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width">
+        <link href="https://fonts.googleapis.com/css?family=Montserrat|Source+Sans+Pro" rel="stylesheet">
+        <title>nurpax - Quick blog update</title>
+        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+
+        <link rel="stylesheet" type="text/css" href="../css/syntax2.css" />
+
+        <link rel="alternate" type="application/rss+xml" title="SimpleBlog" href="../rss.xml" />
+        
+        <script src="../js/jquery.min.js" type="text/javascript"></script>
+        <script src="../js/jquery.flot.min.js" type="text/javascript"></script>
+        
+
+    </head>
+    <body>
+
+    <div id="page-wrap">
+        <div id="header">
+            <h1>&nbsp;</h1>
+        </div>
+        <div id="navigation">
+             <a href="../">Home</a>
+             <a href="../posts.html">All posts</a>
+        </div>
+        <div id="content">
+<article>
+
+<h1>Quick blog update</h1>
+
+<p class="post-author">Janne Hellsten on January  1, 2023</p>
+
+<p>I wanted to push an update to this blog as I finally ripped out Google Analytics from these pages. The GA scripts got out of date and I didn’t need the analytics anyway. Haven’t touched the blog code since 2021 so it took some catching up to get the Haskell Hakyll based blog to build.</p>
+<p>If you’ve followed me on Twitter, you may have noticed I’ve gone silent there. I’m not a fan of the X site so you may find me on <a href="https://mastodon.gamedev.place/@nurpax">mastodon.gamedev.place/<span class="citation" data-cites="nurpax">@nurpax</span></a> or on <a href="https://bsky.app/profile/nurpax.bsky.social">bsky.app/profile/nurpax.bsky.social</a> instead.</p>
+<p>I’ve lately been interested in the <a href="https://ziglang.org/">Zig programming language</a>. Here’s a couple of Zig projects that I’ve either authored or have been involved in somehow:</p>
+<ul>
+<li><p><a href="https://github.com/nurpax/zigrograd">Zigrograd</a> - scalar-valued autograd written in Zig. Inspired by Andrej Karpathy’s <a href="https://github.com/karpathy/micrograd">micrograd</a>, I decided to port micrograd to Zig. It contains a mini-implementation of Numpy (ehh, zigpy?) and the autograd engine is tensor based now. It’s actually pretty fast for a CPU-only implementation. I’ve been adding convolutional layers to it too but haven’t released it yet as the GEMM routine at the core of those layers is not fast enough yet. It’s just a coding playground type of project, not intended to be really useful for anything.</p></li>
+<li><p><a href="https://github.com/natecraddock/ziglua">Ziglua</a> - Zig bindings for Lua/(soon to be released) Luau. I didn’t author this, have just been reviewing and suggesting changes to it to add Luau support. I’m interested in using Luau in some personal gamedev projects.</p></li>
+<li><p><a href="https://github.com/nurpax/zig-imgui">Zig-imgui</a> - Sokol gfx + imgui setup for Zig. Very much WIP and very likely to fail to build (<em>“The build breaks will continue until morale improves”</em> as they say in the Zig circles..).</p></li>
+</ul>
+<p>I think I’ll write more about Ziglua here later.</p>
+<p>Happy New Year!</p>
+
+
+</article>
+
+
+        </div>
+        <div id="footer">
+          <p>Like what you saw here?  Suggestions, improvements?</p>
+          <p>Get in touch: jjhellst@gmail.com or <a href="https://twitter.com/nurpax">@nurpax</a></p>
+        </div>
+    </div>
+
+
+    </body>
+</html>

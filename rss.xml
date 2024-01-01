@@ -10,8 +10,25 @@
         <email>jjhellst@gmail.com</email>
         
     </author>
-    <updated>2021-02-22T00:00:00Z</updated>
+    <updated>2023-01-01T00:00:00Z</updated>
     <entry>
+    <title>Quick blog update</title>
+    <link href="http://nurpax.github.com/posts/2023-01-01-updated.html" />
+    <id>http://nurpax.github.com/posts/2023-01-01-updated.html</id>
+    <published>2023-01-01T00:00:00Z</published>
+    <updated>2023-01-01T00:00:00Z</updated>
+    <summary type="html"><![CDATA[<p>I wanted to push an update to this blog as I finally ripped out Google Analytics from these pages. The GA scripts got out of date and I didn’t need the analytics anyway. Haven’t touched the blog code since 2021 so it took some catching up to get the Haskell Hakyll based blog to build.</p>
+<p>If you’ve followed me on Twitter, you may have noticed I’ve gone silent there. I’m not a fan of the X site so you may find me on <a href="https://mastodon.gamedev.place/@nurpax">mastodon.gamedev.place/<span class="citation" data-cites="nurpax">@nurpax</span></a> or on <a href="https://bsky.app/profile/nurpax.bsky.social">bsky.app/profile/nurpax.bsky.social</a> instead.</p>
+<p>I’ve lately been interested in the <a href="https://ziglang.org/">Zig programming language</a>. Here’s a couple of Zig projects that I’ve either authored or have been involved in somehow:</p>
+<ul>
+<li><p><a href="https://github.com/nurpax/zigrograd">Zigrograd</a> - scalar-valued autograd written in Zig. Inspired by Andrej Karpathy’s <a href="https://github.com/karpathy/micrograd">micrograd</a>, I decided to port micrograd to Zig. It contains a mini-implementation of Numpy (ehh, zigpy?) and the autograd engine is tensor based now. It’s actually pretty fast for a CPU-only implementation. I’ve been adding convolutional layers to it too but haven’t released it yet as the GEMM routine at the core of those layers is not fast enough yet. It’s just a coding playground type of project, not intended to be really useful for anything.</p></li>
+<li><p><a href="https://github.com/natecraddock/ziglua">Ziglua</a> - Zig bindings for Lua/(soon to be released) Luau. I didn’t author this, have just been reviewing and suggesting changes to it to add Luau support. I’m interested in using Luau in some personal gamedev projects.</p></li>
+<li><p><a href="https://github.com/nurpax/zig-imgui">Zig-imgui</a> - Sokol gfx + imgui setup for Zig. Very much WIP and very likely to fail to build (<em>“The build breaks will continue until morale improves”</em> as they say in the Zig circles..).</p></li>
+</ul>
+<p>I think I’ll write more about Ziglua here later.</p>
+<p>Happy New Year!</p>]]></summary>
+</entry>
+<entry>
     <title>Debugging C64jasm projects with VICE and C64Debugger</title>
     <link href="http://nurpax.github.com/posts/2021-02-22-c64jasm-debug-info.html" />
     <id>http://nurpax.github.com/posts/2021-02-22-c64jasm-debug-info.html</id>
@@ -1544,74 +1561,6 @@ $(function () {
 <p><img class="img-pixelated img-medium-wide" src="/images/c64/sine/sinewave-sans-charset.gif" /></p>
 <p>Since I have full control over the sine animation, I choose animation parameters that make the line segments behave “nicely”. Niceness is defined as follows: let <span class="math inline">(<em>x</em>0,<em>y</em>0)</span> and <span class="math inline">(<em>x</em>0+8,<em>y</em>1)</span> be the end points of a line segment. The segment behaves “nicely” if it satisfies the following condition: <span class="math inline">|<em>y</em>0−<em>y</em>1| &lt; <em>c</em></span> (where <span class="math inline"><em>c</em></span> is some small number, in my case 8). This is required in order to keep the <code>fill_tbl</code> at a reasonable size and to limit the number of unique 8x8 characters (since the hardware character set is only 256 entries).</p>
 <p>That’s about all there is to it, I guess.</p>]]></summary>
-</entry>
-<entry>
-    <title>BINTRIS C64 game screen rendering (series part 4)</title>
-    <link href="http://nurpax.github.com/posts/2018-05-30-bintris-on-c64-part-4.html" />
-    <id>http://nurpax.github.com/posts/2018-05-30-bintris-on-c64-part-4.html</id>
-    <published>2018-05-30T00:00:00Z</published>
-    <updated>2018-05-30T00:00:00Z</updated>
-    <summary type="html"><![CDATA[<p>(Looking for the BINTRIS C64 disk image? Find it <a href="/posts/2018-05-21-bintris-on-c64-part-2.html">here</a>.)</p>
-<p>Let’s take a look at how the actual BINTRIS game screen is rendered. This is the first thing I implemented for this projet (after maybe 25 years of C64 dev hiatus) and in hindsight I think it could’ve been simpler with less sprites and more charset manipulation.</p>
-<p>The graphic elements of this screen are:</p>
-<ul>
-<li>The BINTRIS logo at the top (4 multicolor sprites)</li>
-<li>Currently falling bit (one single color sprite)</li>
-<li>Current score (3 multicolor sprites, one sprite per number, max 3 digits)</li>
-<li>The collapse noise animation (3 multicolor sprites)</li>
-<li>The game board rendered in text mode (one character per bit)</li>
-<li>Decimal targets (standard text)</li>
-</ul>
-<p>Here’s how it looks like (with red &amp; green rectangles highlighting sprite locations):</p>
-<p><?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
-    "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%" height="100%" viewBox="0 0 384 272"><style>text { font-family: "arial";}
-
-.pointsample { image-rendering: pixelated; }</style><g><image width="384.0" height="272.0" class="pointsample" xlink:href="/images/bintris/gamescreen-collapse.gif" /><rect width="1120.0" height="1.0" x="-8.0" y="26.0" fill="#393" /><rect width="1120.0" height="1.0" x="-8.0" y="62.0" fill="#933" /><rect width="24.0" height="1.0" x="72.0" y="110.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="96.0" y="110.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="131.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="72.0" y="110.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="158.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="96.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="179.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="72.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="96.0" y="158.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="120.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="96.0" y="179.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="96.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="120.0" y="158.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="144.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="120.0" y="179.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="120.0" y="158.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="158.0" y="68.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="182.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="158.0" y="89.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="158.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="182.0" y="68.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="206.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="182.0" y="89.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="182.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="206.0" y="68.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="230.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="206.0" y="89.0" fill="#ff4422" /><rect width="1.0" height="21.0" x="206.0" y="68.0" fill="#ff4422" /><rect width="24.0" height="1.0" x="72.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="96.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="72.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="72.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="96.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="120.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="96.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="96.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="120.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="144.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="120.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="120.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="144.0" y="36.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="168.0" y="36.0" fill="#44ff22" /><rect width="24.0" height="1.0" x="144.0" y="57.0" fill="#44ff22" /><rect width="1.0" height="21.0" x="144.0" y="36.0" fill="#44ff22" /><g transform="matrix(0.6,0.0,0.0,0.6,28.0,92.0)"><g id="title"><rect width="14.0" height="14.0" x="70.0" y="229.0" fill="#393" /><text x="89.0" y="242.0" fill="white">logo irq line </text></g></g><g transform="matrix(0.6,0.0,0.0,0.6,64.0,92.0)"><g id="title"><rect width="14.0" height="14.0" x="160.0" y="229.0" fill="#933" /><text x="179.0" y="242.0" fill="white">board irq line</text></g></g></g></svg></p>
-<p>That’s 11 sprites in total. As the C64 hardware only supports 8 sprites, we need to multiplex hardware sprites with raster interrupts:</p>
-<ol type="1">
-<li>Program sprites 0-3 for the BINTRIS logo at the top of the frame, before the raster beam reaches the logo.</li>
-<li>Once the raster beam’s past the logo, program sprites 0-6 to be used for the current score (3 sprites), falling bit (1 sprite), and the collapse noise animation (3 sprites).</li>
-</ol>
-<p>Note that not all these sprites are always enabled: the noise animation sprites are enabled only when rows are collapsing, the falling bit is turned off during the noise animation, and if the current score is, say, less than 10, we need only one sprite for the score digits.</p>
-<p>I did skip over some details, though. The biggest omission is the BINTRIS logo level up warp effect. It looks something like this:</p>
-<div class="screenshot">
-<img src="/images/bintris/logowarp.gif" title="BINTRIS logo warp gif" class="img-pixelated" width="300" height="80" />
-</div>
-<p>This effect manipulates the logo sprite X locations on each scanline to achieve the line-by-line distortion effect. It might not look like much in this .gif capture, but as far as timing sensitive code goes, this is by far the trickiest routine in the game. There will be a blog about this effect later in the series.</p>
-<p>The game board is rendered using text mode characters. The charset contains an 8x8 filled rectangle which is used to clear the board area on game start or on level up. Per-frame rendering only sets the color of each such block.</p>
-<p>Board state is represented by two arrays: <code>setbit</code> and <code>bits</code> (16 bytes each). The <code>setbit</code> array encodes which cells contain a block (one bit per column, one byte per row). The <code>bits</code> array containts the actual bit values. The code to render the board is pretty simple with these two arrays:</p>
-<pre><code>piececol:
-    .byte DARK_GRAY, BLACK, DARK_GRAY, WHITE
-
-.macro drawboard(colorbuf) {
-    .const tsetbits = $62
-    .const tbits = $63
-    // Note unrolling by 16 is simply due to lazyness, it&#39;s not
-    // necessary for performance.
-    .for (var y = 0; y &lt; 16; y++) {
-        lda setbit+y
-        sta tsetbits
-        lda bits+y
-        sta tbits
-        ldy bitwidth     // current board bitwidth
-xloop:
-        lda tbits
-        and #1
-        lsr tsetbits
-        rol
-        tax
-        lda piececol, x
-        lsr tbits
-        sta colorbuf+[(y+1)*40], y
-        dey
-        bne xloop
-    }
-}</code></pre>
-<p>That’s roughly 31 clock cycles per block. In the <a href="http://nurpax.com/bintris">BINTRIS web version</a> each block is a bunch of SVG <code>&lt;rect&gt;</code> elements wrapped in a <code>&lt;g&gt;</code> element wrapped in a <code>React.PureComponent</code>. I’m pretty sure the cost to render a block in the web version is at least a couple of orders of magnitude higher. That’s not React’s fault of course, I should totally get the blame for abusing React for gamedev like this.</p>
-<h2 id="next-in-series">Next in series</h2>
-<p>The next post will discuss vertical scrolling with flexible line distance (FLD) and will also go into details on how the BINTRIS logo warp was done.</p>]]></summary>
 </entry>
 
 </feed>
