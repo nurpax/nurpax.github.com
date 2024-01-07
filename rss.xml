@@ -10,13 +10,13 @@
         <email>jjhellst@gmail.com</email>
         
     </author>
-    <updated>2023-01-01T00:00:00Z</updated>
+    <updated>2024-01-01T00:00:00Z</updated>
     <entry>
     <title>A quick blog update</title>
-    <link href="http://nurpax.github.com/posts/2023-01-01-updated.html" />
-    <id>http://nurpax.github.com/posts/2023-01-01-updated.html</id>
-    <published>2023-01-01T00:00:00Z</published>
-    <updated>2023-01-01T00:00:00Z</updated>
+    <link href="http://nurpax.github.com/posts/2024-01-01-updated.html" />
+    <id>http://nurpax.github.com/posts/2024-01-01-updated.html</id>
+    <published>2024-01-01T00:00:00Z</published>
+    <updated>2024-01-01T00:00:00Z</updated>
     <summary type="html"><![CDATA[<p>I wanted to push an update to this blog as I finally ripped out Google Analytics from these pages. The GA scripts got out of date and I didn’t need the analytics anyway. Haven’t touched the blog code since 2021 so it took some catching up to get the Haskell Hakyll based blog to build.</p>
 <p>If you’ve followed me on Twitter, you may have noticed I’ve gone silent there. I’m not a fan of the X site so you may find me on <a href="https://mastodon.gamedev.place/@nurpax">mastodon.gamedev.place/<span class="citation" data-cites="nurpax">@nurpax</span></a> or on <a href="https://bsky.app/profile/nurpax.bsky.social">bsky.app/profile/nurpax.bsky.social</a> instead.</p>
 <p>I’ve lately been interested in the <a href="https://ziglang.org/">Zig programming language</a>. Here’s a couple of Zig projects that I’ve either authored or have been involved in somehow:</p>
